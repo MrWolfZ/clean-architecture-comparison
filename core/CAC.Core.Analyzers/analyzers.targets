@@ -1,0 +1,9 @@
+<Project>
+
+    <PropertyGroup Label="Code Analysis Config">
+        <RuleSetName>full</RuleSetName>
+        <RuleSetName Condition="$(MSBuildProjectName.EndsWith('UnitTests'))">test</RuleSetName>
+        <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)/$(RuleSetName).ruleset</CodeAnalysisRuleSet>
+    </PropertyGroup>
+
+</Project>
