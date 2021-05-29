@@ -5,10 +5,10 @@ using System.Runtime.CompilerServices;
 using CAC.Core.Domain;
 using Microsoft.Extensions.DependencyInjection;
 
-[assembly: InternalsVisibleTo("CAC.Plain.CQS.UnitTests")]
+[assembly: InternalsVisibleTo("CAC.CQS.UnitTests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
-namespace CAC.Plain.CQS.Domain
+namespace CAC.CQS.Domain
 {
     public static class ServiceCollectionExtensions
     {
