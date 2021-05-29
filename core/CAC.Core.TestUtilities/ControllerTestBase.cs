@@ -55,6 +55,7 @@ namespace CAC.Core.TestUtilities
                 webHost.UseTestServer();
 
                 ConfigureWebHost(webHost);
+                webHost.ConfigureServices(ConfigureServices);
             });
 
             host = await hostBuilder.StartAsync();
@@ -71,6 +72,10 @@ namespace CAC.Core.TestUtilities
         }
 
         protected abstract void ConfigureWebHost(IWebHostBuilder webHost);
+
+        protected virtual void ConfigureServices(IServiceCollection services)
+        {
+        }
 
         protected string Serialize(object o) => JsonSerializer.Serialize(o, JsonSerializerOptions);
 
