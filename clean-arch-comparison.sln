@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ddd", "ddd", "{04584DEB-D430-4EF2-9D00-A9445106311B}"
 EndProject
@@ -39,6 +39,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Plain.CQS.UnitTests", "plain-cqs\CAC.Plain.CQS.UnitTests\CAC.Plain.CQS.UnitTests.csproj", "{CC0D57A3-3C0D-43B1-B70B-AAFE160928A1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Core.TestUtilities", "core\CAC.Core.TestUtilities\CAC.Core.TestUtilities.csproj", "{6C5B52A4-8362-411C-9356-37DD05CDD6BC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".solution-items", ".solution-items", "{25F423E5-DC42-47BC-A9BA-46384B79A64A}"
+ProjectSection(SolutionItems) = preProject
+	README.md = README.md
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
