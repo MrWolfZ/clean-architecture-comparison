@@ -1,6 +1,6 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plain", "plain", "{04584DEB-D430-4EF2-9D00-A9445106311B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ddd", "ddd", "{04584DEB-D430-4EF2-9D00-A9445106311B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mediatr", "mediatr", "{45EA5A0D-E89A-4D1F-B92D-A16E7B3D0E62}"
 EndProject
@@ -10,13 +10,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "decorator-proxy", "decorato
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "functional", "functional", "{3A0FB992-FCA6-4F9A-BDA1-AC35A18C7A61}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Plain.Domain", "plain\CAC.Plain.Domain\CAC.Plain.Domain.csproj", "{53E04135-0AA2-4171-825F-A9482D930283}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.DDD.Domain", "ddd\CAC.DDD.Domain\CAC.DDD.Domain.csproj", "{53E04135-0AA2-4171-825F-A9482D930283}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Plain.Infrastructure", "plain\CAC.Plain.Infrastructure\CAC.Plain.Infrastructure.csproj", "{72AC070E-3F8D-40CD-ABBA-92F3CFF40653}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.DDD.Infrastructure", "ddd\CAC.DDD.Infrastructure\CAC.DDD.Infrastructure.csproj", "{72AC070E-3F8D-40CD-ABBA-92F3CFF40653}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Plain.Web", "plain\CAC.Plain.Web\CAC.Plain.Web.csproj", "{6718E131-6333-48B6-B3E4-1A7C16EBC76D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.DDD.Web", "ddd\CAC.DDD.Web\CAC.DDD.Web.csproj", "{6718E131-6333-48B6-B3E4-1A7C16EBC76D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Plain.UnitTests", "plain\CAC.Plain.UnitTests\CAC.Plain.UnitTests.csproj", "{91DAB8DB-FB2B-4378-ADE0-BB28F67284D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.DDD.UnitTests", "ddd\CAC.DDD.UnitTests\CAC.DDD.UnitTests.csproj", "{91DAB8DB-FB2B-4378-ADE0-BB28F67284D5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plain-cqs", "plain-cqs", "{FF2E2E4A-0106-4CB5-B12B-C8D9067D643E}"
 EndProject
