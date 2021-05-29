@@ -4,7 +4,6 @@ This repository contains a comparison of multiple styles for implementing a clea
 
 ## Open Points
 
-- rename `plain-cqs` to `cqs`
 - rename `TaskListsController` to `TaskListsApi`
 - in `ddd` move DTOs from `TaskListsApi` into separate classes
 - change inspection settings to allow C# 9 object instantiation shorthands

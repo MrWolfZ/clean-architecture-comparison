@@ -18,7 +18,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.DDD.Web", "ddd\CAC.DDD.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.DDD.UnitTests", "ddd\CAC.DDD.UnitTests\CAC.DDD.UnitTests.csproj", "{91DAB8DB-FB2B-4378-ADE0-BB28F67284D5}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plain-cqs", "plain-cqs", "{FF2E2E4A-0106-4CB5-B12B-C8D9067D643E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cqs", "cqs", "{FF2E2E4A-0106-4CB5-B12B-C8D9067D643E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{6F533325-7297-4151-8BB3-C036437945B0}"
 EndProject
@@ -30,13 +30,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Core.Web", "core\CAC.Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Core.UnitTests", "core\CAC.Core.UnitTests\CAC.Core.UnitTests.csproj", "{F20AFEF8-85A0-4E18-8A52-3C7FF961992B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Plain.CQS.Domain", "plain-cqs\CAC.Plain.CQS.Domain\CAC.Plain.CQS.Domain.csproj", "{F2C8B9BF-E0A4-4073-8EBE-CB9C76C3035E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.CQS.Domain", "cqs\CAC.CQS.Domain\CAC.CQS.Domain.csproj", "{F2C8B9BF-E0A4-4073-8EBE-CB9C76C3035E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Plain.CQS.Infrastructure", "plain-cqs\CAC.Plain.CQS.Infrastructure\CAC.Plain.CQS.Infrastructure.csproj", "{9C02764E-2CC1-4D29-994B-CED74F913FAD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.CQS.Infrastructure", "cqs\CAC.CQS.Infrastructure\CAC.CQS.Infrastructure.csproj", "{9C02764E-2CC1-4D29-994B-CED74F913FAD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Plain.CQS.Web", "plain-cqs\CAC.Plain.CQS.Web\CAC.Plain.CQS.Web.csproj", "{C23D16FC-2465-4CDA-90C3-DB5DF682BA17}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.CQS.Web", "cqs\CAC.CQS.Web\CAC.CQS.Web.csproj", "{C23D16FC-2465-4CDA-90C3-DB5DF682BA17}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Plain.CQS.UnitTests", "plain-cqs\CAC.Plain.CQS.UnitTests\CAC.Plain.CQS.UnitTests.csproj", "{CC0D57A3-3C0D-43B1-B70B-AAFE160928A1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.CQS.UnitTests", "cqs\CAC.CQS.UnitTests\CAC.CQS.UnitTests.csproj", "{CC0D57A3-3C0D-43B1-B70B-AAFE160928A1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Core.TestUtilities", "core\CAC.Core.TestUtilities\CAC.Core.TestUtilities.csproj", "{6C5B52A4-8362-411C-9356-37DD05CDD6BC}"
 EndProject
