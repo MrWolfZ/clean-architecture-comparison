@@ -34,10 +34,10 @@ namespace CAC.Baseline.Web.Data
             return Task.FromResult(result);
         }
 
-        public async Task<IReadOnlyCollection<TaskList>> GetAllWithPendingItems()
+        public async Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries()
         {
             var all = await GetAll();
-            return all.Where(l => l.Items.Any(i => !i.IsDone)).ToList();
+            return all.Where(l => l.Entries.Any(i => !i.IsDone)).ToList();
         }
     }
 }

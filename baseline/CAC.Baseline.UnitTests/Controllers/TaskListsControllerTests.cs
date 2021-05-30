@@ -88,11 +88,11 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
-        public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidItemIndex_ReturnsNoContent()
+        public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryIndex_ReturnsNoContent()
         {
             var taskList = new TaskList(1, "test");
-            taskList.AddItem("task 1");
-            taskList.AddItem("task 2");
+            taskList.AddEntry("task 1");
+            taskList.AddEntry("task 2");
 
             await TaskListRepository.Upsert(taskList);
 
@@ -103,11 +103,11 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
-        public async Task MarkTaskAsDone_GivenExistingTaskListIdAndNonExistingItemIndex_ReturnsBadRequest()
+        public async Task MarkTaskAsDone_GivenExistingTaskListIdAndNonExistingEntryIndex_ReturnsBadRequest()
         {
             var taskList = new TaskList(1, "test");
-            taskList.AddItem("task 1");
-            taskList.AddItem("task 2");
+            taskList.AddEntry("task 1");
+            taskList.AddEntry("task 2");
 
             await TaskListRepository.Upsert(taskList);
 
@@ -130,8 +130,8 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task GetAll_GivenExistingTaskLists_ReturnsTaskLists()
         {
             var taskList1 = new TaskList(1, "test 1");
-            taskList1.AddItem("task 1");
-            taskList1.AddItem("task 2");
+            taskList1.AddEntry("task 1");
+            taskList1.AddEntry("task 2");
 
             var taskList2 = new TaskList(2, "test 2");
 
@@ -154,8 +154,8 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task GetById_GivenExistingTaskListId_ReturnsTaskList()
         {
             var taskList = new TaskList(1, "test");
-            taskList.AddItem("task 1");
-            taskList.AddItem("task 2");
+            taskList.AddEntry("task 1");
+            taskList.AddEntry("task 2");
 
             await TaskListRepository.Upsert(taskList);
 
@@ -167,7 +167,7 @@ namespace CAC.Baseline.UnitTests.Controllers
             var responseContent = Deserialize<TaskListDto>(responseString);
 
             Assert.AreEqual(taskList.Name, responseContent!.Name);
-            Assert.IsTrue(taskList.Items.SequenceEqual(responseContent.Items));
+            Assert.IsTrue(taskList.Entries.SequenceEqual(responseContent.Entries));
         }
 
         [Test]
@@ -179,25 +179,25 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
-        public async Task GetAllWithPendingItems_GivenExistingTaskLists_ReturnsTaskListsWithPendingItems()
+        public async Task GetAllWithPendingEntries_GivenExistingTaskLists_ReturnsTaskListsWithPendingEntries()
         {
             var taskList1 = new TaskList(1, "test 1");
-            taskList1.AddItem("task 1");
-            taskList1.AddItem("task 2");
-            taskList1.MarkItemAsDone(0);
+            taskList1.AddEntry("task 1");
+            taskList1.AddEntry("task 2");
+            taskList1.MarkEntryAsDone(0);
 
             var taskList2 = new TaskList(2, "test 2");
-            taskList2.AddItem("task 1");
+            taskList2.AddEntry("task 1");
             
             var taskList3 = new TaskList(3, "test 3");
-            taskList3.AddItem("task 1");
-            taskList3.MarkItemAsDone(0);
+            taskList3.AddEntry("task 1");
+            taskList3.MarkEntryAsDone(0);
 
             await TaskListRepository.Upsert(taskList1);
             await TaskListRepository.Upsert(taskList2);
             await TaskListRepository.Upsert(taskList3);
 
-            var response = await HttpClient.GetAsync("taskLists/withPendingItems");
+            var response = await HttpClient.GetAsync("taskLists/withPendingEntries");
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 

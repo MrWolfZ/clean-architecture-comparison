@@ -17,7 +17,7 @@ namespace CAC.Baseline.UnitTests.Model
             var list = new TaskList(id, name);
             Assert.AreEqual(id, list.Id);
             Assert.AreEqual(name, list.Name);
-            Assert.IsEmpty(list.Items);
+            Assert.IsEmpty(list.Entries);
         }
 
         [TestCase(0)]
@@ -43,65 +43,65 @@ namespace CAC.Baseline.UnitTests.Model
         }
 
         [Test]
-        public void AddItem_GivenValidDescription_AddsPendingItemToList()
+        public void AddEntry_GivenValidDescription_AddsPendingEntryToList()
         {
             var list = new TaskList(1, "test list");
             const string description = "task";
 
-            list.AddItem(description);
+            list.AddEntry(description);
 
-            Assert.IsTrue(list.Items.Contains(new TaskListItem(description, false)));
+            Assert.IsTrue(list.Entries.Contains(new TaskListEntry(description, false)));
         }
 
         [Test]
-        public void AddItem_GivenMultipleValidDescriptions_AddsPendingItemsToList()
+        public void AddEntry_GivenMultipleValidDescriptions_AddsPendingEntriesToList()
         {
             var list = new TaskList(1, "test list");
             const string description1 = "task 1";
             const string description2 = "task 2";
 
-            list.AddItem(description1);
-            list.AddItem(description2);
+            list.AddEntry(description1);
+            list.AddEntry(description2);
 
-            Assert.AreEqual(2, list.Items.Count);
-            Assert.IsTrue(list.Items.Contains(new TaskListItem(description1, false)));
-            Assert.IsTrue(list.Items.Contains(new TaskListItem(description2, false)));
+            Assert.AreEqual(2, list.Entries.Count);
+            Assert.IsTrue(list.Entries.Contains(new TaskListEntry(description1, false)));
+            Assert.IsTrue(list.Entries.Contains(new TaskListEntry(description2, false)));
         }
 
         [TestCase("")]
         [TestCase(" ")]
         [TestCase(null)]
-        public void AddItem_GivenEmptyDescription_ThrowsArgumentException(string description)
+        public void AddEntry_GivenEmptyDescription_ThrowsArgumentException(string description)
         {
             var list = new TaskList(1, "test list");
 
-            Assert.Throws<ArgumentException>(() => list.AddItem(description));
+            Assert.Throws<ArgumentException>(() => list.AddEntry(description));
         }
 
         [Test]
-        public void MarkItemAsDone_GivenValidItemIndex_MarksItemAsDone()
+        public void MarkEntryAsDone_GivenValidEntryIndex_MarksEntryAsDone()
         {
             const string description1 = "task 1";
             const string description2 = "task 2";
             var list = new TaskList(1, "test list");
-            list.AddItem(description1);
-            list.AddItem(description2);
+            list.AddEntry(description1);
+            list.AddEntry(description2);
 
-            list.MarkItemAsDone(1);
+            list.MarkEntryAsDone(1);
 
-            Assert.IsTrue(list.Items.Contains(new TaskListItem(description1, false)));
-            Assert.IsTrue(list.Items.Contains(new TaskListItem(description2, true)));
+            Assert.IsTrue(list.Entries.Contains(new TaskListEntry(description1, false)));
+            Assert.IsTrue(list.Entries.Contains(new TaskListEntry(description2, true)));
         }
 
         [TestCase(-1)]
         [TestCase(2)]
-        public void MarkItemAsDone_GivenInvalidItemIndex_ThrowsArgumentException(int itemIdx)
+        public void MarkEntryAsDone_GivenInvalidEntryIndex_ThrowsArgumentException(int entryIdx)
         {
             var list = new TaskList(1, "test list");
-            list.AddItem("task 1");
-            list.AddItem("task 2");
+            list.AddEntry("task 1");
+            list.AddEntry("task 2");
 
-            Assert.Throws<ArgumentException>(() => list.MarkItemAsDone(itemIdx));
+            Assert.Throws<ArgumentException>(() => list.MarkEntryAsDone(entryIdx));
         }
     }
 }

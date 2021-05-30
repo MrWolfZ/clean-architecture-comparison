@@ -56,10 +56,10 @@ namespace CAC.Baseline.Web.Controllers
                     return NotFound();
                 }
 
-                taskList.AddItem(request.TaskDescription);
+                taskList.AddEntry(request.TaskDescription);
                 await taskListRepository.Upsert(taskList);
 
-                logger.LogDebug("added task list item with description '{Description}' to task list '{TaskListName}'", request.TaskDescription, taskList.Name);
+                logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListName}'", request.TaskDescription, taskList.Name);
 
                 return NoContent();
             }
@@ -69,10 +69,10 @@ namespace CAC.Baseline.Web.Controllers
             }
         }
 
-        [HttpPut("{taskListId:long}/tasks/{taskListItemIdx:int}/isDone")]
+        [HttpPut("{taskListId:long}/tasks/{entryIdx:int}/isDone")]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> MarkTaskAsDone(long taskListId, int taskListItemIdx)
+        public async Task<IActionResult> MarkTaskAsDone(long taskListId, int entryIdx)
         {
             try
             {
@@ -83,11 +83,11 @@ namespace CAC.Baseline.Web.Controllers
                     return NotFound();
                 }
 
-                taskList.MarkItemAsDone(taskListItemIdx);
+                taskList.MarkEntryAsDone(entryIdx);
 
                 await taskListRepository.Upsert(taskList);
 
-                logger.LogDebug("marked task list item '{ItemIdx}' in task list '{TaskListName}' as done", taskListItemIdx, taskList.Name);
+                logger.LogDebug("marked task list entry '{EntryIdx}' in task list '{TaskListName}' as done", entryIdx, taskList.Name);
 
                 return NoContent();
             }
@@ -102,7 +102,7 @@ namespace CAC.Baseline.Web.Controllers
         public async Task<IReadOnlyCollection<TaskListDto>> GetAll()
         {
             var lists = await taskListRepository.GetAll();
-            return lists.Select(l => new TaskListDto(l.Id, l.Name, l.Items)).ToList();
+            return lists.Select(l => new TaskListDto(l.Id, l.Name, l.Entries)).ToList();
         }
 
         [HttpGet("{taskListId:long}")]
@@ -110,15 +110,15 @@ namespace CAC.Baseline.Web.Controllers
         public async Task<ActionResult<TaskListDto>> GetById(long taskListId)
         {
             var taskList = await taskListRepository.GetById(taskListId);
-            return taskList == null ? NotFound() : Ok(new TaskListDto(taskList.Id, taskList.Name, taskList.Items));
+            return taskList == null ? NotFound() : Ok(new TaskListDto(taskList.Id, taskList.Name, taskList.Entries));
         }
 
-        [HttpGet("withPendingItems")]
+        [HttpGet("withPendingEntries")]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IReadOnlyCollection<TaskListDto>> GetAllWithPendingItems()
+        public async Task<IReadOnlyCollection<TaskListDto>> GetAllWithPendingEntries()
         {
-            var lists = await taskListRepository.GetAllWithPendingItems();
-            return lists.Select(l => new TaskListDto(l.Id, l.Name, l.Items)).ToList();
+            var lists = await taskListRepository.GetAllWithPendingEntries();
+            return lists.Select(l => new TaskListDto(l.Id, l.Name, l.Entries)).ToList();
         }
     }
 }

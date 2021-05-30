@@ -88,10 +88,10 @@ namespace CAC.Baseline.Web.Data
             return all.FirstOrDefault(l => l.Id == id);
         }
 
-        public async Task<IReadOnlyCollection<TaskList>> GetAllWithPendingItems()
+        public async Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries()
         {
             var all = await GetAll();
-            return all.Where(l => l.Items.Any(i => !i.IsDone)).ToList();
+            return all.Where(l => l.Entries.Any(i => !i.IsDone)).ToList();
         }
 
         private string GetTaskListsFilePath() => Path.Join(GetStorageDir(), "task-lists.json");

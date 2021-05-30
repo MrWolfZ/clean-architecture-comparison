@@ -29,14 +29,14 @@ namespace CAC.Baseline.UnitTests.Infrastructure
         public async Task Upsert_GivenNonExistingTaskList_StoresTaskList()
         {
             var list = new TaskList(1, "test");
-            list.AddItem("task");
+            list.AddEntry("task");
 
             await Testee.Upsert(list);
 
             var storedList = await Testee.GetById(list.Id);
             Assert.IsNotNull(storedList);
             Assert.AreEqual(list.Name, storedList!.Name);
-            Assert.IsTrue(list.Items.SequenceEqual(storedList.Items));
+            Assert.IsTrue(list.Entries.SequenceEqual(storedList.Entries));
         }
 
         [Test]
@@ -46,7 +46,7 @@ namespace CAC.Baseline.UnitTests.Infrastructure
             await Testee.Upsert(existingList);
 
             var list = new TaskList(1, "test");
-            list.AddItem("task");
+            list.AddEntry("task");
 
             await Testee.Upsert(list);
 
@@ -56,7 +56,7 @@ namespace CAC.Baseline.UnitTests.Infrastructure
             var storedList = await Testee.GetById(list.Id);
             Assert.IsNotNull(storedList);
             Assert.AreEqual(list.Name, storedList!.Name);
-            Assert.IsTrue(list.Items.SequenceEqual(storedList.Items));
+            Assert.IsTrue(list.Entries.SequenceEqual(storedList.Entries));
         }
 
         [Test]
@@ -83,7 +83,7 @@ namespace CAC.Baseline.UnitTests.Infrastructure
             await Testee.Upsert(list1);
 
             var list2 = new TaskList(2, "test 2");
-            list2.AddItem("task");
+            list2.AddEntry("task");
             await Testee.Upsert(list2);
 
             var lists = await Testee.GetAll();
@@ -93,25 +93,25 @@ namespace CAC.Baseline.UnitTests.Infrastructure
         }
 
         [Test]
-        public async Task GetAllWithPendingItems_GivenStoredTaskLists_ReturnsCollectionOfListsWithPendingItems()
+        public async Task GetAllWithPendingEntries_GivenStoredTaskLists_ReturnsCollectionOfListsWithPendingEntries()
         {
             var list1 = new TaskList(1, "test 1");
-            list1.AddItem("task 1");
-            list1.AddItem("task 2");
-            list1.MarkItemAsDone(0);
+            list1.AddEntry("task 1");
+            list1.AddEntry("task 2");
+            list1.MarkEntryAsDone(0);
 
             var list2 = new TaskList(2, "test 2");
-            list2.AddItem("task 1");
+            list2.AddEntry("task 1");
 
             var list3 = new TaskList(3, "test 3");
-            list3.AddItem("task 1");
-            list3.MarkItemAsDone(0);
+            list3.AddEntry("task 1");
+            list3.MarkEntryAsDone(0);
 
             await Testee.Upsert(list1);
             await Testee.Upsert(list2);
             await Testee.Upsert(list3);
 
-            var lists = await Testee.GetAllWithPendingItems();
+            var lists = await Testee.GetAllWithPendingEntries();
             Assert.AreEqual(2, lists.Count);
             Assert.IsTrue(lists.Any(l => l.Name == list1.Name));
             Assert.IsTrue(lists.Any(l => l.Name == list2.Name));

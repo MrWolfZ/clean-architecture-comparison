@@ -8,9 +8,9 @@ namespace CAC.Baseline.Web.Model
     {
         public const int MaxTaskListNameLength = 64;
 
-        private readonly List<TaskListItem> items;
+        private readonly List<TaskListEntry> entries;
 
-        public TaskList(long id, string name, IReadOnlyCollection<TaskListItem>? items = null)
+        public TaskList(long id, string name, IReadOnlyCollection<TaskListEntry>? entries = null)
         {
             if (id <= 0)
             {
@@ -29,28 +29,28 @@ namespace CAC.Baseline.Web.Model
 
             Id = id;
             Name = name;
-            this.items = items?.ToList() ?? new List<TaskListItem>();
+            this.entries = entries?.ToList() ?? new List<TaskListEntry>();
         }
 
         public long Id { get; }
 
         public string Name { get; }
 
-        public IReadOnlyCollection<TaskListItem> Items => items;
+        public IReadOnlyCollection<TaskListEntry> Entries => entries;
 
-        public void AddItem(string description)
+        public void AddEntry(string description)
         {
-            items.Add(new TaskListItem(description, false));
+            entries.Add(new TaskListEntry(description, false));
         }
 
-        public void MarkItemAsDone(int itemIdx)
+        public void MarkEntryAsDone(int entryIdx)
         {
-            if (itemIdx < 0 || itemIdx >= Items.Count)
+            if (entryIdx < 0 || entryIdx >= Entries.Count)
             {
-                throw new ArgumentException($"item with index {itemIdx} does not exist", nameof(itemIdx));
+                throw new ArgumentException($"entry with index {entryIdx} does not exist", nameof(entryIdx));
             }
 
-            items[itemIdx].MarkAsDone();
+            entries[entryIdx].MarkAsDone();
         }
     }
 }
