@@ -37,7 +37,6 @@ Below you can find a list of the various styles we are comparing. We recommend y
 
 ## Open Points
 
-- add `DELETE` endpoint in `baseline`
 - add user entity in `baseline`
   - add `IsPremium` property
 - add ownership concept to task lists in `baseline`

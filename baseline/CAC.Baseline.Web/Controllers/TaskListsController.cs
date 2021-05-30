@@ -120,5 +120,13 @@ namespace CAC.Baseline.Web.Controllers
             var lists = await taskListRepository.GetAllWithPendingEntries();
             return lists.Select(l => new TaskListDto(l.Id, l.Name, l.Entries)).ToList();
         }
+
+        [HttpDelete("{taskListId:long}")]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        public async Task<IActionResult> DeleteById(long taskListId)
+        {
+            var wasDeleted = await taskListRepository.DeleteById(taskListId);
+            return wasDeleted ? NoContent() : NotFound();
+        }
     }
 }

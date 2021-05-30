@@ -15,5 +15,7 @@ namespace CAC.Baseline.Web.Data
         public Task<TaskList?> GetById(long id);
 
         public Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries();
+
+        public Task<bool> DeleteById(long id);
     }
 }

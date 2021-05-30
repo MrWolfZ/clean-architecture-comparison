@@ -116,5 +116,25 @@ namespace CAC.Baseline.UnitTests.Infrastructure
             Assert.IsTrue(lists.Any(l => l.Name == list1.Name));
             Assert.IsTrue(lists.Any(l => l.Name == list2.Name));
         }
+
+        [Test]
+        public async Task DeleteById_GivenNonExistingTaskList_ReturnsFalse()
+        {
+            var result = await Testee.DeleteById(1);
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public async Task DeleteById_GivenExistingTaskList_DeletesListAndReturnsTrue()
+        {
+            var list = new TaskList(1, "test");
+            await Testee.Upsert(list);
+
+            var result = await Testee.DeleteById(list.Id);
+            Assert.IsTrue(result);
+
+            var storedList = await Testee.GetById(list.Id);
+            Assert.IsNull(storedList);
+        }
     }
 }

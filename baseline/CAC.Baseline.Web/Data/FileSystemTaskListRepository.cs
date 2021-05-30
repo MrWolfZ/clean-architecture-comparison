@@ -94,6 +94,26 @@ namespace CAC.Baseline.Web.Data
             return all.Where(l => l.Entries.Any(i => !i.IsDone)).ToList();
         }
 
+        public async Task<bool> DeleteById(long id)
+        {
+            var filePath = GetTaskListsFilePath();
+            var all = await GetAll();
+
+            var newLists = new List<TaskList>(all);
+
+            if (newLists.All(l => l.Id != id))
+            {
+                return false;
+            }
+
+            var idx = newLists.FindIndex(l => l.Id == id);
+            newLists.RemoveAt(idx);
+
+            EnsureStorageDirExists();
+            await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(newLists, SerializerOptions));
+            return true;
+        }
+
         private string GetTaskListsFilePath() => Path.Join(GetStorageDir(), "task-lists.json");
 
         private string GetStorageDir()

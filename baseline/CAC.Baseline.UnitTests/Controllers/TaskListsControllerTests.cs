@@ -209,6 +209,32 @@ namespace CAC.Baseline.UnitTests.Controllers
             Assert.IsTrue(lists.Any(l => l.Name == taskList2.Name));
         }
 
+        [Test]
+        public async Task DeleteById_GivenExistingTaskListId_DeletesTaskList()
+        {
+            var taskList = new TaskList(1, "test");
+            taskList.AddEntry("task 1");
+            taskList.AddEntry("task 2");
+
+            await TaskListRepository.Upsert(taskList);
+
+            var response = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
+
+            await response.AssertStatusCode(HttpStatusCode.NoContent);
+            
+            var foundTaskList = await TaskListRepository.GetById(taskList.Id);
+            
+            Assert.IsNull(foundTaskList);
+        }
+
+        [Test]
+        public async Task DeleteById_GivenNonExistingTaskListId_ReturnsNotFound()
+        {
+            var response = await HttpClient.DeleteAsync("taskLists/1");
+
+            await response.AssertStatusCode(HttpStatusCode.NotFound);
+        }
+
         protected override void ConfigureWebHost(IWebHostBuilder webHost)
         {
             webHost.UseStartup<Startup>();

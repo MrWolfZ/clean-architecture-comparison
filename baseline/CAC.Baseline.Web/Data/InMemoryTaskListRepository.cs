@@ -39,5 +39,7 @@ namespace CAC.Baseline.Web.Data
             var all = await GetAll();
             return all.Where(l => l.Entries.Any(i => !i.IsDone)).ToList();
         }
+
+        public Task<bool> DeleteById(long id) => Task.FromResult(listsById.Remove(id, out _));
     }
 }
