@@ -46,6 +46,9 @@ ProjectSection(SolutionItems) = preProject
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "baseline", "baseline", "{EDD65E29-E690-4E23-A4D0-B9C1F1195668}"
+ProjectSection(SolutionItems) = preProject
+	baseline\README.md = baseline\README.md
+EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Baseline.Web", "baseline\CAC.Baseline.Web\CAC.Baseline.Web.csproj", "{15AFA9FA-EEC4-491D-984F-E9FB38C04856}"
 EndProject
