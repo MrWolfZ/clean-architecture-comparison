@@ -15,7 +15,7 @@ namespace CAC.Baseline.Web.Data
 
         public Task Upsert(TaskList taskList)
         {
-            if (listsById.Values.Any(l => l.Id != taskList.Id && l.Name == taskList.Name))
+            if (listsById.Values.Any(l => l.Id != taskList.Id && l.Name == taskList.Name && l.OwnerId == taskList.OwnerId))
             {
                 throw new ArgumentException($"a task list with name '{taskList.Name}' already exists");
             }
@@ -27,6 +27,8 @@ namespace CAC.Baseline.Web.Data
         public Task<long> GenerateId() => Task.FromResult(Interlocked.Increment(ref idCounter));
 
         public Task<IReadOnlyCollection<TaskList>> GetAll() => Task.FromResult<IReadOnlyCollection<TaskList>>(listsById.Values.ToList());
+        
+        public Task<int> GetNumberOfTaskListsByOwner(long ownerId) => Task.FromResult(listsById.Values.Count(l => l.OwnerId == ownerId));
 
         public Task<TaskList?> GetById(long id)
         {

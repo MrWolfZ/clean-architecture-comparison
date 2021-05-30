@@ -18,6 +18,9 @@ namespace CAC.Baseline.UnitTests.Controllers
     [IntegrationTest]
     public sealed class TaskListsControllerTests : ControllerTestBase
     {
+        private const long PremiumOwnerId = 1;
+        private const long NonPremiumOwnerId = 2;
+
         private ITaskListRepository TaskListRepository => Resolve<ITaskListRepository>();
 
         [Test]
@@ -25,7 +28,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             var expectedResponse = new CreateNewTaskListResponseDto(1);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test" });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test", OwnerId = PremiumOwnerId });
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
@@ -35,12 +38,20 @@ namespace CAC.Baseline.UnitTests.Controllers
             Assert.AreEqual(expectedResponse, responseContent);
         }
 
+        [Test]
+        public async Task CreateNewTaskList_GivenNonExistingOwnerId_ReturnsNotFound()
+        {
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test", OwnerId = 99 });
+
+            await response.AssertStatusCode(HttpStatusCode.NotFound);
+        }
+
         [TestCase("")]
         [TestCase(" ")]
         [TestCase(null)]
         public async Task CreateNewTaskList_GivenInvalidName_ReturnsBadRequest(string name)
         {
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwnerId });
 
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
         }
@@ -50,19 +61,55 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             var name = string.Join(string.Empty, Enumerable.Repeat("a", CreateNewTaskListRequestDto.MaxTaskListNameLength + 1));
             
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwnerId });
 
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
         }
 
         [Test]
-        public async Task CreateNewTaskList_GivenDuplicateName_ReturnsConflict()
+        public async Task CreateNewTaskList_GivenDuplicateNameForSameOwner_ReturnsConflict()
         {
-            var taskList = new TaskList(99, "test");
+            var taskList = new TaskList(99, PremiumOwnerId, "test");
 
             await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name, OwnerId = PremiumOwnerId });
+
+            await response.AssertStatusCode(HttpStatusCode.Conflict);
+        }
+
+        [Test]
+        public async Task CreateNewTaskList_GivenDuplicateNameForDifferentOwner_ReturnsSuccess()
+        {
+            var taskList = new TaskList(99, PremiumOwnerId, "test");
+
+            await TaskListRepository.Upsert(taskList);
+
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name, OwnerId = PremiumOwnerId + 1 });
+
+            await response.AssertStatusCode(HttpStatusCode.OK);
+        }
+
+        [Test]
+        public async Task CreateNewTaskList_GivenPremiumOwnerWithExistingTaskList_ReturnsSuccess()
+        {
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
+
+            await TaskListRepository.Upsert(taskList);
+
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = PremiumOwnerId });
+
+            await response.AssertStatusCode(HttpStatusCode.OK);
+        }
+
+        [Test]
+        public async Task CreateNewTaskList_GivenNonPremiumOwnerWithExistingTaskList_ReturnsConflict()
+        {
+            var taskList = new TaskList(1, NonPremiumOwnerId, "test");
+
+            await TaskListRepository.Upsert(taskList);
+
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = NonPremiumOwnerId });
 
             await response.AssertStatusCode(HttpStatusCode.Conflict);
         }
@@ -70,7 +117,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         [Test]
         public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_ReturnsNoContent()
         {
-            var taskList = new TaskList(1, "test");
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
 
             await TaskListRepository.Upsert(taskList);
 
@@ -84,7 +131,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         [TestCase(null)]
         public async Task AddTaskToList_GivenExistingTaskListIdAndInvalidDescription_ReturnsBadRequest(string description)
         {
-            var taskList = new TaskList(1, "test");
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
 
             await TaskListRepository.Upsert(taskList);
 
@@ -96,7 +143,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         [Test]
         public async Task AddTaskToList_GivenExistingTaskListIdAndDescriptionWithTooManyCharacters_ReturnsBadRequest()
         {
-            var taskList = new TaskList(1, "test");
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
             var description = string.Join(string.Empty, Enumerable.Repeat("a", AddTaskToListRequestDto.MaxTaskDescriptionLength + 1));
 
             await TaskListRepository.Upsert(taskList);
@@ -117,7 +164,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         [Test]
         public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryIndex_ReturnsNoContent()
         {
-            var taskList = new TaskList(1, "test");
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
             taskList.AddEntry("task 1");
             taskList.AddEntry("task 2");
 
@@ -132,7 +179,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         [Test]
         public async Task MarkTaskAsDone_GivenExistingTaskListIdAndNonExistingEntryIndex_ReturnsBadRequest()
         {
-            var taskList = new TaskList(1, "test");
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
             taskList.AddEntry("task 1");
             taskList.AddEntry("task 2");
 
@@ -156,11 +203,11 @@ namespace CAC.Baseline.UnitTests.Controllers
         [Test]
         public async Task GetAll_GivenExistingTaskLists_ReturnsTaskLists()
         {
-            var taskList1 = new TaskList(1, "test 1");
+            var taskList1 = new TaskList(1, PremiumOwnerId, "test 1");
             taskList1.AddEntry("task 1");
             taskList1.AddEntry("task 2");
 
-            var taskList2 = new TaskList(2, "test 2");
+            var taskList2 = new TaskList(2, PremiumOwnerId, "test 2");
 
             await TaskListRepository.Upsert(taskList1);
             await TaskListRepository.Upsert(taskList2);
@@ -180,7 +227,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         [Test]
         public async Task GetById_GivenExistingTaskListId_ReturnsTaskList()
         {
-            var taskList = new TaskList(1, "test");
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
             taskList.AddEntry("task 1");
             taskList.AddEntry("task 2");
 
@@ -208,15 +255,15 @@ namespace CAC.Baseline.UnitTests.Controllers
         [Test]
         public async Task GetAllWithPendingEntries_GivenExistingTaskLists_ReturnsTaskListsWithPendingEntries()
         {
-            var taskList1 = new TaskList(1, "test 1");
+            var taskList1 = new TaskList(1, PremiumOwnerId, "test 1");
             taskList1.AddEntry("task 1");
             taskList1.AddEntry("task 2");
             taskList1.MarkEntryAsDone(0);
 
-            var taskList2 = new TaskList(2, "test 2");
+            var taskList2 = new TaskList(2, PremiumOwnerId, "test 2");
             taskList2.AddEntry("task 1");
             
-            var taskList3 = new TaskList(3, "test 3");
+            var taskList3 = new TaskList(3, PremiumOwnerId, "test 3");
             taskList3.AddEntry("task 1");
             taskList3.MarkEntryAsDone(0);
 
@@ -239,7 +286,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         [Test]
         public async Task DeleteById_GivenExistingTaskListId_DeletesTaskList()
         {
-            var taskList = new TaskList(1, "test");
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
             taskList.AddEntry("task 1");
             taskList.AddEntry("task 2");
 

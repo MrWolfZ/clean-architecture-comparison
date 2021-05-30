@@ -12,7 +12,7 @@ using Microsoft.OpenApi.Models;
 
 namespace CAC.Baseline.Web
 {
-    public class Startup
+    public sealed class Startup
     {
         private const string ApiVersion = "v1";
 
@@ -40,6 +40,7 @@ namespace CAC.Baseline.Web
             services.ConfigureOptions<FileSystemStoragePersistenceOptionsDevelopmentConfiguration>();
 
             services.AddTransient<ITaskListRepository, FileSystemTaskListRepository>();
+            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
         }
 
         public void Configure(IApplicationBuilder app)

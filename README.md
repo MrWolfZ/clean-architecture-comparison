@@ -37,10 +37,7 @@ Below you can find a list of the various styles we are comparing. We recommend y
 
 ## Open Points
 
-- add user entity in `baseline`
-  - add `IsPremium` property
-- add ownership concept to task lists in `baseline`
-  - enforce limit on number of task lists for non-premium users
+- enforce limit on number of entries in list for non-premium users
 - add service for gathering task list statistics in `baseline`
 - adjust `basic` based on `baseline`
   - also remove entity base classes, typed IDs etc.

@@ -47,7 +47,7 @@ namespace CAC.Baseline.Web.Data
 
             var newLists = new List<TaskList>(all);
 
-            if (newLists.Find(l => l.Id != taskList.Id && l.Name == taskList.Name) != null)
+            if (newLists.Find(l => l.Id != taskList.Id && l.Name == taskList.Name && l.OwnerId == taskList.OwnerId) != null)
             {
                 throw new ArgumentException($"a task list with name '{taskList.Name}' already exists");
             }
@@ -80,6 +80,12 @@ namespace CAC.Baseline.Web.Data
 
             var fileContent = await File.ReadAllTextAsync(filePath);
             return JsonSerializer.Deserialize<List<TaskList>>(fileContent, SerializerOptions)!;
+        }
+
+        public async Task<int> GetNumberOfTaskListsByOwner(long ownerId)
+        {
+            var all = await GetAll();
+            return all.Count(l => l.OwnerId == ownerId);
         }
 
         public async Task<TaskList?> GetById(long id)

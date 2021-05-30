@@ -6,6 +6,9 @@ namespace CAC.Baseline.Web.Controllers
     {
         public const int MaxTaskListNameLength = 64;
         
+        [Required]
+        public long OwnerId { get; init; }
+        
         /// <example>my task list</example>
         [Required]
         [MaxLength(MaxTaskListNameLength)]

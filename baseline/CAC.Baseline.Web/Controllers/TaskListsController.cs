@@ -16,18 +16,39 @@ namespace CAC.Baseline.Web.Controllers
     {
         private readonly ILogger<TaskListsController> logger;
         private readonly ITaskListRepository taskListRepository;
+        private readonly IUserRepository userRepository;
 
-        public TaskListsController(ITaskListRepository taskListRepository, ILogger<TaskListsController> logger)
+        public TaskListsController(ITaskListRepository taskListRepository,
+                                   IUserRepository userRepository,
+                                   ILogger<TaskListsController> logger)
         {
             this.taskListRepository = taskListRepository;
             this.logger = logger;
+            this.userRepository = userRepository;
         }
 
         [HttpPost]
         public async Task<ActionResult<CreateNewTaskListResponseDto>> CreateNewTaskList(CreateNewTaskListRequestDto request)
         {
+            var user = await userRepository.GetById(request.OwnerId);
+
+            if (user == null)
+            {
+                return NotFound($"user {request.OwnerId} does not exist");
+            }
+
+            if (!user.IsPremium)
+            {
+                var numberOfListsOwnedByOwner = await taskListRepository.GetNumberOfTaskListsByOwner(request.OwnerId);
+
+                if (numberOfListsOwnedByOwner > 0)
+                {
+                    return Conflict($"non-premium user {request.OwnerId} already owns a task list");
+                }
+            }
+
             var id = await taskListRepository.GenerateId();
-            var taskList = new TaskList(id, request.Name);
+            var taskList = new TaskList(id, request.OwnerId, request.Name);
 
             try
             {
@@ -52,7 +73,7 @@ namespace CAC.Baseline.Web.Controllers
 
             if (taskList == null)
             {
-                return NotFound();
+                return NotFound($"task list {taskListId} does not exist");
             }
 
             taskList.AddEntry(request.TaskDescription);
@@ -72,7 +93,7 @@ namespace CAC.Baseline.Web.Controllers
 
             if (taskList == null)
             {
-                return NotFound();
+                return NotFound($"task list {taskListId} does not exist");
             }
 
             if (entryIdx < 0 || entryIdx >= taskList.Entries.Count)
@@ -102,7 +123,7 @@ namespace CAC.Baseline.Web.Controllers
         public async Task<ActionResult<TaskListDto>> GetById(long taskListId)
         {
             var taskList = await taskListRepository.GetById(taskListId);
-            return taskList == null ? NotFound() : Ok(new TaskListDto(taskList.Id, taskList.Name, taskList.Entries));
+            return taskList == null ? NotFound($"task list {taskListId} does not exist") : Ok(new TaskListDto(taskList.Id, taskList.Name, taskList.Entries));
         }
 
         [HttpGet("withPendingEntries")]
@@ -118,7 +139,7 @@ namespace CAC.Baseline.Web.Controllers
         public async Task<IActionResult> DeleteById(long taskListId)
         {
             var wasDeleted = await taskListRepository.DeleteById(taskListId);
-            return wasDeleted ? NoContent() : NotFound();
+            return wasDeleted ? NoContent() : NotFound($"task list {taskListId} does not exist");
         }
     }
 }

@@ -8,11 +8,16 @@ namespace CAC.Baseline.Web.Model
     {
         private readonly List<TaskListEntry> entries;
 
-        public TaskList(long id, string name, IReadOnlyCollection<TaskListEntry>? entries = null)
+        public TaskList(long id, long ownerId, string name, IReadOnlyCollection<TaskListEntry>? entries = null)
         {
             if (id <= 0)
             {
                 throw new ArgumentException("id must be a positive integer", nameof(id));
+            }
+            
+            if (ownerId <= 0)
+            {
+                throw new ArgumentException("owner id must be a positive integer", nameof(ownerId));
             }
 
             if (string.IsNullOrWhiteSpace(name))
@@ -21,11 +26,14 @@ namespace CAC.Baseline.Web.Model
             }
 
             Id = id;
+            OwnerId = ownerId;
             Name = name;
             this.entries = entries?.ToList() ?? new List<TaskListEntry>();
         }
 
         public long Id { get; }
+
+        public long OwnerId { get; }
 
         public string Name { get; }
 
