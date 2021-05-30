@@ -4,8 +4,11 @@ namespace CAC.Baseline.Web.Controllers
 {
     public sealed record CreateNewTaskListRequestDto
     {
+        public const int MaxTaskListNameLength = 64;
+        
         /// <example>my task list</example>
         [Required]
+        [MaxLength(MaxTaskListNameLength)]
         public string Name { get; init; } = string.Empty;
     }
 }

@@ -36,13 +36,6 @@ namespace CAC.Baseline.UnitTests.Model
         }
 
         [Test]
-        public void Constructor_GivenNameWithTooManyCharacters_ThrowsArgumentException()
-        {
-            var name = string.Join(string.Empty, Enumerable.Repeat("a", TaskList.MaxTaskListNameLength + 1));
-            Assert.Throws<ArgumentException>(() => new TaskList(1, name));
-        }
-
-        [Test]
         public void AddEntry_GivenValidDescription_AddsPendingEntryToList()
         {
             var list = new TaskList(1, "test list");
@@ -71,7 +64,7 @@ namespace CAC.Baseline.UnitTests.Model
         [TestCase("")]
         [TestCase(" ")]
         [TestCase(null)]
-        public void AddEntry_GivenEmptyDescription_ThrowsArgumentException(string description)
+        public void AddEntry_GivenInvalidDescription_ThrowsArgumentException(string description)
         {
             var list = new TaskList(1, "test list");
 

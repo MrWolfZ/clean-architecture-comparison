@@ -6,8 +6,6 @@ namespace CAC.Baseline.Web.Model
 {
     public sealed class TaskList
     {
-        public const int MaxTaskListNameLength = 64;
-
         private readonly List<TaskListEntry> entries;
 
         public TaskList(long id, string name, IReadOnlyCollection<TaskListEntry>? entries = null)
@@ -20,11 +18,6 @@ namespace CAC.Baseline.Web.Model
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentException("name must be a non-empty non-whitespace string", nameof(name));
-            }
-
-            if (name.Length > MaxTaskListNameLength)
-            {
-                throw new ArgumentException($"task list name must not be longer than {MaxTaskListNameLength} characters, but it was {name.Length} characters long", nameof(name));
             }
 
             Id = id;

@@ -26,10 +26,11 @@ namespace CAC.Baseline.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<CreateNewTaskListResponseDto>> CreateNewTaskList(CreateNewTaskListRequestDto request)
         {
+            var id = await taskListRepository.GenerateId();
+            var taskList = new TaskList(id, request.Name);
+
             try
             {
-                var id = await taskListRepository.GenerateId();
-                var taskList = new TaskList(id, request.Name);
                 await taskListRepository.Upsert(taskList);
 
                 logger.LogDebug("created new task list with name '{Name}' and id '{Id}'...", request.Name, id);
@@ -38,7 +39,7 @@ namespace CAC.Baseline.Web.Controllers
             }
             catch (ArgumentException e)
             {
-                return BadRequest(e.Message);
+                return Conflict(e.Message);
             }
         }
 
@@ -47,26 +48,19 @@ namespace CAC.Baseline.Web.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> AddTaskToList(long taskListId, AddTaskToListRequestDto request)
         {
-            try
+            var taskList = await taskListRepository.GetById(taskListId);
+
+            if (taskList == null)
             {
-                var taskList = await taskListRepository.GetById(taskListId);
-
-                if (taskList == null)
-                {
-                    return NotFound();
-                }
-
-                taskList.AddEntry(request.TaskDescription);
-                await taskListRepository.Upsert(taskList);
-
-                logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListName}'", request.TaskDescription, taskList.Name);
-
-                return NoContent();
+                return NotFound();
             }
-            catch (ArgumentException e)
-            {
-                return BadRequest(e.Message);
-            }
+
+            taskList.AddEntry(request.TaskDescription);
+            await taskListRepository.Upsert(taskList);
+
+            logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListName}'", request.TaskDescription, taskList.Name);
+
+            return NoContent();
         }
 
         [HttpPut("{taskListId:long}/tasks/{entryIdx:int}/isDone")]
@@ -74,27 +68,25 @@ namespace CAC.Baseline.Web.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> MarkTaskAsDone(long taskListId, int entryIdx)
         {
-            try
+            var taskList = await taskListRepository.GetById(taskListId);
+
+            if (taskList == null)
             {
-                var taskList = await taskListRepository.GetById(taskListId);
-
-                if (taskList == null)
-                {
-                    return NotFound();
-                }
-
-                taskList.MarkEntryAsDone(entryIdx);
-
-                await taskListRepository.Upsert(taskList);
-
-                logger.LogDebug("marked task list entry '{EntryIdx}' in task list '{TaskListName}' as done", entryIdx, taskList.Name);
-
-                return NoContent();
+                return NotFound();
             }
-            catch (ArgumentException e)
+
+            if (entryIdx < 0 || entryIdx >= taskList.Entries.Count)
             {
-                return BadRequest(e.Message);
+                return BadRequest($"entry with index {entryIdx} does not exist");
             }
+
+            taskList.MarkEntryAsDone(entryIdx);
+
+            await taskListRepository.Upsert(taskList);
+
+            logger.LogDebug("marked task list entry '{EntryIdx}' in task list '{TaskListName}' as done", entryIdx, taskList.Name);
+
+            return NoContent();
         }
 
         [HttpGet]

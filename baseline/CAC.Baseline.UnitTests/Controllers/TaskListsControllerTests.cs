@@ -35,16 +35,28 @@ namespace CAC.Baseline.UnitTests.Controllers
             Assert.AreEqual(expectedResponse, responseContent);
         }
 
-        [Test]
-        public async Task CreateNewTaskList_GivenInvalidName_ReturnsBadRequest()
+        [TestCase("")]
+        [TestCase(" ")]
+        [TestCase(null)]
+        public async Task CreateNewTaskList_GivenInvalidName_ReturnsBadRequest(string name)
         {
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = string.Empty });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name });
 
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
         }
 
         [Test]
-        public async Task CreateNewTaskList_GivenDuplicateName_ReturnsBadRequest()
+        public async Task CreateNewTaskList_GivenNameWithTooManyCharacters_ReturnsBadRequest()
+        {
+            var name = string.Join(string.Empty, Enumerable.Repeat("a", CreateNewTaskListRequestDto.MaxTaskListNameLength + 1));
+            
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name });
+
+            await response.AssertStatusCode(HttpStatusCode.BadRequest);
+        }
+
+        [Test]
+        public async Task CreateNewTaskList_GivenDuplicateName_ReturnsConflict()
         {
             var taskList = new TaskList(99, "test");
 
@@ -52,7 +64,7 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name });
 
-            await response.AssertStatusCode(HttpStatusCode.BadRequest);
+            await response.AssertStatusCode(HttpStatusCode.Conflict);
         }
 
         [Test]
@@ -67,14 +79,29 @@ namespace CAC.Baseline.UnitTests.Controllers
             await response.AssertStatusCode(HttpStatusCode.NoContent);
         }
 
-        [Test]
-        public async Task AddTaskToList_GivenExistingTaskListIdAndInvalidDescription_ReturnsBadRequest()
+        [TestCase("")]
+        [TestCase(" ")]
+        [TestCase(null)]
+        public async Task AddTaskToList_GivenExistingTaskListIdAndInvalidDescription_ReturnsBadRequest(string description)
         {
             var taskList = new TaskList(1, "test");
 
             await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = string.Empty });
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = description });
+
+            await response.AssertStatusCode(HttpStatusCode.BadRequest);
+        }
+
+        [Test]
+        public async Task AddTaskToList_GivenExistingTaskListIdAndDescriptionWithTooManyCharacters_ReturnsBadRequest()
+        {
+            var taskList = new TaskList(1, "test");
+            var description = string.Join(string.Empty, Enumerable.Repeat("a", AddTaskToListRequestDto.MaxTaskDescriptionLength + 1));
+
+            await TaskListRepository.Upsert(taskList);
+
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = description });
 
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
         }
