@@ -37,7 +37,6 @@ Below you can find a list of the various styles we are comparing. We recommend y
 
 ## Open Points
 
-- add service for gathering task list statistics in `baseline`
 - adjust `basic` based on `baseline`
   - also remove entity base classes, typed IDs etc.
   - use constructors instead of factory methods

@@ -8,6 +8,7 @@ using CAC.Baseline.Web;
 using CAC.Baseline.Web.Controllers;
 using CAC.Baseline.Web.Data;
 using CAC.Baseline.Web.Model;
+using CAC.Baseline.Web.Services;
 using CAC.Core.TestUtilities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,8 @@ namespace CAC.Baseline.UnitTests.Controllers
         private const long NonPremiumOwnerId = 2;
 
         private ITaskListRepository TaskListRepository => Resolve<ITaskListRepository>();
+
+        private ITaskListStatisticsService StatisticsService => Resolve<ITaskListStatisticsService>();
 
         [Test]
         public async Task CreateNewTaskList_GivenValidName_ReturnsTaskListId()
@@ -60,7 +63,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task CreateNewTaskList_GivenNameWithTooManyCharacters_ReturnsBadRequest()
         {
             var name = string.Join(string.Empty, Enumerable.Repeat("a", CreateNewTaskListRequestDto.MaxTaskListNameLength + 1));
-            
+
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwnerId });
 
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
@@ -112,6 +115,15 @@ namespace CAC.Baseline.UnitTests.Controllers
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = NonPremiumOwnerId });
 
             await response.AssertStatusCode(HttpStatusCode.Conflict);
+        }
+
+        [Test]
+        public async Task CreateNewTaskList_GivenSuccess_UpdatesStatistics()
+        {
+            await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test", OwnerId = PremiumOwnerId });
+
+            var statistics = await Resolve<ITaskListStatisticsService>().GetStatistics();
+            Assert.AreEqual(1, statistics.NumberOfTaskListsCreated);
         }
 
         [Test]
@@ -195,6 +207,19 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
+        public async Task AddTaskToList_GivenSuccess_UpdatesStatistics()
+        {
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
+
+            await TaskListRepository.Upsert(taskList);
+
+            await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" });
+
+            var statistics = await Resolve<ITaskListStatisticsService>().GetStatistics();
+            Assert.AreEqual(1, statistics.NumberOfTimesTaskListsWereEdited);
+        }
+
+        [Test]
         public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryIndex_ReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
@@ -231,6 +256,21 @@ namespace CAC.Baseline.UnitTests.Controllers
             var response = await HttpClient.PutAsync("taskLists/1/tasks/1/isDone", content);
 
             await response.AssertStatusCode(HttpStatusCode.NotFound);
+        }
+
+        [Test]
+        public async Task MarkTaskAsDone_GivenSuccess_UpdatesStatistics()
+        {
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
+            taskList.AddEntry("task");
+
+            await TaskListRepository.Upsert(taskList);
+
+            using var content = new StringContent(string.Empty);
+            await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/0/isDone", content);
+
+            var statistics = await Resolve<ITaskListStatisticsService>().GetStatistics();
+            Assert.AreEqual(1, statistics.NumberOfTimesTaskListsWereEdited);
         }
 
         [Test]
@@ -295,7 +335,7 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             var taskList2 = new TaskList(2, PremiumOwnerId, "test 2");
             taskList2.AddEntry("task 1");
-            
+
             var taskList3 = new TaskList(3, PremiumOwnerId, "test 3");
             taskList3.AddEntry("task 1");
             taskList3.MarkEntryAsDone(0);
@@ -328,9 +368,9 @@ namespace CAC.Baseline.UnitTests.Controllers
             var response = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 
             await response.AssertStatusCode(HttpStatusCode.NoContent);
-            
+
             var foundTaskList = await TaskListRepository.GetById(taskList.Id);
-            
+
             Assert.IsNull(foundTaskList);
         }
 
@@ -340,6 +380,19 @@ namespace CAC.Baseline.UnitTests.Controllers
             var response = await HttpClient.DeleteAsync("taskLists/1");
 
             await response.AssertStatusCode(HttpStatusCode.NotFound);
+        }
+
+        [Test]
+        public async Task DeleteById_GivenSuccess_UpdatesStatistics()
+        {
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
+
+            await TaskListRepository.Upsert(taskList);
+
+            await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
+
+            var statistics = await StatisticsService.GetStatistics();
+            Assert.AreEqual(1, statistics.NumberOfTaskListsDeleted);
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder webHost)

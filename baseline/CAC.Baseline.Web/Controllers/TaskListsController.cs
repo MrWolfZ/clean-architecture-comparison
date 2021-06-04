@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using CAC.Baseline.Web.Data;
 using CAC.Baseline.Web.Model;
+using CAC.Baseline.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -15,17 +16,20 @@ namespace CAC.Baseline.Web.Controllers
     public class TaskListsController : ControllerBase
     {
         private const int NonPremiumUserTaskEntryCountLimit = 5;
-        
+
         private readonly ILogger<TaskListsController> logger;
+        private readonly ITaskListStatisticsService statisticsService;
         private readonly ITaskListRepository taskListRepository;
         private readonly IUserRepository userRepository;
 
         public TaskListsController(ITaskListRepository taskListRepository,
                                    IUserRepository userRepository,
+                                   ITaskListStatisticsService statisticsService,
                                    ILogger<TaskListsController> logger)
         {
             this.taskListRepository = taskListRepository;
             this.logger = logger;
+            this.statisticsService = statisticsService;
             this.userRepository = userRepository;
         }
 
@@ -56,7 +60,9 @@ namespace CAC.Baseline.Web.Controllers
             {
                 await taskListRepository.Upsert(taskList);
 
-                logger.LogDebug("created new task list with name '{Name}' and id '{Id}'...", request.Name, id);
+                logger.LogDebug("created new task list with name '{Name}' and id '{TaskListId}' for owner '{OwnerId}'...", request.Name, id, taskList.OwnerId);
+
+                await statisticsService.OnTaskListCreated(taskList);
 
                 return Ok(new CreateNewTaskListResponseDto(id));
             }
@@ -93,7 +99,9 @@ namespace CAC.Baseline.Web.Controllers
             taskList.AddEntry(request.TaskDescription);
             await taskListRepository.Upsert(taskList);
 
-            logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListName}'", request.TaskDescription, taskList.Name);
+            logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", request.TaskDescription, taskList.Id);
+
+            await statisticsService.OnTaskAddedToList(taskList, taskList.Entries.Count - 1);
 
             return NoContent();
         }
@@ -120,6 +128,8 @@ namespace CAC.Baseline.Web.Controllers
             await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("marked task list entry '{EntryIdx}' in task list '{TaskListName}' as done", entryIdx, taskList.Name);
+
+            await statisticsService.OnTaskMarkedAsDone(taskList, entryIdx);
 
             return NoContent();
         }
@@ -153,7 +163,17 @@ namespace CAC.Baseline.Web.Controllers
         public async Task<IActionResult> DeleteById(long taskListId)
         {
             var wasDeleted = await taskListRepository.DeleteById(taskListId);
-            return wasDeleted ? NoContent() : NotFound($"task list {taskListId} does not exist");
+
+            if (!wasDeleted)
+            {
+                return NotFound($"task list {taskListId} does not exist");
+            }
+
+            logger.LogDebug("deleted task list '{TaskListId}'", taskListId);
+
+            await statisticsService.OnTaskListDeleted(taskListId);
+            
+            return NoContent();
         }
     }
 }
