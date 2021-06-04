@@ -37,9 +37,7 @@ Below you can find a list of the various styles we are comparing. We recommend y
 
 ## Open Points
 
-- adjust `basic` based on `baseline`
-  - also remove entity base classes, typed IDs etc.
-  - use constructors instead of factory methods
+- add `README` for `basic`
 - adjust `ddd` based on `basic`
 - adjust `cqs` based on `ddd`
 - rename `TaskListsController` to `TaskListsApi`
