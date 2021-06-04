@@ -12,6 +12,7 @@ using CAC.Baseline.Web.Services;
 using CAC.Core.TestUtilities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NUnit.Framework;
 
 namespace CAC.Baseline.UnitTests.Controllers
@@ -27,11 +28,12 @@ namespace CAC.Baseline.UnitTests.Controllers
         private ITaskListStatisticsService StatisticsService => Resolve<ITaskListStatisticsService>();
 
         [Test]
-        public async Task CreateNewTaskList_GivenValidName_ReturnsTaskListId()
+        public async Task CreateNewTaskList_GivenValidName_StoresTaskListAndReturnsTaskListId()
         {
             var expectedResponse = new CreateNewTaskListResponseDto(1);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test", OwnerId = PremiumOwnerId });
+            const string test = "test";
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = test, OwnerId = PremiumOwnerId });
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
@@ -39,6 +41,10 @@ namespace CAC.Baseline.UnitTests.Controllers
             var responseContent = Deserialize<CreateNewTaskListResponseDto>(responseBody);
 
             Assert.AreEqual(expectedResponse, responseContent);
+
+            var storedTaskList = await TaskListRepository.GetById(responseContent!.Id);
+
+            Assert.AreEqual(test, storedTaskList?.Name);
         }
 
         [Test]
@@ -127,15 +133,20 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
-        public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_ReturnsNoContent()
+        public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_UpdatesTaskListAndReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
 
             await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" });
+            const string taskDescription = "task";
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = taskDescription });
 
             await response.AssertStatusCode(HttpStatusCode.NoContent);
+
+            var storedTaskList = await TaskListRepository.GetById(taskList.Id);
+
+            Assert.AreEqual(taskDescription, storedTaskList?.Entries.Single().Description);
         }
 
         [TestCase("")]
@@ -220,7 +231,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
-        public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryIndex_ReturnsNoContent()
+        public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryIndex_UpdatesTaskListAndReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
             taskList.AddEntry("task 1");
@@ -232,6 +243,10 @@ namespace CAC.Baseline.UnitTests.Controllers
             var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/1/isDone", content);
 
             await response.AssertStatusCode(HttpStatusCode.NoContent);
+
+            var storedTaskList = await TaskListRepository.GetById(taskList.Id);
+
+            Assert.IsTrue(storedTaskList?.Entries.ElementAt(1).IsDone);
         }
 
         [Test]
@@ -357,7 +372,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
-        public async Task DeleteById_GivenExistingTaskListId_DeletesTaskList()
+        public async Task DeleteById_GivenExistingTaskListId_DeletesTaskListAndReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
             taskList.AddEntry("task 1");
@@ -402,7 +417,7 @@ namespace CAC.Baseline.UnitTests.Controllers
 
         protected override void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<ITaskListRepository, InMemoryTaskListRepository>();
+            services.Replace(ServiceDescriptor.Singleton<ITaskListRepository, InMemoryTaskListRepository>());
         }
     }
 }
