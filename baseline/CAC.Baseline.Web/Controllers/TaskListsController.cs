@@ -14,6 +14,8 @@ namespace CAC.Baseline.Web.Controllers
     [Route("taskLists")]
     public class TaskListsController : ControllerBase
     {
+        private const int NonPremiumUserTaskEntryCountLimit = 5;
+        
         private readonly ILogger<TaskListsController> logger;
         private readonly ITaskListRepository taskListRepository;
         private readonly IUserRepository userRepository;
@@ -74,6 +76,18 @@ namespace CAC.Baseline.Web.Controllers
             if (taskList == null)
             {
                 return NotFound($"task list {taskListId} does not exist");
+            }
+
+            var user = await userRepository.GetById(taskList.OwnerId);
+
+            if (user == null)
+            {
+                return Conflict($"user {taskList.OwnerId} does not exist");
+            }
+
+            if (!user.IsPremium && taskList.Entries.Count >= NonPremiumUserTaskEntryCountLimit)
+            {
+                return Conflict($"non-premium user {taskList.OwnerId} can only have at most {NonPremiumUserTaskEntryCountLimit} tasks in their list");
             }
 
             taskList.AddEntry(request.TaskDescription);

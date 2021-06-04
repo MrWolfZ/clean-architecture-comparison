@@ -162,6 +162,39 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
+        public async Task AddTaskToList_GivenTaskListWithLessThanFiveEntriesAndNonPremiumOwner_ReturnsNoContent()
+        {
+            var taskList = new TaskList(1, NonPremiumOwnerId, "test");
+            taskList.AddEntry("task 1");
+            taskList.AddEntry("task 2");
+            taskList.AddEntry("task 3");
+            taskList.AddEntry("task 4");
+
+            await TaskListRepository.Upsert(taskList);
+
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" });
+
+            await response.AssertStatusCode(HttpStatusCode.NoContent);
+        }
+
+        [Test]
+        public async Task AddTaskToList_GivenTaskListWithFiveEntriesAndNonPremiumOwner_ReturnsConflict()
+        {
+            var taskList = new TaskList(1, NonPremiumOwnerId, "test");
+            taskList.AddEntry("task 1");
+            taskList.AddEntry("task 2");
+            taskList.AddEntry("task 3");
+            taskList.AddEntry("task 4");
+            taskList.AddEntry("task 5");
+
+            await TaskListRepository.Upsert(taskList);
+
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" });
+
+            await response.AssertStatusCode(HttpStatusCode.Conflict);
+        }
+
+        [Test]
         public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryIndex_ReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");

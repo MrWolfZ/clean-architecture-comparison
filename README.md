@@ -28,7 +28,7 @@ Each compared style is a standalone application that has some common cross-cutti
 Below you can find a list of the various styles we are comparing. We recommend you to go through the list in order since some styles re-use concepts from other styles. We also encourage you to clone the repository and look at the code in your favorite IDE for easier navigation.
 
 - (work-in-progress) [basic](basic#readme): in this style we simply split the baseline into layers according to clean architecture (i.e. _domain_, _application_, _infrastructure_, and _web_)
-- (work-in-progress)  [domain-driven design](ddd#readme) (_DDD_): an extension of the _basic_ style that uses concepts of [domain-driven design](https://en.wikipedia.org/wiki/Domain-driven_design) (i.e. aggregates, entities, domain events etc.)
+- (work-in-progress) [domain-driven design](ddd#readme) (_DDD_): an extension of the _basic_ style that uses concepts of [domain-driven design](https://en.wikipedia.org/wiki/Domain-driven_design) (i.e. aggregates, entities, domain events etc.)
 - (work-in-progress) [command query separation](cqs#readme) (_CQS_): an extension of the _DDD_ style that models operations as _commands_ and _queries_
 - (work-in-progress) [mediator](mediatr#readme): a variant of _CQS_ that uses the [mediator pattern](https://en.wikipedia.org/wiki/Mediator_pattern) for handling _commands_, _queries_, and _domain events_ (using the [MediatR](https://github.com/jbogard/MediatR) library)
 - (work-in-progress) [decorator](decorator#readme): a variant of _CQS_ that uses the [decorator pattern](https://en.wikipedia.org/wiki/Decorator_pattern) for handling cross-cutting concerns (e.g. logging and validation) of our _command_ and _query_ handlers
@@ -37,7 +37,6 @@ Below you can find a list of the various styles we are comparing. We recommend y
 
 ## Open Points
 
-- enforce limit on number of entries in list for non-premium users
 - add service for gathering task list statistics in `baseline`
 - adjust `basic` based on `baseline`
   - also remove entity base classes, typed IDs etc.
