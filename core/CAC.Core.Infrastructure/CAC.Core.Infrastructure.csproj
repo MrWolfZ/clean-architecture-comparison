@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\CAC.Core.Domain\CAC.Core.Domain.csproj" />
+        <ProjectReference Include="..\CAC.Core.Application\CAC.Core.Application.csproj" />
     </ItemGroup>
 
 </Project>

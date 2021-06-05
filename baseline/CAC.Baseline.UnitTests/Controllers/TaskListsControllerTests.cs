@@ -188,10 +188,10 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task AddTaskToList_GivenTaskListWithLessThanFiveEntriesAndNonPremiumOwner_ReturnsNoContent()
         {
             var taskList = new TaskList(1, NonPremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
-            taskList.AddEntry("task 3");
-            taskList.AddEntry("task 4");
+            taskList.Entries.Add(new TaskListEntry("task 1", false));
+            taskList.Entries.Add(new TaskListEntry("task 2", false));
+            taskList.Entries.Add(new TaskListEntry("task 3", false));
+            taskList.Entries.Add(new TaskListEntry("task 4", false));
 
             await TaskListRepository.Upsert(taskList);
 
@@ -204,11 +204,11 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task AddTaskToList_GivenTaskListWithFiveEntriesAndNonPremiumOwner_ReturnsConflict()
         {
             var taskList = new TaskList(1, NonPremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
-            taskList.AddEntry("task 3");
-            taskList.AddEntry("task 4");
-            taskList.AddEntry("task 5");
+            taskList.Entries.Add(new TaskListEntry("task 1", false));
+            taskList.Entries.Add(new TaskListEntry("task 2", false));
+            taskList.Entries.Add(new TaskListEntry("task 3", false));
+            taskList.Entries.Add(new TaskListEntry("task 4", false));
+            taskList.Entries.Add(new TaskListEntry("task 5", false));
 
             await TaskListRepository.Upsert(taskList);
 
@@ -234,8 +234,8 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryIndex_UpdatesTaskListAndReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
+            taskList.Entries.Add(new TaskListEntry("task 1", false));
+            taskList.Entries.Add(new TaskListEntry("task 2", false));
 
             await TaskListRepository.Upsert(taskList);
 
@@ -253,8 +253,8 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task MarkTaskAsDone_GivenExistingTaskListIdAndNonExistingEntryIndex_ReturnsBadRequest()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
+            taskList.Entries.Add(new TaskListEntry("task 1", false));
+            taskList.Entries.Add(new TaskListEntry("task 2", false));
 
             await TaskListRepository.Upsert(taskList);
 
@@ -277,7 +277,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task MarkTaskAsDone_GivenSuccess_UpdatesStatistics()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.AddEntry("task");
+            taskList.Entries.Add(new TaskListEntry("task", false));
 
             await TaskListRepository.Upsert(taskList);
 
@@ -292,8 +292,8 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task GetAll_GivenExistingTaskLists_ReturnsTaskLists()
         {
             var taskList1 = new TaskList(1, PremiumOwnerId, "test 1");
-            taskList1.AddEntry("task 1");
-            taskList1.AddEntry("task 2");
+            taskList1.Entries.Add(new TaskListEntry("task 1", false));
+            taskList1.Entries.Add(new TaskListEntry("task 2", false));
 
             var taskList2 = new TaskList(2, PremiumOwnerId, "test 2");
 
@@ -316,8 +316,8 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task GetById_GivenExistingTaskListId_ReturnsTaskList()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
+            taskList.Entries.Add(new TaskListEntry("task 1", false));
+            taskList.Entries.Add(new TaskListEntry("task 2", false));
 
             await TaskListRepository.Upsert(taskList);
 
@@ -344,16 +344,14 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task GetAllWithPendingEntries_GivenExistingTaskLists_ReturnsTaskListsWithPendingEntries()
         {
             var taskList1 = new TaskList(1, PremiumOwnerId, "test 1");
-            taskList1.AddEntry("task 1");
-            taskList1.AddEntry("task 2");
-            taskList1.MarkEntryAsDone(0);
+            taskList1.Entries.Add(new TaskListEntry("task 1", true));
+            taskList1.Entries.Add(new TaskListEntry("task 2", false));
 
             var taskList2 = new TaskList(2, PremiumOwnerId, "test 2");
-            taskList2.AddEntry("task 1");
+            taskList2.Entries.Add(new TaskListEntry("task 1", false));
 
             var taskList3 = new TaskList(3, PremiumOwnerId, "test 3");
-            taskList3.AddEntry("task 1");
-            taskList3.MarkEntryAsDone(0);
+            taskList3.Entries.Add(new TaskListEntry("task 1", true));
 
             await TaskListRepository.Upsert(taskList1);
             await TaskListRepository.Upsert(taskList2);
@@ -375,8 +373,8 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task DeleteById_GivenExistingTaskListId_DeletesTaskListAndReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
+            taskList.Entries.Add(new TaskListEntry("task 1", false));
+            taskList.Entries.Add(new TaskListEntry("task 2", false));
 
             await TaskListRepository.Upsert(taskList);
 

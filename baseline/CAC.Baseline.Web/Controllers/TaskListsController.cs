@@ -96,7 +96,7 @@ namespace CAC.Baseline.Web.Controllers
                 return Conflict($"non-premium user {taskList.OwnerId} can only have at most {NonPremiumUserTaskEntryCountLimit} tasks in their list");
             }
 
-            taskList.AddEntry(request.TaskDescription);
+            taskList.Entries.Add(new TaskListEntry(request.TaskDescription, false));
             await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", request.TaskDescription, taskList.Id);
@@ -123,7 +123,7 @@ namespace CAC.Baseline.Web.Controllers
                 return BadRequest($"entry with index {entryIdx} does not exist");
             }
 
-            taskList.MarkEntryAsDone(entryIdx);
+            taskList.Entries[entryIdx].IsDone = true;
 
             await taskListRepository.Upsert(taskList);
 

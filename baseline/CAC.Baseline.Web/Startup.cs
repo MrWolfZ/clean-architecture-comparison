@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using CAC.Baseline.Web.Data;
 using CAC.Baseline.Web.Services;
 using CAC.Core.Domain;
+using CAC.Core.Infrastructure;
 using CAC.Core.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

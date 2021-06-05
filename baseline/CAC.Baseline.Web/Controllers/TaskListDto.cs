@@ -3,5 +3,5 @@ using CAC.Baseline.Web.Model;
 
 namespace CAC.Baseline.Web.Controllers
 {
-    public sealed record TaskListDto(long Id, string Name, IReadOnlyCollection<TaskListEntry> Entries);
+    public sealed record TaskListDto(long Id, string Name, IList<TaskListEntry> Entries);
 }

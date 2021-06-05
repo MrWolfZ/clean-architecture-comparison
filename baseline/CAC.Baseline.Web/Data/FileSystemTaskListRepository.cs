@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CAC.Baseline.Web.Model;
+using CAC.Core.Infrastructure;
 using Microsoft.Extensions.Options;
 
 namespace CAC.Baseline.Web.Data

@@ -8,6 +8,6 @@ In the _data_ layer we use the **repository pattern**. For our task lists we hav
 
 In the _controller_ layer we have the controllers that provide the entry points into the application.
 
-We also have _unit tests_ for each layer.
+We also have _unit tests_ for our repositories and API endpoints.
 
-The code is fairly simple so we encourage you to take a look to familiarize with it.
+The code is fairly simple so we encourage you to take a look to familiarize yourself with it.

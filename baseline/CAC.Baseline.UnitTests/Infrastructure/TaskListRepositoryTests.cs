@@ -31,7 +31,7 @@ namespace CAC.Baseline.UnitTests.Infrastructure
         public async Task Upsert_GivenNonExistingTaskList_StoresTaskList()
         {
             var list = new TaskList(1, OwnerId, "test");
-            list.AddEntry("task");
+            list.Entries.Add(new TaskListEntry("task", false));
 
             await Testee.Upsert(list);
 
@@ -48,7 +48,7 @@ namespace CAC.Baseline.UnitTests.Infrastructure
             await Testee.Upsert(existingList);
 
             var list = new TaskList(1, OwnerId, "test");
-            list.AddEntry("task");
+            list.Entries.Add(new TaskListEntry("task", false));
 
             await Testee.Upsert(list);
 
@@ -99,7 +99,7 @@ namespace CAC.Baseline.UnitTests.Infrastructure
             await Testee.Upsert(list1);
 
             var list2 = new TaskList(2, OwnerId, "test 2");
-            list2.AddEntry("task");
+            list2.Entries.Add(new TaskListEntry("task", false));
             await Testee.Upsert(list2);
 
             var lists = await Testee.GetAll();
@@ -112,16 +112,14 @@ namespace CAC.Baseline.UnitTests.Infrastructure
         public async Task GetAllWithPendingEntries_GivenStoredTaskLists_ReturnsCollectionOfListsWithPendingEntries()
         {
             var list1 = new TaskList(1, OwnerId, "test 1");
-            list1.AddEntry("task 1");
-            list1.AddEntry("task 2");
-            list1.MarkEntryAsDone(0);
+            list1.Entries.Add(new TaskListEntry("task 1", true));
+            list1.Entries.Add(new TaskListEntry("task 2", false));
 
             var list2 = new TaskList(2, OwnerId, "test 2");
-            list2.AddEntry("task 1");
+            list2.Entries.Add(new TaskListEntry("task 1", false));
 
             var list3 = new TaskList(3, OwnerId, "test 3");
-            list3.AddEntry("task 1");
-            list3.MarkEntryAsDone(0);
+            list3.Entries.Add(new TaskListEntry("task 1", true));
 
             await Testee.Upsert(list1);
             await Testee.Upsert(list2);
@@ -136,14 +134,14 @@ namespace CAC.Baseline.UnitTests.Infrastructure
         [Test]
         public async Task GetNumberOfTaskListsByOwner_GivenStoredTaskLists_ReturnsCorrectCounts()
         {
-            var ownerId2 = OwnerId + 1;
-            var ownerId3 = OwnerId + 2;
+            const long ownerId2 = OwnerId + 1;
+            const long ownerId3 = OwnerId + 2;
             
             var list1 = new TaskList(1, OwnerId, "test 1");
             await Testee.Upsert(list1);
 
             var list2 = new TaskList(2, OwnerId, "test 2");
-            list2.AddEntry("task");
+            list2.Entries.Add(new TaskListEntry("task", false));
             await Testee.Upsert(list2);
 
             var list3 = new TaskList(3, ownerId2, "test");

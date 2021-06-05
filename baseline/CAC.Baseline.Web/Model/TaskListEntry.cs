@@ -1,5 +1,3 @@
-using System;
-
 namespace CAC.Baseline.Web.Model
 {
     // this is not a good name in terms of DDD, since people would usually talk about
@@ -9,19 +7,12 @@ namespace CAC.Baseline.Web.Model
     {
         public TaskListEntry(string description, bool isDone)
         {
-            if (string.IsNullOrWhiteSpace(description))
-            {
-                throw new ArgumentException("entry description must be a non-empty non-whitespace string", nameof(description));
-            }
-
             Description = description;
             IsDone = isDone;
         }
 
         public string Description { get; }
 
-        public bool IsDone { get; private set; }
-
-        public void MarkAsDone() => IsDone = true;
+        public bool IsDone { get; set; }
     }
 }
