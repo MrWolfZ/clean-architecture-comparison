@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CAC.Baseline.Web.Controllers
+namespace CAC.Baseline.Web.Dto
 {
     public sealed record CreateNewTaskListRequestDto
     {

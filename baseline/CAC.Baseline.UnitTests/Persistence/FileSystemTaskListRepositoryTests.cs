@@ -1,11 +1,11 @@
 ﻿using System.IO;
-using CAC.Baseline.Web.Data;
+using CAC.Baseline.Web.Persistence;
 using CAC.Core.Infrastructure;
 using CAC.Core.TestUtilities;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
 
-namespace CAC.Baseline.UnitTests.Infrastructure
+namespace CAC.Baseline.UnitTests.Persistence
 {
     [TestFixture]
     [IntegrationTest]

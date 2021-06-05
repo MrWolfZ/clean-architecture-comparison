@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CAC.Baseline.Web.Data;
 using CAC.Baseline.Web.Model;
+using CAC.Baseline.Web.Persistence;
 using NUnit.Framework;
 
-namespace CAC.Baseline.UnitTests.Infrastructure
+namespace CAC.Baseline.UnitTests.Persistence
 {
     public abstract class TaskListEntryRepositoryTests
     {

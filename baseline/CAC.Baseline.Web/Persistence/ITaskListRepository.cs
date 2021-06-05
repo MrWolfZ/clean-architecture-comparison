@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CAC.Baseline.Web.Model;
 
-namespace CAC.Baseline.Web.Data
+namespace CAC.Baseline.Web.Persistence
 {
     public interface ITaskListRepository
     {

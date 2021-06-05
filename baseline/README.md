@@ -1,10 +1,10 @@
 # Baseline
 
-This is a simple implementation of our application using basic architectural patterns. We have a single _web_ project that contains all the logic for the application. The web application uses a classical layering approach using the three layers _model_, _data_, and _controllers_.
+This is a simple implementation of our application using basic architectural patterns. We have a single _web_ project that contains all the logic for the application. The web application uses a classical layering approach using the three layers _models and services_, _persistence_, and _controllers and data transfer objects (DTOs)_.
 
 Our _models_ are basic mutable C# objects. These models are designed to map to relational database tables (although this example does not use a real database).
 
-In the _data_ layer we use the **repository pattern**. For our task lists we have two implementations of repositories: `file system` (for running the application) and `in-memory` (for testing).
+In the _persistence_ layer we use the **repository pattern**. For our task lists we have two implementations of repositories: `file system` (for running the application) and `in-memory` (for testing).
 
 In the _controller_ layer we have the controllers that provide the entry points into the application.
 

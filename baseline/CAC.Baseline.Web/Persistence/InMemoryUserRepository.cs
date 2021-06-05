@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using CAC.Baseline.Web.Model;
 
-namespace CAC.Baseline.Web.Data
+namespace CAC.Baseline.Web.Persistence
 {
     internal sealed class InMemoryUserRepository : IUserRepository
     {

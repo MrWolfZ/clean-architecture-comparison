@@ -8,7 +8,7 @@ using CAC.Baseline.Web.Model;
 using CAC.Core.Infrastructure;
 using Microsoft.Extensions.Options;
 
-namespace CAC.Baseline.Web.Data
+namespace CAC.Baseline.Web.Persistence
 {
     internal sealed class FileSystemTaskListEntryRepository : ITaskListEntryRepository
     {

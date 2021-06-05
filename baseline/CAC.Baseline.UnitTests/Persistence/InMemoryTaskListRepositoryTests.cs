@@ -1,7 +1,7 @@
-using CAC.Baseline.Web.Data;
+using CAC.Baseline.Web.Persistence;
 using NUnit.Framework;
 
-namespace CAC.Baseline.UnitTests.Infrastructure
+namespace CAC.Baseline.UnitTests.Persistence
 {
     [TestFixture]
     public sealed class InMemoryTaskListRepositoryTests : TaskListRepositoryTests

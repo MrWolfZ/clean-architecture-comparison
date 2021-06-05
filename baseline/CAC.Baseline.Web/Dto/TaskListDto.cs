@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CAC.Baseline.Web.Controllers
+namespace CAC.Baseline.Web.Dto
 {
     public sealed record TaskListDto(long Id, string Name, IList<TaskListEntryDto> Entries);
 
