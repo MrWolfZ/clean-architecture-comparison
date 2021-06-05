@@ -7,9 +7,9 @@ namespace CAC.Baseline.Web.Services
     {
         Task OnTaskListCreated(TaskList taskList);
         
-        Task OnTaskAddedToList(TaskList taskList, int taskListEntryIdx);
+        Task OnTaskAddedToList(TaskListEntry taskListEntry);
         
-        Task OnTaskMarkedAsDone(TaskList taskList, int taskListEntryIdx);
+        Task OnTaskMarkedAsDone(long taskListEntryId);
         
         Task OnTaskListDeleted(long taskListId);
 

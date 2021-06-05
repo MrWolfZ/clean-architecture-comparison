@@ -13,9 +13,9 @@ namespace CAC.Baseline.Web.Services
             return Task.CompletedTask;
         }
 
-        public Task OnTaskAddedToList(TaskList taskList, int taskListEntryIdx) => OnTaskListEdited();
+        public Task OnTaskAddedToList(TaskListEntry taskListEntry) => OnTaskListEdited();
 
-        public Task OnTaskMarkedAsDone(TaskList taskList, int taskListEntryIdx) => OnTaskListEdited();
+        public Task OnTaskMarkedAsDone(long taskListEntryId) => OnTaskListEdited();
 
         public Task OnTaskListDeleted(long taskListId)
         {

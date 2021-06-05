@@ -1,15 +1,12 @@
-﻿using System.Collections.Generic;
-
-namespace CAC.Baseline.Web.Model
+﻿namespace CAC.Baseline.Web.Model
 {
     public sealed class TaskList
     {
-        public TaskList(long id, long ownerId, string name, IList<TaskListEntry>? entries = null)
+        public TaskList(long id, long ownerId, string name)
         {
             Id = id;
             OwnerId = ownerId;
             Name = name;
-            Entries = entries ?? new List<TaskListEntry>();
         }
 
         public long Id { get; }
@@ -17,7 +14,5 @@ namespace CAC.Baseline.Web.Model
         public long OwnerId { get; }
 
         public string Name { get; }
-
-        public IList<TaskListEntry> Entries { get; }
     }
 }

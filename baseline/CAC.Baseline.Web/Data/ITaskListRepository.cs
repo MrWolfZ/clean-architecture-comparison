@@ -8,16 +8,20 @@ namespace CAC.Baseline.Web.Data
     {
         public Task<long> GenerateId();
 
-        public Task Upsert(TaskList taskList);
+        public Task Store(TaskList taskList);
 
-        public Task<IReadOnlyCollection<TaskList>> GetAll();
+        public Task<bool> DeleteById(long id);
 
-        public Task<int> GetNumberOfTaskListsByOwner(long ownerId);
+        public Task<bool> Exists(long id);
 
         public Task<TaskList?> GetById(long id);
 
-        public Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries();
+        public Task<IReadOnlyCollection<TaskList>> GetByIds(IReadOnlyCollection<long> ids);
 
-        public Task<bool> DeleteById(long id);
+        public Task<IReadOnlyCollection<TaskList>> GetAll();
+
+        public Task<long?> GetOwnerId(long id);
+
+        public Task<int> GetNumberOfTaskListsByOwner(long ownerId);
     }
 }

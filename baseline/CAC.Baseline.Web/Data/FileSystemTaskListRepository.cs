@@ -41,8 +41,13 @@ namespace CAC.Baseline.Web.Data
             return newId;
         }
 
-        public async Task Upsert(TaskList taskList)
+        public async Task Store(TaskList taskList)
         {
+            if (await Exists(taskList.Id))
+            {
+                throw new ArgumentException($"task list '{taskList.Id}' already exists");
+            }
+            
             var filePath = GetTaskListsFilePath();
             var all = await GetAll();
 
@@ -70,37 +75,6 @@ namespace CAC.Baseline.Web.Data
             await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(newLists, SerializerOptions));
         }
 
-        public async Task<IReadOnlyCollection<TaskList>> GetAll()
-        {
-            var filePath = GetTaskListsFilePath();
-
-            if (!File.Exists(filePath))
-            {
-                return Array.Empty<TaskList>();
-            }
-
-            var fileContent = await File.ReadAllTextAsync(filePath);
-            return JsonSerializer.Deserialize<List<TaskList>>(fileContent, SerializerOptions)!;
-        }
-
-        public async Task<int> GetNumberOfTaskListsByOwner(long ownerId)
-        {
-            var all = await GetAll();
-            return all.Count(l => l.OwnerId == ownerId);
-        }
-
-        public async Task<TaskList?> GetById(long id)
-        {
-            var all = await GetAll();
-            return all.FirstOrDefault(l => l.Id == id);
-        }
-
-        public async Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries()
-        {
-            var all = await GetAll();
-            return all.Where(l => l.Entries.Any(i => !i.IsDone)).ToList();
-        }
-
         public async Task<bool> DeleteById(long id)
         {
             var filePath = GetTaskListsFilePath();
@@ -121,7 +95,53 @@ namespace CAC.Baseline.Web.Data
             return true;
         }
 
-        private string GetTaskListsFilePath() => Path.Join(GetStorageDir(), "task-lists.json");
+        public async Task<bool> Exists(long id)
+        {
+            var list = await GetById(id);
+            return list != null;
+        }
+
+        public async Task<TaskList?> GetById(long id)
+        {
+            var all = await GetAll();
+            return all.FirstOrDefault(l => l.Id == id);
+        }
+
+        public async Task<IReadOnlyCollection<TaskList>> GetByIds(IReadOnlyCollection<long> ids)
+        {
+            var all = await GetAll();
+            return all.Where(l => ids.Contains(l.Id)).ToList();
+        }
+
+        public async Task<IReadOnlyCollection<TaskList>> GetAll()
+        {
+            var filePath = GetTaskListsFilePath();
+
+            if (!File.Exists(filePath))
+            {
+                return Array.Empty<TaskList>();
+            }
+
+            var fileContent = await File.ReadAllTextAsync(filePath);
+            return JsonSerializer.Deserialize<List<TaskList>>(fileContent, SerializerOptions)!;
+        }
+
+        public async Task<long?> GetOwnerId(long id)
+        {
+            var list = await GetById(id);
+            return list?.OwnerId;
+        }
+
+        public async Task<int> GetNumberOfTaskListsByOwner(long ownerId)
+        {
+            var all = await GetAll();
+            return all.Count(l => l.OwnerId == ownerId);
+        }
+
+        private string GetTaskListsFilePath()
+        {
+            return Path.Join(GetStorageDir(), "task-lists.json");
+        }
 
         private string GetStorageDir()
         {
@@ -133,6 +153,9 @@ namespace CAC.Baseline.Web.Data
             return Path.Join(baseDir, "task-lists");
         }
 
-        private void EnsureStorageDirExists() => Directory.CreateDirectory(GetStorageDir());
+        private void EnsureStorageDirExists()
+        {
+            Directory.CreateDirectory(GetStorageDir());
+        }
     }
 }

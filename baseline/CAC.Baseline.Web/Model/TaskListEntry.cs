@@ -5,11 +5,17 @@ namespace CAC.Baseline.Web.Model
     // already has a very specific meaning in C#
     public sealed record TaskListEntry
     {
-        public TaskListEntry(string description, bool isDone)
+        public TaskListEntry(long id, long owningTaskListId, string description, bool isDone)
         {
+            Id = id;
+            OwningTaskListId = owningTaskListId;
             Description = description;
             IsDone = isDone;
         }
+
+        public long Id { get; }
+        
+        public long OwningTaskListId { get; }
 
         public string Description { get; }
 

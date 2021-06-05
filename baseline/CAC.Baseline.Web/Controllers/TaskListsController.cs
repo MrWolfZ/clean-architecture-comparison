@@ -19,16 +19,19 @@ namespace CAC.Baseline.Web.Controllers
 
         private readonly ILogger<TaskListsController> logger;
         private readonly ITaskListStatisticsService statisticsService;
+        private readonly ITaskListEntryRepository taskListEntryRepository;
         private readonly ITaskListRepository taskListRepository;
         private readonly IUserRepository userRepository;
 
         public TaskListsController(ITaskListRepository taskListRepository,
+                                   ITaskListEntryRepository taskListEntryRepository,
                                    IUserRepository userRepository,
                                    ITaskListStatisticsService statisticsService,
                                    ILogger<TaskListsController> logger)
         {
             this.taskListRepository = taskListRepository;
             this.logger = logger;
+            this.taskListEntryRepository = taskListEntryRepository;
             this.statisticsService = statisticsService;
             this.userRepository = userRepository;
         }
@@ -58,7 +61,7 @@ namespace CAC.Baseline.Web.Controllers
 
             try
             {
-                await taskListRepository.Upsert(taskList);
+                await taskListRepository.Store(taskList);
 
                 logger.LogDebug("created new task list with name '{Name}' and id '{TaskListId}' for owner '{OwnerId}'...", request.Name, id, taskList.OwnerId);
 
@@ -77,59 +80,59 @@ namespace CAC.Baseline.Web.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> AddTaskToList(long taskListId, AddTaskToListRequestDto request)
         {
-            var taskList = await taskListRepository.GetById(taskListId);
+            var ownerId = await taskListRepository.GetOwnerId(taskListId);
 
-            if (taskList == null)
+            if (ownerId == null)
             {
                 return NotFound($"task list {taskListId} does not exist");
             }
 
-            var user = await userRepository.GetById(taskList.OwnerId);
+            var user = await userRepository.GetById(ownerId.Value);
 
             if (user == null)
             {
-                return Conflict($"user {taskList.OwnerId} does not exist");
+                return Conflict($"user {ownerId} does not exist");
             }
 
-            if (!user.IsPremium && taskList.Entries.Count >= NonPremiumUserTaskEntryCountLimit)
+            var nrOfEntries = await taskListEntryRepository.GetNumberOfEntriesForTaskList(taskListId);
+
+            if (!user.IsPremium && nrOfEntries >= NonPremiumUserTaskEntryCountLimit)
             {
-                return Conflict($"non-premium user {taskList.OwnerId} can only have at most {NonPremiumUserTaskEntryCountLimit} tasks in their list");
+                return Conflict($"non-premium user {ownerId} can only have at most {NonPremiumUserTaskEntryCountLimit} tasks in their list");
             }
 
-            taskList.Entries.Add(new TaskListEntry(request.TaskDescription, false));
-            await taskListRepository.Upsert(taskList);
+            var id = await taskListEntryRepository.GenerateId();
+            var entry = new TaskListEntry(id, taskListId, request.TaskDescription, false);
+            
+            await taskListEntryRepository.Store(entry);
 
-            logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", request.TaskDescription, taskList.Id);
+            logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", request.TaskDescription, taskListId);
 
-            await statisticsService.OnTaskAddedToList(taskList, taskList.Entries.Count - 1);
+            await statisticsService.OnTaskAddedToList(entry);
 
             return NoContent();
         }
 
-        [HttpPut("{taskListId:long}/tasks/{entryIdx:int}/isDone")]
+        [HttpPut("{taskListId:long}/tasks/{entryId:int}/isDone")]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> MarkTaskAsDone(long taskListId, int entryIdx)
+        public async Task<IActionResult> MarkTaskAsDone(long taskListId, long entryId)
         {
-            var taskList = await taskListRepository.GetById(taskListId);
-
-            if (taskList == null)
+            if (!await taskListRepository.Exists(taskListId))
             {
                 return NotFound($"task list {taskListId} does not exist");
             }
 
-            if (entryIdx < 0 || entryIdx >= taskList.Entries.Count)
+            var wasSuccess = await taskListEntryRepository.MarkEntryAsDone(entryId);
+
+            if (!wasSuccess)
             {
-                return BadRequest($"entry with index {entryIdx} does not exist");
+                return BadRequest($"task list entry {entryId} does not exist");
             }
 
-            taskList.Entries[entryIdx].IsDone = true;
+            logger.LogDebug("marked task list entry '{EntryId}' as done", entryId);
 
-            await taskListRepository.Upsert(taskList);
-
-            logger.LogDebug("marked task list entry '{EntryIdx}' in task list '{TaskListName}' as done", entryIdx, taskList.Name);
-
-            await statisticsService.OnTaskMarkedAsDone(taskList, entryIdx);
+            await statisticsService.OnTaskMarkedAsDone(entryId);
 
             return NoContent();
         }
@@ -139,7 +142,8 @@ namespace CAC.Baseline.Web.Controllers
         public async Task<IReadOnlyCollection<TaskListDto>> GetAll()
         {
             var lists = await taskListRepository.GetAll();
-            return lists.Select(l => new TaskListDto(l.Id, l.Name, l.Entries)).ToList();
+            var entriesByTaskListId = await taskListEntryRepository.GetEntriesForTaskLists(lists.Select(l => l.Id).ToList());
+            return lists.Select(l => new TaskListDto(l.Id, l.Name, entriesByTaskListId[l.Id].Select(ToDto).ToList())).ToList();
         }
 
         [HttpGet("{taskListId:long}")]
@@ -147,15 +151,24 @@ namespace CAC.Baseline.Web.Controllers
         public async Task<ActionResult<TaskListDto>> GetById(long taskListId)
         {
             var taskList = await taskListRepository.GetById(taskListId);
-            return taskList == null ? NotFound($"task list {taskListId} does not exist") : Ok(new TaskListDto(taskList.Id, taskList.Name, taskList.Entries));
+
+            if (taskList == null)
+            {
+                return NotFound($"task list {taskListId} does not exist");
+            }
+            
+            var entries = await taskListEntryRepository.GetEntriesForTaskList(taskListId);
+            return Ok(new TaskListDto(taskList.Id, taskList.Name, entries.Select(ToDto).ToList()));
         }
 
         [HttpGet("withPendingEntries")]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public async Task<IReadOnlyCollection<TaskListDto>> GetAllWithPendingEntries()
         {
-            var lists = await taskListRepository.GetAllWithPendingEntries();
-            return lists.Select(l => new TaskListDto(l.Id, l.Name, l.Entries)).ToList();
+            var listIds = await taskListEntryRepository.GetIdsOfAllTaskListsWithPendingEntries();
+            var lists = await taskListRepository.GetByIds(listIds);
+            var entriesByTaskListId = await taskListEntryRepository.GetEntriesForTaskLists(lists.Select(l => l.Id).ToList());
+            return lists.Select(l => new TaskListDto(l.Id, l.Name, entriesByTaskListId[l.Id].Select(ToDto).ToList())).ToList();
         }
 
         [HttpDelete("{taskListId:long}")]
@@ -172,8 +185,10 @@ namespace CAC.Baseline.Web.Controllers
             logger.LogDebug("deleted task list '{TaskListId}'", taskListId);
 
             await statisticsService.OnTaskListDeleted(taskListId);
-            
+
             return NoContent();
         }
+
+        private static TaskListEntryDto ToDto(TaskListEntry entry) => new TaskListEntryDto(entry.Id, entry.Description, entry.IsDone);
     }
 }

@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
-using CAC.Baseline.Web.Model;
 
 namespace CAC.Baseline.Web.Controllers
 {
-    public sealed record TaskListDto(long Id, string Name, IList<TaskListEntry> Entries);
+    public sealed record TaskListDto(long Id, string Name, IList<TaskListEntryDto> Entries);
+
+    public sealed record TaskListEntryDto(long Id, string Description, bool IsDone);
 }

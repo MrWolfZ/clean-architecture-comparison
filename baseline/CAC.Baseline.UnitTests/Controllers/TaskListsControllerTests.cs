@@ -25,6 +25,8 @@ namespace CAC.Baseline.UnitTests.Controllers
 
         private ITaskListRepository TaskListRepository => Resolve<ITaskListRepository>();
 
+        private ITaskListEntryRepository TaskListEntryRepository => Resolve<ITaskListEntryRepository>();
+
         private ITaskListStatisticsService StatisticsService => Resolve<ITaskListStatisticsService>();
 
         [Test]
@@ -80,7 +82,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             var taskList = new TaskList(99, PremiumOwnerId, "test");
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
 
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name, OwnerId = PremiumOwnerId });
 
@@ -92,7 +94,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             var taskList = new TaskList(99, PremiumOwnerId, "test");
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
 
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name, OwnerId = PremiumOwnerId + 1 });
 
@@ -104,7 +106,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
 
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = PremiumOwnerId });
 
@@ -116,7 +118,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             var taskList = new TaskList(1, NonPremiumOwnerId, "test");
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
 
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = NonPremiumOwnerId });
 
@@ -133,20 +135,20 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
-        public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_UpdatesTaskListAndReturnsNoContent()
+        public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_StoresEntryAndReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
 
             const string taskDescription = "task";
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = taskDescription });
 
             await response.AssertStatusCode(HttpStatusCode.NoContent);
 
-            var storedTaskList = await TaskListRepository.GetById(taskList.Id);
+            var storedEntries = await TaskListEntryRepository.GetEntriesForTaskList(taskList.Id);
 
-            Assert.AreEqual(taskDescription, storedTaskList?.Entries.Single().Description);
+            Assert.AreEqual(taskDescription, storedEntries.Single().Description);
         }
 
         [TestCase("")]
@@ -156,7 +158,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = description });
 
@@ -169,7 +171,7 @@ namespace CAC.Baseline.UnitTests.Controllers
             var taskList = new TaskList(1, PremiumOwnerId, "test");
             var description = string.Join(string.Empty, Enumerable.Repeat("a", AddTaskToListRequestDto.MaxTaskDescriptionLength + 1));
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = description });
 
@@ -188,12 +190,13 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task AddTaskToList_GivenTaskListWithLessThanFiveEntriesAndNonPremiumOwner_ReturnsNoContent()
         {
             var taskList = new TaskList(1, NonPremiumOwnerId, "test");
-            taskList.Entries.Add(new TaskListEntry("task 1", false));
-            taskList.Entries.Add(new TaskListEntry("task 2", false));
-            taskList.Entries.Add(new TaskListEntry("task 3", false));
-            taskList.Entries.Add(new TaskListEntry("task 4", false));
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
+            
+            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(3, taskList.Id, "task 3", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(4, taskList.Id, "task 4", false));
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" });
 
@@ -204,13 +207,14 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task AddTaskToList_GivenTaskListWithFiveEntriesAndNonPremiumOwner_ReturnsConflict()
         {
             var taskList = new TaskList(1, NonPremiumOwnerId, "test");
-            taskList.Entries.Add(new TaskListEntry("task 1", false));
-            taskList.Entries.Add(new TaskListEntry("task 2", false));
-            taskList.Entries.Add(new TaskListEntry("task 3", false));
-            taskList.Entries.Add(new TaskListEntry("task 4", false));
-            taskList.Entries.Add(new TaskListEntry("task 5", false));
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
+            
+            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(3, taskList.Id, "task 3", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(4, taskList.Id, "task 4", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(5, taskList.Id, "task 5", false));
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" });
 
@@ -222,7 +226,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
 
             await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" });
 
@@ -234,32 +238,35 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryIndex_UpdatesTaskListAndReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.Entries.Add(new TaskListEntry("task 1", false));
-            taskList.Entries.Add(new TaskListEntry("task 2", false));
+            var taskListEntry = new TaskListEntry(1, taskList.Id, "task 1", false);
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
+
+            await TaskListEntryRepository.Store(taskListEntry);
+            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
 
             using var content = new StringContent(string.Empty);
-            var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/1/isDone", content);
+            var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{taskListEntry.Id}/isDone", content);
 
             await response.AssertStatusCode(HttpStatusCode.NoContent);
 
-            var storedTaskList = await TaskListRepository.GetById(taskList.Id);
+            var storedEntry = await TaskListEntryRepository.GetById(taskList.Id);
 
-            Assert.IsTrue(storedTaskList?.Entries.ElementAt(1).IsDone);
+            Assert.IsTrue(storedEntry?.IsDone);
         }
 
         [Test]
         public async Task MarkTaskAsDone_GivenExistingTaskListIdAndNonExistingEntryIndex_ReturnsBadRequest()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.Entries.Add(new TaskListEntry("task 1", false));
-            taskList.Entries.Add(new TaskListEntry("task 2", false));
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
+            
+            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
 
             using var content = new StringContent(string.Empty);
-            var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/2/isDone", content);
+            var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/3/isDone", content);
 
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
         }
@@ -277,12 +284,13 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task MarkTaskAsDone_GivenSuccess_UpdatesStatistics()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.Entries.Add(new TaskListEntry("task", false));
+            var entry = new TaskListEntry(1, taskList.Id, "task 1", false);
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
+            await TaskListEntryRepository.Store(entry);
 
             using var content = new StringContent(string.Empty);
-            await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/0/isDone", content);
+            await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entry.Id}/isDone", content);
 
             var statistics = await Resolve<ITaskListStatisticsService>().GetStatistics();
             Assert.AreEqual(1, statistics.NumberOfTimesTaskListsWereEdited);
@@ -292,13 +300,13 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task GetAll_GivenExistingTaskLists_ReturnsTaskLists()
         {
             var taskList1 = new TaskList(1, PremiumOwnerId, "test 1");
-            taskList1.Entries.Add(new TaskListEntry("task 1", false));
-            taskList1.Entries.Add(new TaskListEntry("task 2", false));
-
             var taskList2 = new TaskList(2, PremiumOwnerId, "test 2");
 
-            await TaskListRepository.Upsert(taskList1);
-            await TaskListRepository.Upsert(taskList2);
+            await TaskListRepository.Store(taskList1);
+            await TaskListRepository.Store(taskList2);
+            
+            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList1.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList1.Id, "task 2", false));
 
             var response = await HttpClient.GetAsync("taskLists");
 
@@ -316,10 +324,11 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task GetById_GivenExistingTaskListId_ReturnsTaskList()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.Entries.Add(new TaskListEntry("task 1", false));
-            taskList.Entries.Add(new TaskListEntry("task 2", false));
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
+            
+            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
 
             var response = await HttpClient.GetAsync($"taskLists/{taskList.Id}");
 
@@ -329,7 +338,9 @@ namespace CAC.Baseline.UnitTests.Controllers
             var responseContent = Deserialize<TaskListDto>(responseString);
 
             Assert.AreEqual(taskList.Name, responseContent!.Name);
-            Assert.IsTrue(taskList.Entries.SequenceEqual(responseContent.Entries));
+            Assert.AreEqual(2, responseContent.Entries.Count);
+            Assert.IsTrue(responseContent.Entries.Any(e => e.Id == 1));
+            Assert.IsTrue(responseContent.Entries.Any(e => e.Id == 2));
         }
 
         [Test]
@@ -344,18 +355,17 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task GetAllWithPendingEntries_GivenExistingTaskLists_ReturnsTaskListsWithPendingEntries()
         {
             var taskList1 = new TaskList(1, PremiumOwnerId, "test 1");
-            taskList1.Entries.Add(new TaskListEntry("task 1", true));
-            taskList1.Entries.Add(new TaskListEntry("task 2", false));
-
             var taskList2 = new TaskList(2, PremiumOwnerId, "test 2");
-            taskList2.Entries.Add(new TaskListEntry("task 1", false));
-
             var taskList3 = new TaskList(3, PremiumOwnerId, "test 3");
-            taskList3.Entries.Add(new TaskListEntry("task 1", true));
 
-            await TaskListRepository.Upsert(taskList1);
-            await TaskListRepository.Upsert(taskList2);
-            await TaskListRepository.Upsert(taskList3);
+            await TaskListRepository.Store(taskList1);
+            await TaskListRepository.Store(taskList2);
+            await TaskListRepository.Store(taskList3);
+            
+            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList1.Id, "task 1", true));
+            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList1.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(3, taskList2.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(4, taskList3.Id, "task 1", true));
 
             var response = await HttpClient.GetAsync("taskLists/withPendingEntries");
 
@@ -373,10 +383,11 @@ namespace CAC.Baseline.UnitTests.Controllers
         public async Task DeleteById_GivenExistingTaskListId_DeletesTaskListAndReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.Entries.Add(new TaskListEntry("task 1", false));
-            taskList.Entries.Add(new TaskListEntry("task 2", false));
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
+            
+            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
 
             var response = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 
@@ -400,7 +411,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
 
-            await TaskListRepository.Upsert(taskList);
+            await TaskListRepository.Store(taskList);
 
             await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 
@@ -416,6 +427,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         protected override void ConfigureServices(IServiceCollection services)
         {
             services.Replace(ServiceDescriptor.Singleton<ITaskListRepository, InMemoryTaskListRepository>());
+            services.Replace(ServiceDescriptor.Singleton<ITaskListEntryRepository, InMemoryTaskListEntryRepository>());
         }
     }
 }

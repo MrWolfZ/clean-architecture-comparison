@@ -42,6 +42,7 @@ namespace CAC.Baseline.Web
             services.ConfigureOptions<FileSystemStoragePersistenceOptionsDevelopmentConfiguration>();
 
             services.AddTransient<ITaskListRepository, FileSystemTaskListRepository>();
+            services.AddTransient<ITaskListEntryRepository, FileSystemTaskListEntryRepository>();
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             
             services.AddSingleton<ITaskListStatisticsService, InMemoryTaskListStatisticsService>();
