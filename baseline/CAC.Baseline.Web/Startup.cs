@@ -47,6 +47,9 @@ namespace CAC.Baseline.Web
             services.AddSingleton<ITaskListStatisticsRepository, InMemoryTaskListStatisticsRepository>();
             
             services.AddTransient<ITaskListStatisticsService, TaskListStatisticsService>();
+            services.AddTransient<ITaskListNotificationService, TaskListNotificationService>();
+            
+            services.AddTransient<IMessageQueueAdapter, NullMessageQueueAdapter>();
         }
 
         public void Configure(IApplicationBuilder app)

@@ -9,6 +9,7 @@ using CAC.Baseline.Web.Model;
 using CAC.Baseline.Web.Persistence;
 using CAC.Baseline.Web.Services;
 using CAC.Core.TestUtilities;
+using Moq;
 using NUnit.Framework;
 
 namespace CAC.Baseline.UnitTests.Controllers
@@ -131,6 +132,15 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
+        public async Task CreateNewTaskList_GivenSuccess_PublishesNotification()
+        {
+            const string name = "test";
+            await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwnerId });
+
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationService.TaskListCreatedMessage>(m => m.TaskList.Name == name)));
+        }
+
+        [Test]
         public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_StoresEntryAndReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
@@ -231,6 +241,18 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
+        public async Task AddTaskToList_GivenSuccess_PublishesNotification()
+        {
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
+
+            await TaskListRepository.Store(taskList);
+
+            await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" });
+
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationService.TaskAddedToListMessage>(m => m.TaskList.Name == taskList.Name)));
+        }
+
+        [Test]
         public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryIndex_UpdatesTaskListAndReturnsNoContent()
         {
             var taskList = new TaskList(1, PremiumOwnerId, "test");
@@ -290,6 +312,21 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             var statistics = await StatisticsService.GetStatistics();
             Assert.AreEqual(1, statistics.NumberOfTimesTaskListsWereEdited);
+        }
+
+        [Test]
+        public async Task MarkTaskAsDone_GivenSuccess_PublishesNotification()
+        {
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
+            var entry = new TaskListEntry(1, taskList.Id, "task 1", false);
+
+            await TaskListRepository.Store(taskList);
+            await TaskListEntryRepository.Store(entry);
+
+            using var content = new StringContent(string.Empty);
+            await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entry.Id}/isDone", content);
+
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationService.TaskMarkedAsDoneMessage>(m => m.TaskList.Name == taskList.Name && m.TaskListEntryId == entry.Id)));
         }
 
         [Test]
@@ -413,6 +450,18 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             var statistics = await StatisticsService.GetStatistics();
             Assert.AreEqual(1, statistics.NumberOfTaskListsDeleted);
+        }
+
+        [Test]
+        public async Task DeleteById_GivenSuccess_PublishesNotification()
+        {
+            var taskList = new TaskList(1, PremiumOwnerId, "test");
+
+            await TaskListRepository.Store(taskList);
+
+            await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
+
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationService.TaskListDeletedMessage>(m => m.TaskListId == taskList.Id)));
         }
     }
 }

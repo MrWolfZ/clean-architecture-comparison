@@ -12,6 +12,7 @@ The scenario we are using for showcasing the different styles is a simple task l
 - there are _premium_ and non-_premium_ users
 - non-_premium_ users are limited to at most one _task list_ with at most 5 items
 - the system gathers statistics about changes that are made to the _task lists_ it manages
+- whenever a _task list_ is created or changed the system publishes change notification to other systems
 
 For the sake of simplicity our system contains no user interface, but only APIs. It also does not have any authentication or authorization, i.e. _users_ only exist as business objects.
 

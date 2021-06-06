@@ -8,6 +8,6 @@ In the _persistence_ layer we use the **repository pattern**. For our task lists
 
 In the _controller_ layer we have the controllers that provide the entry points into the application.
 
-We also have _unit tests_ for our repositories and API endpoints.
+We also have _unit tests_ for our repositories and API endpoints. Test tests for the API endpoints are integration tests that test the whole system without needing databases or external systems to be present. This is achieved by replacing repositories with their in-memory variants and by mocking adapters for external systems.
 
 The code is fairly simple so we encourage you to take a look to familiarize yourself with it.

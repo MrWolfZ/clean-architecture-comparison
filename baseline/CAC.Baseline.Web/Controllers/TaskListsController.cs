@@ -22,16 +22,19 @@ namespace CAC.Baseline.Web.Controllers
         private readonly ITaskListStatisticsService statisticsService;
         private readonly ITaskListEntryRepository taskListEntryRepository;
         private readonly ITaskListRepository taskListRepository;
+        private readonly ITaskListNotificationService notificationService;
         private readonly IUserRepository userRepository;
 
         public TaskListsController(ITaskListRepository taskListRepository,
                                    ITaskListEntryRepository taskListEntryRepository,
                                    IUserRepository userRepository,
                                    ITaskListStatisticsService statisticsService,
+                                   ITaskListNotificationService notificationService,
                                    ILogger<TaskListsController> logger)
         {
             this.taskListRepository = taskListRepository;
             this.logger = logger;
+            this.notificationService = notificationService;
             this.taskListEntryRepository = taskListEntryRepository;
             this.statisticsService = statisticsService;
             this.userRepository = userRepository;
@@ -67,6 +70,7 @@ namespace CAC.Baseline.Web.Controllers
                 logger.LogDebug("created new task list with name '{Name}' and id '{TaskListId}' for owner '{OwnerId}'...", request.Name, id, taskList.OwnerId);
 
                 await statisticsService.OnTaskListCreated(taskList);
+                await notificationService.OnTaskListCreated(taskList);
 
                 return Ok(new CreateNewTaskListResponseDto(id));
             }
@@ -110,6 +114,7 @@ namespace CAC.Baseline.Web.Controllers
             logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", request.TaskDescription, taskListId);
 
             await statisticsService.OnTaskAddedToList(entry);
+            await notificationService.OnTaskAddedToList(entry);
 
             return NoContent();
         }
@@ -134,6 +139,26 @@ namespace CAC.Baseline.Web.Controllers
             logger.LogDebug("marked task list entry '{EntryId}' as done", entryId);
 
             await statisticsService.OnTaskMarkedAsDone(entryId);
+            await notificationService.OnTaskMarkedAsDone(taskListId, entryId);
+
+            return NoContent();
+        }
+
+        [HttpDelete("{taskListId:long}")]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        public async Task<IActionResult> DeleteById(long taskListId)
+        {
+            var wasDeleted = await taskListRepository.DeleteById(taskListId);
+
+            if (!wasDeleted)
+            {
+                return NotFound($"task list {taskListId} does not exist");
+            }
+
+            logger.LogDebug("deleted task list '{TaskListId}'", taskListId);
+
+            await statisticsService.OnTaskListDeleted(taskListId);
+            await notificationService.OnTaskListDeleted(taskListId);
 
             return NoContent();
         }
@@ -170,24 +195,6 @@ namespace CAC.Baseline.Web.Controllers
             var lists = await taskListRepository.GetByIds(listIds);
             var entriesByTaskListId = await taskListEntryRepository.GetEntriesForTaskLists(lists.Select(l => l.Id).ToList());
             return lists.Select(l => new TaskListDto(l.Id, l.Name, entriesByTaskListId[l.Id].Select(ToDto).ToList())).ToList();
-        }
-
-        [HttpDelete("{taskListId:long}")]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> DeleteById(long taskListId)
-        {
-            var wasDeleted = await taskListRepository.DeleteById(taskListId);
-
-            if (!wasDeleted)
-            {
-                return NotFound($"task list {taskListId} does not exist");
-            }
-
-            logger.LogDebug("deleted task list '{TaskListId}'", taskListId);
-
-            await statisticsService.OnTaskListDeleted(taskListId);
-
-            return NoContent();
         }
 
         private static TaskListEntryDto ToDto(TaskListEntry entry) => new TaskListEntryDto(entry.Id, entry.Description, entry.IsDone);
