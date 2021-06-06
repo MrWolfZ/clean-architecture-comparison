@@ -3,7 +3,7 @@ using System.IO;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
-namespace CAC.Core.Infrastructure
+namespace CAC.Core.Infrastructure.Persistence
 {
     public sealed class FileSystemStoragePersistenceOptionsDevelopmentConfiguration : IConfigureOptions<FileSystemStoragePersistenceOptions>
     {
@@ -33,19 +33,19 @@ namespace CAC.Core.Infrastructure
             
             var currentDir = AppContext.BaseDirectory;
 
-            while (currentDir != null && !Directory.Exists(Path.Join(currentDir, ".git")))
+            while (currentDir != null && !File.Exists(Path.Join(currentDir, "Properties", "launchSettings.json")))
             {
                 currentDir = Directory.GetParent(currentDir)?.FullName;
             }
 
             if (currentDir == null)
             {
-                throw new InvalidOperationException($"could not find repository root relative to dir '{AppContext.BaseDirectory}'");
+                throw new InvalidOperationException($"could not find app base dir relative to dir '{AppContext.BaseDirectory}'");
             }
+            
+            options.BaseDir = Path.Join(Directory.GetParent(currentDir)?.FullName, ".data");
 
-            options.BaseDir = Path.Join(currentDir, ".data");
-
-            Directory.CreateDirectory(options.BaseDir);
+            _ = Directory.CreateDirectory(options.BaseDir);
         }
     }
 }

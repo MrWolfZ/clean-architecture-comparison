@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CAC.Baseline.Web.Model;
-using CAC.Core.Infrastructure;
+using CAC.Core.Infrastructure.Persistence;
 using Microsoft.Extensions.Options;
 
 namespace CAC.Baseline.Web.Persistence

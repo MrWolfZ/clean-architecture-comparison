@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using CAC.Baseline.Web.Persistence;
-using CAC.Core.Infrastructure;
+using CAC.Core.Infrastructure.Persistence;
 using CAC.Core.TestUtilities;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;

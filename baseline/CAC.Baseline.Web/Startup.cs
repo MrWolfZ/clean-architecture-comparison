@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using CAC.Baseline.Web.Persistence;
 using CAC.Baseline.Web.Services;
-using CAC.Core.Infrastructure;
+using CAC.Core.Infrastructure.Persistence;
 using CAC.Core.Infrastructure.Serialization;
 using CAC.Core.Web;
 using Microsoft.AspNetCore.Builder;

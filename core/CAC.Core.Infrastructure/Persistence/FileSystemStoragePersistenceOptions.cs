@@ -1,4 +1,4 @@
-﻿namespace CAC.Core.Infrastructure
+﻿namespace CAC.Core.Infrastructure.Persistence
 {
     public sealed class FileSystemStoragePersistenceOptions
     {
