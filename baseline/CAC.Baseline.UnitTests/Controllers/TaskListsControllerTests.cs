@@ -36,8 +36,7 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
-            var responseBody = await response.Content.ReadAsStringAsync();
-            var responseContent = Deserialize<CreateNewTaskListResponseDto>(responseBody);
+            var responseContent = await response.Content.ReadFromJsonAsync<CreateNewTaskListResponseDto>(JsonSerializerOptions);
 
             Assert.AreEqual(expectedResponse, responseContent);
 
@@ -345,12 +344,11 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
-            var responseString = await response.Content.ReadAsStringAsync();
-            var lists = Deserialize<IReadOnlyCollection<TaskListDto>>(responseString)!;
+            var lists = await response.Content.ReadFromJsonAsync<IReadOnlyCollection<TaskListDto>>();
 
-            Assert.AreEqual(2, lists.Count);
-            Assert.IsTrue(lists.Any(l => l.Name == taskList1.Name));
-            Assert.IsTrue(lists.Any(l => l.Name == taskList2.Name));
+            Assert.AreEqual(2, lists?.Count);
+            Assert.IsTrue(lists?.Any(l => l.Name == taskList1.Name));
+            Assert.IsTrue(lists?.Any(l => l.Name == taskList2.Name));
         }
 
         [Test]
@@ -367,8 +365,7 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
-            var responseString = await response.Content.ReadAsStringAsync();
-            var responseContent = Deserialize<TaskListDto>(responseString);
+            var responseContent = await response.Content.ReadFromJsonAsync<TaskListDto>();
 
             Assert.AreEqual(taskList.Name, responseContent!.Name);
             Assert.AreEqual(2, responseContent.Entries.Count);
@@ -404,12 +401,11 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
-            var responseString = await response.Content.ReadAsStringAsync();
-            var lists = Deserialize<IReadOnlyCollection<TaskListDto>>(responseString)!;
+            var lists = await response.Content.ReadFromJsonAsync<IReadOnlyCollection<TaskListDto>>();
 
-            Assert.AreEqual(2, lists.Count);
-            Assert.IsTrue(lists.Any(l => l.Name == taskList1.Name));
-            Assert.IsTrue(lists.Any(l => l.Name == taskList2.Name));
+            Assert.AreEqual(2, lists?.Count);
+            Assert.IsTrue(lists?.Any(l => l.Name == taskList1.Name));
+            Assert.IsTrue(lists?.Any(l => l.Name == taskList2.Name));
         }
 
         [Test]
