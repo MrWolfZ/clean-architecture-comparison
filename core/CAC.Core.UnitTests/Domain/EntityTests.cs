@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace CAC.Core.UnitTests.Domain
 {
-    public class EntityTests
+    public sealed class EntityTests
     {
         [Test]
         public void EntityId_Parse_GivenValidStringAndType_CreatesInstanceOfType()
@@ -28,7 +28,7 @@ namespace CAC.Core.UnitTests.Domain
         [TestCase("Foo-1")]
         public void EntityId_Parse_GivenInvalidString_ThrowsArgumentException(string value)
         {
-            Assert.Throws<ArgumentException>(() => EntityId.Parse<TestEntityId>(value));
+            _ = Assert.Throws<ArgumentException>(() => EntityId.Parse<TestEntityId>(value));
         }
         
         // ReSharper disable ClassNeverInstantiated.Local

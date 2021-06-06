@@ -56,16 +56,16 @@ namespace System.Collections.Immutable
         public ValueList<T> Add(T value) => wrappedList.Add(value).ToValueList();
         public ValueList<T> AddRange(IEnumerable<T> items) => wrappedList.AddRange(items).ToValueList();
         public ValueList<T> Clear() => wrappedList.Clear().ToValueList();
-        public int IndexOf(T item, int index, int count, IEqualityComparer<T>? equalityComparer) => wrappedList.IndexOf(item, index, count, equalityComparer);
+        public int IndexOf(T item, int index, int count, IEqualityComparer<T>? equalityComparer = null) => wrappedList.IndexOf(item, index, count, equalityComparer);
         public ValueList<T> Insert(int index, T element) => wrappedList.Insert(index, element).ToValueList();
         public ValueList<T> InsertRange(int index, IEnumerable<T> items) => wrappedList.InsertRange(index, items).ToValueList();
-        public int LastIndexOf(T item, int index, int count, IEqualityComparer<T>? equalityComparer) => wrappedList.LastIndexOf(item, index, count, equalityComparer);
-        public ValueList<T> Remove(T value, IEqualityComparer<T>? equalityComparer) => wrappedList.Remove(value, equalityComparer).ToValueList();
+        public int LastIndexOf(T item, int index, int count, IEqualityComparer<T>? equalityComparer = null) => wrappedList.LastIndexOf(item, index, count, equalityComparer);
+        public ValueList<T> Remove(T value, IEqualityComparer<T>? equalityComparer = null) => wrappedList.Remove(value, equalityComparer).ToValueList();
         public ValueList<T> RemoveAll(Predicate<T> match) => wrappedList.RemoveAll(match).ToValueList();
         public ValueList<T> RemoveAt(int index) => wrappedList.RemoveAt(index).ToValueList();
-        public ValueList<T> RemoveRange(IEnumerable<T> items, IEqualityComparer<T>? equalityComparer) => wrappedList.RemoveRange(items, equalityComparer).ToValueList();
+        public ValueList<T> RemoveRange(IEnumerable<T> items, IEqualityComparer<T>? equalityComparer = null) => wrappedList.RemoveRange(items, equalityComparer).ToValueList();
         public ValueList<T> RemoveRange(int index, int count) => wrappedList.RemoveRange(index, count).ToValueList();
-        public ValueList<T> Replace(T oldValue, T newValue, IEqualityComparer<T>? equalityComparer) => wrappedList.Replace(oldValue, newValue, equalityComparer).ToValueList();
+        public ValueList<T> Replace(T oldValue, T newValue, IEqualityComparer<T>? equalityComparer = null) => wrappedList.Replace(oldValue, newValue, equalityComparer).ToValueList();
         public ValueList<T> SetItem(int index, T value) => wrappedList.SetItem(index, value).ToValueList();
 
         private static bool IsCompatibleObject(object? value)

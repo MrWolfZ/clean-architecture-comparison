@@ -1,9 +1,11 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using CAC.Core.Domain;
+using CAC.Core.Infrastructure.Persistence;
+using CAC.Core.Infrastructure.Serialization;
 using CAC.Core.Web;
-using CAC.DDD.Domain;
-using CAC.DDD.Infrastructure;
+using CAC.DDD.Web.Persistence;
+using CAC.DDD.Web.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,10 +15,10 @@ using Microsoft.OpenApi.Models;
 
 namespace CAC.DDD.Web
 {
-    public class Startup
+    public sealed class Startup
     {
         private const string ApiVersion = "v1";
-        
+
         public Startup(IWebHostEnvironment environment)
         {
             Environment = environment;
@@ -36,9 +38,20 @@ namespace CAC.DDD.Web
             });
 
             services.AddCoreWeb(Environment);
+            
+            Assembly.GetExecutingAssembly().AddEntityIdTypeConverterAttributes();
 
-            services.AddDomain();
-            services.AddInfrastructure();
+            services.AddOptions<PersistenceOptions>("Persistence");
+            services.ConfigureOptions<FileSystemStoragePersistenceOptionsDevelopmentConfiguration>();
+
+            services.AddTransient<ITaskListRepository, FileSystemTaskListRepository>();
+            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+            services.AddSingleton<ITaskListStatisticsRepository, InMemoryTaskListStatisticsRepository>();
+            
+            services.AddTransient<ITaskListStatisticsService, TaskListStatisticsService>();
+            services.AddTransient<ITaskListNotificationService, TaskListNotificationService>();
+            
+            services.AddTransient<IMessageQueueAdapter, NullMessageQueueAdapter>();
         }
 
         public void Configure(IApplicationBuilder app)

@@ -44,8 +44,6 @@ Below you can find a list of the various styles we are comparing. We recommend y
 - change inspection settings to allow C# 9 object instantiation shorthands
 - add `README` for `ddd`
 - add `README` for `basic`
-- adjust `ddd` based on `baseline`
-    - add `AggregateRoot`, `IAggregateRepository` etc. base classes
 - adjust `basic` based on `ddd`
 - adjust `cqs` based on `basic`
     - split write and read repositories

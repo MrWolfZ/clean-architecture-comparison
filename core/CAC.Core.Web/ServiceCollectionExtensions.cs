@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using CAC.Core.Domain;
+using CAC.Core.Domain.Exceptions;
 using Hellang.Middleware.ProblemDetails;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -16,7 +16,7 @@ namespace CAC.Core.Web
             {
                 setup.IncludeExceptionDetails = (_, _) => environment.IsDevelopment() || environment.IsStaging();
 
-                setup.Map<DomainValidationException>(DomainValidationProblemDetails.New);
+                setup.Map<DomainEntityException>(ex => new DomainExceptionProblemDetails(ex));
             });
         }
     }

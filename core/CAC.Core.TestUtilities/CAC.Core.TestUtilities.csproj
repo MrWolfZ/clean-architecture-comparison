@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CAC.Core.Analyzers\CAC.Core.Analyzers.csproj" />
+        <ProjectReference Include="..\CAC.Core.Web\CAC.Core.Web.csproj" />
     </ItemGroup>
 
 </Project>

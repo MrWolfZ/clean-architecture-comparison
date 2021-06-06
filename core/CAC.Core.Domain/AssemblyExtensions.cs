@@ -8,7 +8,7 @@ namespace CAC.Core.Domain
 {
     public static class AssemblyExtensions
     {
-        public static void AddTypeConverterAttributes(this Assembly assembly)
+        public static void AddEntityIdTypeConverterAttributes(this Assembly assembly)
         {
             foreach (var type in FindEntityIdTypes(assembly))
             {
@@ -20,7 +20,7 @@ namespace CAC.Core.Domain
         {
             var genericConverterType = typeof(EntityIdTypeConverter<>);
             var concreteConverterType = genericConverterType.MakeGenericType(type);
-            TypeDescriptor.AddAttributes(type, new TypeConverterAttribute(concreteConverterType));
+            _ = TypeDescriptor.AddAttributes(type, new TypeConverterAttribute(concreteConverterType));
         }
         
         private static IEnumerable<Type> FindEntityIdTypes(Assembly assembly)

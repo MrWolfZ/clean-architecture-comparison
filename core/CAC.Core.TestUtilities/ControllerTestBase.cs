@@ -52,10 +52,11 @@ namespace CAC.Core.TestUtilities
         {
             var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
             {
-                webHost.UseTestServer();
-
+                _ = webHost.UseTestServer();
+                
                 ConfigureWebHost(webHost);
-                webHost.ConfigureServices(ConfigureServices);
+
+                _ = webHost.ConfigureServices(ConfigureServices);
             });
 
             host = await hostBuilder.StartAsync();
@@ -76,10 +77,6 @@ namespace CAC.Core.TestUtilities
         protected virtual void ConfigureServices(IServiceCollection services)
         {
         }
-
-        protected string Serialize(object o) => JsonSerializer.Serialize(o, JsonSerializerOptions);
-
-        protected T? Deserialize<T>(string s) => JsonSerializer.Deserialize<T>(s, JsonSerializerOptions);
 
         protected T Resolve<T>()
             where T : notnull => Host.Services.GetRequiredService<T>();

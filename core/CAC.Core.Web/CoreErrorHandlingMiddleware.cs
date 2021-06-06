@@ -8,13 +8,13 @@ namespace CAC.Core.Web
 {
     public static class CoreErrorHandlingMiddleware
     {
-        public static void UseCoreErrorHandling(
+        public static IApplicationBuilder UseCoreErrorHandling(
             this IApplicationBuilder app,
             IHostEnvironment environment,
             string apiRoutePrefix = "api",
             string errorHandlingPath = "/ui/home/error")
         {
-            app.UseIfElse(IsApiRequest, ApiExceptionMiddleware, DefaultExceptionMiddleware);
+            return app.UseIfElse(IsApiRequest, ApiExceptionMiddleware, DefaultExceptionMiddleware);
 
             static void ApiExceptionMiddleware(IApplicationBuilder a) => a.UseProblemDetails();
 
@@ -22,23 +22,23 @@ namespace CAC.Core.Web
             {
                 if (environment.IsDevelopment() || environment.IsStaging())
                 {
-                    a.UseDeveloperExceptionPage();
+                    _ = a.UseDeveloperExceptionPage();
                 }
                 else
                 {
-                    a.UseExceptionHandler(errorHandlingPath);
+                    _ = a.UseExceptionHandler(errorHandlingPath);
                 }
 
-                a.UseStatusCodePages();
+                _ = a.UseStatusCodePages();
             }
 
             bool IsApiRequest(HttpContext httpContext) => httpContext.Request.Path.StartsWithSegments($"/{apiRoutePrefix}", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static void UseIfElse(this IApplicationBuilder app, Func<HttpContext, bool> predicate, Action<IApplicationBuilder> ifCase, Action<IApplicationBuilder> elseCase)
+        private static IApplicationBuilder UseIfElse(this IApplicationBuilder app, Func<HttpContext, bool> predicate, Action<IApplicationBuilder> ifCase, Action<IApplicationBuilder> elseCase)
         {
-            app.UseWhen(predicate, ifCase);
-            app.UseWhen(ctx => !predicate(ctx), elseCase);
+            return app.UseWhen(predicate, ifCase)
+                      .UseWhen(ctx => !predicate(ctx), elseCase);
         }
     }
 }

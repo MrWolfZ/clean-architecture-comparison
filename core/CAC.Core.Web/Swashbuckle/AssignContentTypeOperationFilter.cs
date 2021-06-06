@@ -16,7 +16,7 @@ namespace CAC.Core.Web.Swashbuckle
 
                 foreach (var mediaType in mediaTypesToRemove)
                 {
-                    okResponse.Content.Remove(mediaType);
+                    _ = okResponse.Content.Remove(mediaType);
                 }
             }
         }
