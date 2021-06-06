@@ -25,8 +25,8 @@ namespace CAC.Baseline.Web.Persistence
                 throw new ArgumentException($"entry '{entry.Id}' already exists");
             }
 
-            entriesById.AddOrUpdate(entry.Id, _ => entry, (_, _) => entry);
-            Interlocked.Exchange(ref idCounter, entry.Id);
+            _ = entriesById.AddOrUpdate(entry.Id, _ => entry, (_, _) => entry);
+            _ = Interlocked.Exchange(ref idCounter, entry.Id);
             return Task.CompletedTask;
         }
 
@@ -62,7 +62,7 @@ namespace CAC.Baseline.Web.Persistence
 
             foreach (var id in taskListIds)
             {
-                result.TryAdd(id, new List<TaskListEntry>());
+                _ = result.TryAdd(id, new List<TaskListEntry>());
             }
 
             return Task.FromResult(result as IReadOnlyDictionary<long, IReadOnlyCollection<TaskListEntry>>);

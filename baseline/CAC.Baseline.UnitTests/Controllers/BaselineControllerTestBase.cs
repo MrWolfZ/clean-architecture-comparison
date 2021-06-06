@@ -15,14 +15,14 @@ namespace CAC.Baseline.UnitTests.Controllers
 
         protected override void ConfigureWebHost(IWebHostBuilder webHost)
         {
-            webHost.UseStartup<Startup>();
+            _ = webHost.UseStartup<Startup>();
         }
 
         protected override void ConfigureServices(IServiceCollection services)
         {
-            services.Replace(ServiceDescriptor.Singleton<ITaskListRepository, InMemoryTaskListRepository>());
-            services.Replace(ServiceDescriptor.Singleton<ITaskListEntryRepository, InMemoryTaskListEntryRepository>());
-            services.Replace(ServiceDescriptor.Singleton(MessageQueueAdapterMock.Object));
+            _ = services.Replace(ServiceDescriptor.Singleton<ITaskListRepository, InMemoryTaskListRepository>())
+                        .Replace(ServiceDescriptor.Singleton<ITaskListEntryRepository, InMemoryTaskListEntryRepository>())
+                        .Replace(ServiceDescriptor.Singleton(MessageQueueAdapterMock.Object));
         }
     }
 }

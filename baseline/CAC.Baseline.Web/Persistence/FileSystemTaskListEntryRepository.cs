@@ -99,7 +99,7 @@ namespace CAC.Baseline.Web.Persistence
 
             foreach (var id in taskListIds)
             {
-                result.TryAdd(id, new List<TaskListEntry>());
+                _ = result.TryAdd(id, new List<TaskListEntry>());
             }
 
             return result;
@@ -148,7 +148,7 @@ namespace CAC.Baseline.Web.Persistence
 
         private void EnsureStorageDirExists()
         {
-            Directory.CreateDirectory(GetStorageDir());
+            _ = Directory.CreateDirectory(GetStorageDir());
         }
     }
 }

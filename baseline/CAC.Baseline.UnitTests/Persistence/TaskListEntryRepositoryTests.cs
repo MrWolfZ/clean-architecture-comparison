@@ -23,7 +23,7 @@ namespace CAC.Baseline.UnitTests.Persistence
             {
                 var id = await Testee.GenerateId();
                 Assert.IsFalse(generatedIds.Contains(id));
-                generatedIds.Add(id);
+                _ = generatedIds.Add(id);
             }
         }
 
@@ -47,7 +47,7 @@ namespace CAC.Baseline.UnitTests.Persistence
 
             var entry = new TaskListEntry(1, OwningTaskListId, "task", false);
 
-            Assert.ThrowsAsync<ArgumentException>(() => Testee.Store(entry));
+            _ = Assert.ThrowsAsync<ArgumentException>(() => Testee.Store(entry));
         }
 
         [Test]

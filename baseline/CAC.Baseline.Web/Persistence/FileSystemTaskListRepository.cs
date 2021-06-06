@@ -155,7 +155,7 @@ namespace CAC.Baseline.Web.Persistence
 
         private void EnsureStorageDirExists()
         {
-            Directory.CreateDirectory(GetStorageDir());
+            _ = Directory.CreateDirectory(GetStorageDir());
         }
     }
 }

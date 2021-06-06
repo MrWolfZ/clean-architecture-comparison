@@ -27,8 +27,8 @@ namespace CAC.Baseline.Web.Persistence
                 throw new ArgumentException($"a task list with name '{taskList.Name}' already exists");
             }
 
-            listsById.AddOrUpdate(taskList.Id, _ => taskList, (_, _) => taskList);
-            Interlocked.Exchange(ref idCounter, taskList.Id);
+            _ = listsById.AddOrUpdate(taskList.Id, _ => taskList, (_, _) => taskList);
+            _ = Interlocked.Exchange(ref idCounter, taskList.Id);
             return Task.CompletedTask;
         }
 

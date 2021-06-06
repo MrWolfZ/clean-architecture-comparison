@@ -1,10 +1,8 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using CAC.Baseline.Web;
 using CAC.Baseline.Web.Model;
 using CAC.Baseline.Web.Services;
 using CAC.Core.TestUtilities;
-using Microsoft.AspNetCore.Hosting;
 using NUnit.Framework;
 
 namespace CAC.Baseline.UnitTests.Controllers
@@ -24,11 +22,6 @@ namespace CAC.Baseline.UnitTests.Controllers
             var response = await HttpClient.GetFromJsonAsync<TaskListStatistics>("taskListStatistics");
 
             Assert.AreEqual(expectedResponse, response);
-        }
-
-        protected override void ConfigureWebHost(IWebHostBuilder webHost)
-        {
-            webHost.UseStartup<Startup>();
         }
     }
 }
