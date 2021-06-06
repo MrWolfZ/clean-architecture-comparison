@@ -4,21 +4,17 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using CAC.Baseline.Web;
 using CAC.Baseline.Web.Dto;
 using CAC.Baseline.Web.Model;
 using CAC.Baseline.Web.Persistence;
 using CAC.Baseline.Web.Services;
 using CAC.Core.TestUtilities;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using NUnit.Framework;
 
 namespace CAC.Baseline.UnitTests.Controllers
 {
     [IntegrationTest]
-    public sealed class TaskListsControllerTests : ControllerTestBase
+    public sealed class TaskListsControllerTests : BaselineControllerTestBase
     {
         private const long PremiumOwnerId = 1;
         private const long NonPremiumOwnerId = 2;
@@ -130,7 +126,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test", OwnerId = PremiumOwnerId });
 
-            var statistics = await Resolve<ITaskListStatisticsService>().GetStatistics();
+            var statistics = await StatisticsService.GetStatistics();
             Assert.AreEqual(1, statistics.NumberOfTaskListsCreated);
         }
 
@@ -192,7 +188,7 @@ namespace CAC.Baseline.UnitTests.Controllers
             var taskList = new TaskList(1, NonPremiumOwnerId, "test");
 
             await TaskListRepository.Store(taskList);
-            
+
             await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
             await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
             await TaskListEntryRepository.Store(new TaskListEntry(3, taskList.Id, "task 3", false));
@@ -209,7 +205,7 @@ namespace CAC.Baseline.UnitTests.Controllers
             var taskList = new TaskList(1, NonPremiumOwnerId, "test");
 
             await TaskListRepository.Store(taskList);
-            
+
             await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
             await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
             await TaskListEntryRepository.Store(new TaskListEntry(3, taskList.Id, "task 3", false));
@@ -230,7 +226,7 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" });
 
-            var statistics = await Resolve<ITaskListStatisticsService>().GetStatistics();
+            var statistics = await StatisticsService.GetStatistics();
             Assert.AreEqual(1, statistics.NumberOfTimesTaskListsWereEdited);
         }
 
@@ -261,7 +257,7 @@ namespace CAC.Baseline.UnitTests.Controllers
             var taskList = new TaskList(1, PremiumOwnerId, "test");
 
             await TaskListRepository.Store(taskList);
-            
+
             await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
             await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
 
@@ -292,7 +288,7 @@ namespace CAC.Baseline.UnitTests.Controllers
             using var content = new StringContent(string.Empty);
             await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entry.Id}/isDone", content);
 
-            var statistics = await Resolve<ITaskListStatisticsService>().GetStatistics();
+            var statistics = await StatisticsService.GetStatistics();
             Assert.AreEqual(1, statistics.NumberOfTimesTaskListsWereEdited);
         }
 
@@ -304,7 +300,7 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await TaskListRepository.Store(taskList1);
             await TaskListRepository.Store(taskList2);
-            
+
             await TaskListEntryRepository.Store(new TaskListEntry(1, taskList1.Id, "task 1", false));
             await TaskListEntryRepository.Store(new TaskListEntry(2, taskList1.Id, "task 2", false));
 
@@ -326,7 +322,7 @@ namespace CAC.Baseline.UnitTests.Controllers
             var taskList = new TaskList(1, PremiumOwnerId, "test");
 
             await TaskListRepository.Store(taskList);
-            
+
             await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
             await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
 
@@ -361,7 +357,7 @@ namespace CAC.Baseline.UnitTests.Controllers
             await TaskListRepository.Store(taskList1);
             await TaskListRepository.Store(taskList2);
             await TaskListRepository.Store(taskList3);
-            
+
             await TaskListEntryRepository.Store(new TaskListEntry(1, taskList1.Id, "task 1", true));
             await TaskListEntryRepository.Store(new TaskListEntry(2, taskList1.Id, "task 2", false));
             await TaskListEntryRepository.Store(new TaskListEntry(3, taskList2.Id, "task 1", false));
@@ -385,7 +381,7 @@ namespace CAC.Baseline.UnitTests.Controllers
             var taskList = new TaskList(1, PremiumOwnerId, "test");
 
             await TaskListRepository.Store(taskList);
-            
+
             await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
             await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
 
@@ -417,17 +413,6 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             var statistics = await StatisticsService.GetStatistics();
             Assert.AreEqual(1, statistics.NumberOfTaskListsDeleted);
-        }
-
-        protected override void ConfigureWebHost(IWebHostBuilder webHost)
-        {
-            webHost.UseStartup<Startup>();
-        }
-
-        protected override void ConfigureServices(IServiceCollection services)
-        {
-            services.Replace(ServiceDescriptor.Singleton<ITaskListRepository, InMemoryTaskListRepository>());
-            services.Replace(ServiceDescriptor.Singleton<ITaskListEntryRepository, InMemoryTaskListEntryRepository>());
         }
     }
 }

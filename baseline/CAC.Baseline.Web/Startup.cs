@@ -2,8 +2,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using CAC.Baseline.Web.Persistence;
 using CAC.Baseline.Web.Services;
-using CAC.Core.Domain;
 using CAC.Core.Infrastructure;
+using CAC.Core.Infrastructure.Serialization;
 using CAC.Core.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -44,8 +44,9 @@ namespace CAC.Baseline.Web
             services.AddTransient<ITaskListRepository, FileSystemTaskListRepository>();
             services.AddTransient<ITaskListEntryRepository, FileSystemTaskListEntryRepository>();
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+            services.AddSingleton<ITaskListStatisticsRepository, InMemoryTaskListStatisticsRepository>();
             
-            services.AddSingleton<ITaskListStatisticsService, InMemoryTaskListStatisticsService>();
+            services.AddTransient<ITaskListStatisticsService, TaskListStatisticsService>();
         }
 
         public void Configure(IApplicationBuilder app)

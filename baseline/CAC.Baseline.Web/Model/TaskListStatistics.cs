@@ -4,10 +4,10 @@
     // a real application this will likely be much more involved
     public sealed record TaskListStatistics
     {
-        public long NumberOfTaskListsCreated { get; set; }
-
-        public long NumberOfTimesTaskListsWereEdited { get; set; }
-
-        public long NumberOfTaskListsDeleted { get; set; }
+        public long NumberOfTaskListsCreated { get; init; }
+        
+        public long NumberOfTimesTaskListsWereEdited { get; init; }
+        
+        public long NumberOfTaskListsDeleted { get; init; }
     }
 }

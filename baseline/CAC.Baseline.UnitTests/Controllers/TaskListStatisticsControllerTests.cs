@@ -10,7 +10,7 @@ using NUnit.Framework;
 namespace CAC.Baseline.UnitTests.Controllers
 {
     [IntegrationTest]
-    public sealed class TaskListStatisticsControllerTests : ControllerTestBase
+    public sealed class TaskListStatisticsControllerTests : BaselineControllerTestBase
     {
         private ITaskListStatisticsService StatisticsService => Resolve<ITaskListStatisticsService>();
 
