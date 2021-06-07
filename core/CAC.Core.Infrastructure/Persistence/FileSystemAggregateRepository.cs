@@ -36,13 +36,13 @@ namespace CAC.Core.Infrastructure.Persistence
 
         public async Task<TId> GenerateId() => CreateId(await GenerateNumericIdForType<TId>());
 
-        public virtual async Task Upsert(TAggregate aggregate)
+        public virtual async Task<TAggregate> Upsert(TAggregate aggregate)
         {
             if (aggregate.IsDeleted)
             {
                 await DeleteById(aggregate.Id);
                 await domainEventPublisher.Publish(aggregate.DomainEvents);
-                return;
+                return aggregate.WithoutEvents();
             }
 
             var all = await LoadAll();
@@ -65,6 +65,7 @@ namespace CAC.Core.Infrastructure.Persistence
             await StoreAll(newLists);
             
             await domainEventPublisher.Publish(aggregate.DomainEvents);
+            return aggregate.WithoutEvents();
         }
 
         public async Task<TAggregate?> GetById(TId id)

@@ -37,7 +37,7 @@ namespace CAC.Core.TestUtilities
         {
             var aggregate = CreateAggregate();
 
-            await Testee.Upsert(aggregate);
+            aggregate = await Testee.Upsert(aggregate);
 
             var storedAggregate = await Testee.GetById(aggregate.Id);
             Assert.AreEqual(aggregate, storedAggregate);
@@ -47,64 +47,97 @@ namespace CAC.Core.TestUtilities
         public async Task Upsert_GivenExistingAggregate_StoresAggregate()
         {
             var existingAggregate = CreateAggregate();
-            await Testee.Upsert(existingAggregate);
+            existingAggregate = await Testee.Upsert(existingAggregate);
 
-            var aggregate = UpdateAggregate(existingAggregate);
-            await Testee.Upsert(aggregate);
+            var updatedAggregate = UpdateAggregate(existingAggregate);
+            updatedAggregate = await Testee.Upsert(updatedAggregate);
 
-            var storedAggregate = await Testee.GetById(aggregate.Id);
-            Assert.AreEqual(aggregate.WithoutEvents(), storedAggregate);
+            var storedAggregate = await Testee.GetById(updatedAggregate.Id);
+            Assert.AreEqual(updatedAggregate, storedAggregate);
         }
 
         [Test]
         public async Task Upsert_GivenNonExistingDeletedAggregate_DoesNotStoreAggregate()
         {
-            var list = CreateAggregate().MarkAsDeleted();
+            var aggregate = CreateAggregate().MarkAsDeleted();
 
-            await Testee.Upsert(list);
+            aggregate = await Testee.Upsert(aggregate);
 
-            var storedList = await Testee.GetById(list.Id);
+            var storedList = await Testee.GetById(aggregate.Id);
             Assert.IsNull(storedList);
         }
 
         [Test]
         public async Task Upsert_GivenExistingDeletedAggregate_DeletesAggregate()
         {
-            var list = CreateAggregate();
-            await Testee.Upsert(list);
+            var aggregate = CreateAggregate();
+            aggregate = await Testee.Upsert(aggregate);
 
-            await Testee.Upsert(list.MarkAsDeleted());
+            aggregate = await Testee.Upsert(aggregate.MarkAsDeleted());
 
-            var storedList = await Testee.GetById(list.Id);
+            var storedList = await Testee.GetById(aggregate.Id);
             Assert.IsNull(storedList);
         }
 
         [Test]
-        public async Task Upsert_GivenAggregateWithDomainEvents_PublishesEvents()
+        public async Task Upsert_GivenAggregateWithEvents_PublishesEvents()
         {
             var originalAggregate = CreateAggregate();
-            await Testee.Upsert(originalAggregate);
+            originalAggregate = await Testee.Upsert(originalAggregate);
             
             DomainEventPublisherMock.Verify(p => p.Publish(originalAggregate.DomainEvents));
 
-            var updatedAggregate = UpdateAggregate(originalAggregate.WithoutEvents());
-            await Testee.Upsert(updatedAggregate);
+            var updatedAggregate = UpdateAggregate(originalAggregate);
+            updatedAggregate = await Testee.Upsert(updatedAggregate);
             
             DomainEventPublisherMock.Verify(p => p.Publish(updatedAggregate.DomainEvents));
         }
 
         [Test]
-        public async Task Upsert_GivenDeletedAggregateWithDomainEvents_PublishesEvents()
+        public async Task Upsert_GivenDeletedAggregateWithEvents_PublishesEvents()
         {
             var originalAggregate = CreateAggregate();
-            await Testee.Upsert(originalAggregate);
+            originalAggregate = await Testee.Upsert(originalAggregate);
             
             DomainEventPublisherMock.Verify(p => p.Publish(originalAggregate.DomainEvents));
 
-            var updatedAggregate = UpdateAggregate(originalAggregate.WithoutEvents()).MarkAsDeleted();
-            await Testee.Upsert(updatedAggregate);
+            var updatedAggregate = UpdateAggregate(originalAggregate).MarkAsDeleted();
+            updatedAggregate = await Testee.Upsert(updatedAggregate);
             
             DomainEventPublisherMock.Verify(p => p.Publish(updatedAggregate.DomainEvents));
+        }
+
+        [Test]
+        public async Task Upsert_GivenNonExistingAggregateWithEvents_ReturnsAggregateWithoutEvents()
+        {
+            var aggregate = CreateAggregate();
+            aggregate = await Testee.Upsert(aggregate);
+            
+            Assert.IsEmpty(aggregate.DomainEvents);
+        }
+
+        [Test]
+        public async Task Upsert_GivenExistingAggregateWithEvents_ReturnsAggregateWithoutEvents()
+        {
+            var existingAggregate = CreateAggregate();
+            existingAggregate = await Testee.Upsert(existingAggregate);
+
+            var updatedAggregate = UpdateAggregate(existingAggregate);
+            updatedAggregate = await Testee.Upsert(updatedAggregate);
+            
+            Assert.IsEmpty(updatedAggregate.DomainEvents);
+        }
+
+        [Test]
+        public async Task Upsert_GivenDeletedAggregateWithEvents_ReturnsAggregateWithoutEvents()
+        {
+            var originalAggregate = CreateAggregate();
+            originalAggregate = await Testee.Upsert(originalAggregate);
+            
+            var updatedAggregate = UpdateAggregate(originalAggregate).MarkAsDeleted();
+            updatedAggregate = await Testee.Upsert(updatedAggregate);
+            
+            Assert.IsEmpty(updatedAggregate.DomainEvents);
         }
 
         protected abstract TAggregate CreateAggregate();

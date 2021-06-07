@@ -19,7 +19,7 @@ namespace CAC.DDD.Web.Persistence
         {
         }
 
-        public override async Task Upsert(TaskList taskList)
+        public override async Task<TaskList> Upsert(TaskList taskList)
         {
             var all = await GetAll();
             if (all.Any(l => l.Id != taskList.Id && l.Name == taskList.Name && l.OwnerId == taskList.OwnerId))
@@ -27,10 +27,11 @@ namespace CAC.DDD.Web.Persistence
                 throw new UniquenessConstraintViolationException(taskList.Id, nameof(TaskList.Name), $"a task list with name '{taskList.Name}' already exists");
             }
 
-            await base.Upsert(taskList);
+            taskList = await base.Upsert(taskList);
             all = await GetAll();
 
             _ = Interlocked.Exchange(ref entryIdCounter, all.SelectMany(l => l.Entries).Select(e => e.Id.NumericValue).Concat(new[] { 0L }).Max());
+            return taskList;
         }
 
         public Task<TaskListEntryId> GenerateEntryId() => Task.FromResult(TaskListEntryId.Of(Interlocked.Increment(ref entryIdCounter)));

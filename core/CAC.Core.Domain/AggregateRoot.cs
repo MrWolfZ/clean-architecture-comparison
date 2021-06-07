@@ -42,6 +42,6 @@ namespace CAC.Core.Domain
             return This with { IsDeleted = true };
         }
 
-        internal TAggregate WithoutEvents() => This with { DomainEvents = ValueList<DomainEvent<TAggregate>>.Empty };
+        public TAggregate WithoutEvents() => This with { DomainEvents = ValueList<DomainEvent<TAggregate>>.Empty };
     }
 }

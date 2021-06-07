@@ -23,7 +23,7 @@ namespace CAC.DDD.UnitTests.Persistence
         public async Task Upsert_GivenNewTaskListWithExistingNameAndSameOwner_ThrowsException()
         {
             var existingList = CreateTaskList();
-            await Testee.Upsert(existingList);
+            existingList = await Testee.Upsert(existingList);
 
             var list = TaskList.New(2, OwnerId, existingList.Name, ValueList<TaskListEntry>.Empty);
             _ = Assert.ThrowsAsync<UniquenessConstraintViolationException>(() => Testee.Upsert(list));
@@ -33,10 +33,10 @@ namespace CAC.DDD.UnitTests.Persistence
         public async Task Upsert_GivenNewTaskListWithExistingNameAndDifferentOwner_StoresTaskList()
         {
             var existingList = CreateTaskList();
-            await Testee.Upsert(existingList);
+            existingList = await Testee.Upsert(existingList);
 
             var list = CreateTaskList(ownerId: OwnerId + 1, name: existingList.Name);
-            await Testee.Upsert(list);
+            list = await Testee.Upsert(list);
 
             var storedList = await Testee.GetById(list.Id);
             Assert.IsNotNull(storedList);
@@ -54,11 +54,11 @@ namespace CAC.DDD.UnitTests.Persistence
         public async Task GetAll_GivenStoredTaskLists_ReturnsCollectionOfLists()
         {
             var list1 = CreateTaskList();
-            await Testee.Upsert(list1);
+            list1 = await Testee.Upsert(list1);
 
             var list2 = CreateTaskList(1);
 
-            await Testee.Upsert(list2);
+            list2 = await Testee.Upsert(list2);
 
             var lists = await Testee.GetAll();
             Assert.AreEqual(2, lists.Count);
@@ -77,9 +77,9 @@ namespace CAC.DDD.UnitTests.Persistence
             var list3 = CreateTaskList(1);
             list3 = list3.MarkEntryAsDone(list3.Entries.First().Id);
 
-            await Testee.Upsert(list1);
-            await Testee.Upsert(list2);
-            await Testee.Upsert(list3);
+            list1 = await Testee.Upsert(list1);
+            list2 = await Testee.Upsert(list2);
+            _ = await Testee.Upsert(list3);
 
             var lists = await Testee.GetAllWithPendingEntries();
             Assert.AreEqual(2, lists.Count);
@@ -94,13 +94,13 @@ namespace CAC.DDD.UnitTests.Persistence
             const long ownerId3 = OwnerId + 2;
 
             var list1 = CreateTaskList();
-            await Testee.Upsert(list1);
+            _ = await Testee.Upsert(list1);
 
             var list2 = CreateTaskList(1);
-            await Testee.Upsert(list2);
+            _ = await Testee.Upsert(list2);
 
             var list3 = CreateTaskList(ownerId: ownerId2);
-            await Testee.Upsert(list3);
+            _ = await Testee.Upsert(list3);
 
             Assert.AreEqual(2, await Testee.GetNumberOfTaskListsByOwner(OwnerId));
             Assert.AreEqual(1, await Testee.GetNumberOfTaskListsByOwner(ownerId2));

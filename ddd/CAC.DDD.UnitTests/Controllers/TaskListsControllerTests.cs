@@ -81,7 +81,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name, OwnerId = taskList.OwnerId }, JsonSerializerOptions);
 
@@ -93,7 +93,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name, OwnerId = NonPremiumOwner.Id }, JsonSerializerOptions);
 
@@ -105,7 +105,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = taskList.OwnerId }, JsonSerializerOptions);
 
@@ -117,7 +117,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList(NonPremiumOwner);
 
-            await TaskListRepository.Upsert(taskList);
+            _ = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = NonPremiumOwner.Id }, JsonSerializerOptions);
 
@@ -150,7 +150,7 @@ namespace CAC.DDD.UnitTests.Controllers
             var expectedResponse = new AddTaskToListResponseDto(1);
             var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             const string taskDescription = "task";
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = taskDescription }, JsonSerializerOptions);
@@ -173,7 +173,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = description }, JsonSerializerOptions);
 
@@ -186,7 +186,7 @@ namespace CAC.DDD.UnitTests.Controllers
             var taskList = CreateTaskList();
             var description = string.Join(string.Empty, Enumerable.Repeat("a", AddTaskToListRequestDto.MaxTaskDescriptionLength + 1));
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = description }, JsonSerializerOptions);
 
@@ -207,7 +207,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList(NonPremiumOwner, 4);
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" }, JsonSerializerOptions);
 
@@ -219,7 +219,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList(NonPremiumOwner, 5);
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" }, JsonSerializerOptions);
 
@@ -231,7 +231,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             _ = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" }, JsonSerializerOptions);
 
@@ -244,7 +244,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             _ = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" }, JsonSerializerOptions);
 
@@ -257,7 +257,7 @@ namespace CAC.DDD.UnitTests.Controllers
             var taskList = CreateTaskList(numberOfEntries: 2);
             var entryId = taskList.Entries.First().Id;
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             using var content = new StringContent(string.Empty);
             var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entryId}/isDone", content);
@@ -275,7 +275,7 @@ namespace CAC.DDD.UnitTests.Controllers
             var taskList = CreateTaskList(numberOfEntries: 2);
             var nonExistingEntryId = TaskListEntryId.Of(99);
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             using var content = new StringContent(string.Empty);
             var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{nonExistingEntryId}/isDone", content);
@@ -301,7 +301,7 @@ namespace CAC.DDD.UnitTests.Controllers
             var taskList = CreateTaskList(numberOfEntries: 1);
             var entryId = taskList.Entries.First().Id;
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             using var content = new StringContent(string.Empty);
             _ = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entryId}/isDone", content);
@@ -317,7 +317,7 @@ namespace CAC.DDD.UnitTests.Controllers
             var entryId = TaskListEntryId.Of(1);
             taskList = taskList.AddEntry(entryId, "task");
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             using var content = new StringContent(string.Empty);
             _ = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entryId}/isDone", content);
@@ -330,7 +330,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList(numberOfEntries: 2);
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 
@@ -355,7 +355,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             _ = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 
@@ -368,7 +368,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             _ = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 
@@ -381,8 +381,8 @@ namespace CAC.DDD.UnitTests.Controllers
             var taskList1 = CreateTaskList(numberOfEntries: 2);
             var taskList2 = CreateTaskList(numberOfEntries: 1);
 
-            await TaskListRepository.Upsert(taskList1);
-            await TaskListRepository.Upsert(taskList2);
+            taskList1 = await TaskListRepository.Upsert(taskList1);
+            taskList2 = await TaskListRepository.Upsert(taskList2);
 
             var response = await HttpClient.GetAsync("taskLists");
 
@@ -401,7 +401,7 @@ namespace CAC.DDD.UnitTests.Controllers
             var taskList = CreateTaskList(numberOfEntries: 2);
             taskList = taskList.MarkEntryAsDone(taskList.Entries.First().Id);
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.GetAsync($"taskLists/{taskList.Id}");
 
@@ -433,9 +433,9 @@ namespace CAC.DDD.UnitTests.Controllers
             var taskList3 = CreateTaskList(numberOfEntries: 1);
             taskList3 = taskList3.MarkEntryAsDone(taskList3.Entries.First().Id);
 
-            await TaskListRepository.Upsert(taskList1);
-            await TaskListRepository.Upsert(taskList2);
-            await TaskListRepository.Upsert(taskList3);
+            taskList1 = await TaskListRepository.Upsert(taskList1);
+            taskList2 = await TaskListRepository.Upsert(taskList2);
+            _ = await TaskListRepository.Upsert(taskList3);
 
             var response = await HttpClient.GetAsync("taskLists/withPendingEntries");
 

@@ -47,7 +47,7 @@ namespace CAC.DDD.Web.Controllers
 
             try
             {
-                await taskListRepository.Upsert(taskList);
+                taskList = await taskListRepository.Upsert(taskList);
 
                 logger.LogDebug("created new task list with name '{Name}' and id '{TaskListId}' for owner '{OwnerId}'...", request.Name, id, taskList.OwnerId);
 
@@ -84,7 +84,7 @@ namespace CAC.DDD.Web.Controllers
 
             var id = await taskListRepository.GenerateEntryId();
             taskList = taskList.AddEntry(id, request.TaskDescription);
-            await taskListRepository.Upsert(taskList);
+            taskList = await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", request.TaskDescription, taskList.Id);
 
@@ -110,7 +110,7 @@ namespace CAC.DDD.Web.Controllers
 
             taskList = taskList.MarkEntryAsDone(entryId);
 
-            await taskListRepository.Upsert(taskList);
+            taskList = await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("marked task list entry '{EntryId}' in task list '{TaskListName}' as done", entryId, taskList.Name);
 
@@ -154,7 +154,7 @@ namespace CAC.DDD.Web.Controllers
 
             taskList = taskList.MarkAsDeleted();
 
-            await taskListRepository.Upsert(taskList);
+            _ = await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("deleted task list '{TaskListId}'", taskListId);
 

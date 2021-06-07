@@ -9,7 +9,7 @@ namespace CAC.Core.Application
     {
         public Task<TId> GenerateId();
 
-        public Task Upsert(TAggregate aggregate);
+        public Task<TAggregate> Upsert(TAggregate aggregate);
 
         public Task<TAggregate?> GetById(TId id);
     }

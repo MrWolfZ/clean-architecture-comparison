@@ -23,7 +23,7 @@ namespace CAC.Core.Infrastructure.Persistence
 
         public Task<TId> GenerateId() => Task.FromResult(CreateId(Interlocked.Increment(ref idCounter)));
 
-        public virtual async Task Upsert(TAggregate aggregate)
+        public virtual async Task<TAggregate> Upsert(TAggregate aggregate)
         {
             if (aggregate.IsDeleted)
             {
@@ -36,6 +36,7 @@ namespace CAC.Core.Infrastructure.Persistence
             }
 
             await domainEventPublisher.Publish(aggregate.DomainEvents);
+            return aggregate.WithoutEvents();
         }
 
         public Task<TAggregate?> GetById(TId id)
