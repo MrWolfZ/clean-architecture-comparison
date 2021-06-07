@@ -2,15 +2,24 @@
 
 This repository contains a comparison of multiple styles for implementing a [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) in .NET (using [.NET 5](https://dotnet.microsoft.com/download/dotnet/5.0) and [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-5.0)).
 
-> Note that _clean architecture_ is arguably just the latest of a long list of names (including [hexagonal / ports and adapters](<https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)>) and [onion](https://medium.com/@shivendraodean/software-architecture-the-onion-architecture-1b235bec1dec) among others) that describe the same fundamental concept for defining your architecture: [dependency inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle). Therefore this comparison is also somewhat applicable to those styles, although the naming of concepts slightly differs.
+> Note that _clean architecture_ is arguably just the latest of a long list of names (including [hexagonal / ports and adapters](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) and [onion](https://medium.com/@shivendraodean/software-architecture-the-onion-architecture-1b235bec1dec) among others) that describe the same fundamental concept for defining your architecture: [dependency inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle). Therefore this comparison is also somewhat applicable to those styles, although the naming of concepts slightly differs.
 
-The scenario we are using for showcasing the different styles is a simple task list management application with the following properties:
+The scenario we are using for showcasing the different styles is a simple task list management application.
 
-- the system manages _task lists_ that are owned by _users_
-- a _task list_ has a unique-per-owner _name_ and contains _task list entries_
+Our domain model has the following properties:
+
+- there are _task lists_ that are owned by _users_
+- a _task list_ has a _name_ and contains _task list entries_
 - a _task list entry_ has a description and can be marked as _done_
 - there are _premium_ and non-_premium_ users
-- non-_premium_ users are limited to at most one _task list_ with at most 5 items
+
+The following are our application's business rules:
+
+- a _task list_'s name must be unique per owner
+- non-_premium_ users are limited to at most one _task list_ with at most 5 _entries_
+
+In addition to our business rules, our application has a few more behaviors:
+
 - the system gathers statistics about changes that are made to the _task lists_ it manages
 - whenever a _task list_ is created or changed the system publishes change notification to other systems
 
