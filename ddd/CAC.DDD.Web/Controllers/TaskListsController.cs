@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -37,24 +36,17 @@ namespace CAC.DDD.Web.Controllers
             {
                 return NotFound($"user {request.OwnerId} does not exist");
             }
-            
+
             var numberOfListsOwnedByOwner = await taskListRepository.GetNumberOfTaskListsByOwner(request.OwnerId);
 
             var id = await taskListRepository.GenerateId();
             var taskList = TaskList.New(id, owner, request.Name, numberOfListsOwnedByOwner);
 
-            try
-            {
-                taskList = await taskListRepository.Upsert(taskList);
+            taskList = await taskListRepository.Upsert(taskList);
 
-                logger.LogDebug("created new task list with name '{Name}' and id '{TaskListId}' for owner '{OwnerId}'...", request.Name, id, taskList.OwnerId);
+            logger.LogDebug("created new task list with name '{Name}' and id '{TaskListId}' for owner '{OwnerId}'...", request.Name, id, taskList.OwnerId);
 
-                return Ok(new CreateNewTaskListResponseDto(id));
-            }
-            catch (ArgumentException e)
-            {
-                return Conflict(e.Message);
-            }
+            return Ok(new CreateNewTaskListResponseDto(id));
         }
 
         [HttpPost("{taskListId}/tasks")]
