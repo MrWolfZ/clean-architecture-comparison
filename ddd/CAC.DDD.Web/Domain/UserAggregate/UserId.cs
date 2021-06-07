@@ -11,7 +11,7 @@ namespace CAC.DDD.Web.Domain.UserAggregate
 
         public static implicit operator UserId(long value) => Of(value);
 
-        public static UserId Of(long value) => new UserId(value);
+        public static UserId Of(long value) => new(value);
 
         public override string ToString() => Value;
     }

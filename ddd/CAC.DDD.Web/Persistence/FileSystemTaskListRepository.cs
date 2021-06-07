@@ -56,7 +56,7 @@ namespace CAC.DDD.Web.Persistence
         protected override TaskListPo ToPersistenceObject(TaskList aggregate)
         {
             var entryPos = aggregate.Entries.Select(e => new TaskListEntryPo(e.Id, e.Description, e.IsDone)).ToList();
-            return new TaskListPo(aggregate.Id, aggregate.OwnerId, aggregate.Name, entryPos);
+            return new(aggregate.Id, aggregate.OwnerId, aggregate.Name, entryPos);
         }
 
         protected override TaskList FromPersistenceObject(TaskListPo persistenceObject)

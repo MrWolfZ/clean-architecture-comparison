@@ -39,7 +39,7 @@ namespace CAC.DDD.Web.Domain.TaskListAggregate
                 throw new DomainInvariantViolationException(id, "name must be a non-empty non-whitespace string");
             }
 
-            return new TaskList(id, ownerId, name, entries);
+            return new(id, ownerId, name, entries);
         }
 
         public TaskList AddEntry(TaskListEntryId id, string description)

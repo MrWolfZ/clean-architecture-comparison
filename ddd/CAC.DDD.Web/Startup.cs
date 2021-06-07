@@ -10,7 +10,6 @@ using CAC.DDD.Web.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
 
 [assembly: InternalsVisibleTo("CAC.DDD.UnitTests")]
 
@@ -34,7 +33,7 @@ namespace CAC.DDD.Web
             services.AddControllers(c => c.UseApiPrefix()).AddJsonOptions(setup => setup.JsonSerializerOptions.AddCoreConverters());
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc(ApiVersion, new OpenApiInfo { Title = AssemblyName, Version = ApiVersion });
+                c.SwaggerDoc(ApiVersion, new() { Title = AssemblyName, Version = ApiVersion });
                 c.ConfigureCore();
             });
 

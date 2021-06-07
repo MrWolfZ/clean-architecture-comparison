@@ -23,7 +23,7 @@ namespace CAC.DDD.Web.Domain.UserAggregate
                 throw new DomainInvariantViolationException(id, "name must be a non-empty non-whitespace string");
             }
 
-            return new User(id, name, isPremium);
+            return new(id, name, isPremium);
         }
 
         protected override DomainEvent<User> CreateEvent<TPayload>(TPayload payload) => new UserDomainEvent<TPayload>(this, payload);

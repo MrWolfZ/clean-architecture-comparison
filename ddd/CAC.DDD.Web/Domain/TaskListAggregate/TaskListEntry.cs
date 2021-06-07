@@ -26,7 +26,7 @@ namespace CAC.DDD.Web.Domain.TaskListAggregate
                 throw new DomainInvariantViolationException(owningTaskListId, "item description must be a non-empty non-whitespace string");
             }
 
-            return new TaskListEntry(id, description, isDone);
+            return new(id, description, isDone);
         }
 
         public TaskListEntry MarkAsDone() => this with { IsDone = true };
