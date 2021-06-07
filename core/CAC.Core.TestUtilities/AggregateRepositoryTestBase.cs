@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain;
+using Moq;
 using NUnit.Framework;
 
 #pragma warning disable CA1707
@@ -13,6 +14,10 @@ namespace CAC.Core.TestUtilities
         where TId : EntityId<TAggregate>
     {
         protected abstract IAggregateRepository<TAggregate, TId> Testee { get; }
+
+        protected Mock<IDomainEventPublisher> DomainEventPublisherMock { get; } = new Mock<IDomainEventPublisher>();
+
+        protected IDomainEventPublisher DomainEventPublisher => DomainEventPublisherMock.Object;
 
         [Test]
         public async Task GenerateId_ReturnsNewIdOnEachCall()
@@ -63,7 +68,7 @@ namespace CAC.Core.TestUtilities
         }
 
         [Test]
-        public async Task DeleteById_GivenExistingDeletedAggregate_DeletesAggregate()
+        public async Task Upsert_GivenExistingDeletedAggregate_DeletesAggregate()
         {
             var list = CreateAggregate();
             await Testee.Upsert(list);
@@ -72,6 +77,34 @@ namespace CAC.Core.TestUtilities
 
             var storedList = await Testee.GetById(list.Id);
             Assert.IsNull(storedList);
+        }
+
+        [Test]
+        public async Task Upsert_GivenAggregateWithDomainEvents_PublishesEvents()
+        {
+            var originalAggregate = CreateAggregate();
+            await Testee.Upsert(originalAggregate);
+            
+            DomainEventPublisherMock.Verify(p => p.Publish(originalAggregate.DomainEvents));
+
+            var updatedAggregate = UpdateAggregate(originalAggregate.WithoutEvents());
+            await Testee.Upsert(updatedAggregate);
+            
+            DomainEventPublisherMock.Verify(p => p.Publish(updatedAggregate.DomainEvents));
+        }
+
+        [Test]
+        public async Task Upsert_GivenDeletedAggregateWithDomainEvents_PublishesEvents()
+        {
+            var originalAggregate = CreateAggregate();
+            await Testee.Upsert(originalAggregate);
+            
+            DomainEventPublisherMock.Verify(p => p.Publish(originalAggregate.DomainEvents));
+
+            var updatedAggregate = UpdateAggregate(originalAggregate.WithoutEvents()).MarkAsDeleted();
+            await Testee.Upsert(updatedAggregate);
+            
+            DomainEventPublisherMock.Verify(p => p.Publish(updatedAggregate.DomainEvents));
         }
 
         protected abstract TAggregate CreateAggregate();

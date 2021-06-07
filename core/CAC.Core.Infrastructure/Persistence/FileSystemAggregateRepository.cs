@@ -16,14 +16,16 @@ namespace CAC.Core.Infrastructure.Persistence
         where TId : EntityId<TAggregate>
     {
         private readonly string baseDir;
+        private readonly IDomainEventPublisher domainEventPublisher;
 
         private readonly JsonSerializerOptions serializerOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
         }.AddCoreConverters();
 
-        protected FileSystemAggregateRepository(IOptions<FileSystemStoragePersistenceOptions> options)
+        protected FileSystemAggregateRepository(IOptions<FileSystemStoragePersistenceOptions> options, IDomainEventPublisher domainEventPublisher)
         {
+            this.domainEventPublisher = domainEventPublisher;
             baseDir = options.Value.BaseDir;
 
             if (string.IsNullOrWhiteSpace(baseDir))
@@ -39,6 +41,7 @@ namespace CAC.Core.Infrastructure.Persistence
             if (aggregate.IsDeleted)
             {
                 await DeleteById(aggregate.Id);
+                await domainEventPublisher.Publish(aggregate.DomainEvents);
                 return;
             }
 
@@ -60,6 +63,8 @@ namespace CAC.Core.Infrastructure.Persistence
             newLists.Insert(idx, aggregate);
 
             await StoreAll(newLists);
+            
+            await domainEventPublisher.Publish(aggregate.DomainEvents);
         }
 
         public async Task<TAggregate?> GetById(TId id)

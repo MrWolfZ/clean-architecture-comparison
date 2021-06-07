@@ -26,6 +26,11 @@ namespace CAC.DDD.UnitTests.Persistence
 
         private static readonly DirectoryInfo StorageDir = new DirectoryInfo(Path.Join(TestContext.CurrentContext.TestDirectory, nameof(FileSystemTaskListRepositoryTests)));
 
-        protected override ITaskListRepository Testee { get; } = new FileSystemTaskListRepository(Options.Create(new FileSystemStoragePersistenceOptions { BaseDir = StorageDir.FullName }));
+        public FileSystemTaskListRepositoryTests()
+        {
+            Testee = new FileSystemTaskListRepository(Options.Create(new FileSystemStoragePersistenceOptions { BaseDir = StorageDir.FullName }), DomainEventPublisher);
+        }
+
+        protected override ITaskListRepository Testee { get; }
     }
 }

@@ -27,7 +27,7 @@ namespace CAC.DDD.UnitTests.Controllers
 
         private ITaskListRepository TaskListRepository => Resolve<ITaskListRepository>();
 
-        private ITaskListStatisticsService StatisticsService => Resolve<ITaskListStatisticsService>();
+        private ITaskListStatisticsRepository StatisticsRepository => Resolve<ITaskListStatisticsRepository>();
 
         [Test]
         public async Task CreateNewTaskList_GivenValidName_StoresTaskListAndReturnsTaskListId()
@@ -129,7 +129,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             _ = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test", OwnerId = PremiumOwner.Id }, JsonSerializerOptions);
 
-            var statistics = await StatisticsService.GetStatistics();
+            var statistics = await StatisticsRepository.Get();
             Assert.AreEqual(1, statistics.NumberOfTaskListsCreated);
         }
 
@@ -137,14 +137,17 @@ namespace CAC.DDD.UnitTests.Controllers
         public async Task CreateNewTaskList_GivenSuccess_PublishesNotification()
         {
             const string name = "test";
-            _ = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwner.Id }, JsonSerializerOptions);
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwner.Id }, JsonSerializerOptions);
+            var deserialized = await response.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<CreateNewTaskListResponseDto>(JsonSerializerOptions);
+            var id = deserialized?.Id;
 
-            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationService.TaskListCreatedMessage>(m => m.TaskList.Name == name)));
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskListCreatedMessage>(m => m.TaskListId == id)));
         }
 
         [Test]
-        public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_UpdatesTaskListAndReturnsNoContent()
+        public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_UpdatesTaskListAndReturnsEntryId()
         {
+            var expectedResponse = new AddTaskToListResponseDto(1);
             var taskList = CreateTaskList();
 
             await TaskListRepository.Upsert(taskList);
@@ -152,7 +155,11 @@ namespace CAC.DDD.UnitTests.Controllers
             const string taskDescription = "task";
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = taskDescription }, JsonSerializerOptions);
 
-            await response.AssertStatusCode(HttpStatusCode.NoContent);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<AddTaskToListResponseDto>(JsonSerializerOptions);
+
+            Assert.AreEqual(expectedResponse, responseContent);
 
             var storedTaskList = await TaskListRepository.GetById(taskList.Id);
 
@@ -196,7 +203,7 @@ namespace CAC.DDD.UnitTests.Controllers
         }
 
         [Test]
-        public async Task AddTaskToList_GivenTaskListWithLessThanFiveEntriesAndNonPremiumOwner_ReturnsNoContent()
+        public async Task AddTaskToList_GivenTaskListWithLessThanFiveEntriesAndNonPremiumOwner_ReturnsSuccess()
         {
             var taskList = CreateTaskList(NonPremiumOwner, 4);
 
@@ -204,7 +211,7 @@ namespace CAC.DDD.UnitTests.Controllers
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" }, JsonSerializerOptions);
 
-            await response.AssertStatusCode(HttpStatusCode.NoContent);
+            await response.AssertStatusCode(HttpStatusCode.OK);
         }
 
         [Test]
@@ -228,7 +235,7 @@ namespace CAC.DDD.UnitTests.Controllers
 
             _ = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" }, JsonSerializerOptions);
 
-            var statistics = await StatisticsService.GetStatistics();
+            var statistics = await StatisticsRepository.Get();
             Assert.AreEqual(1, statistics.NumberOfTimesTaskListsWereEdited);
         }
 
@@ -241,7 +248,7 @@ namespace CAC.DDD.UnitTests.Controllers
 
             _ = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" }, JsonSerializerOptions);
 
-            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationService.TaskAddedToListMessage>(m => m.TaskList.Name == taskList.Name)));
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskAddedToListMessage>(m => m.TaskListId == taskList.Id)));
         }
 
         [Test]
@@ -299,7 +306,7 @@ namespace CAC.DDD.UnitTests.Controllers
             using var content = new StringContent(string.Empty);
             _ = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entryId}/isDone", content);
 
-            var statistics = await StatisticsService.GetStatistics();
+            var statistics = await StatisticsRepository.Get();
             Assert.AreEqual(1, statistics.NumberOfTimesTaskListsWereEdited);
         }
 
@@ -315,7 +322,7 @@ namespace CAC.DDD.UnitTests.Controllers
             using var content = new StringContent(string.Empty);
             _ = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entryId}/isDone", content);
 
-            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationService.TaskMarkedAsDoneMessage>(m => m.TaskList.Name == taskList.Name && m.TaskListEntryId == entryId)));
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskMarkedAsDoneMessage>(m => m.TaskListId == taskList.Id && m.TaskListEntryId == entryId)));
         }
 
         [Test]
@@ -352,7 +359,7 @@ namespace CAC.DDD.UnitTests.Controllers
 
             _ = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 
-            var statistics = await StatisticsService.GetStatistics();
+            var statistics = await StatisticsRepository.Get();
             Assert.AreEqual(1, statistics.NumberOfTaskListsDeleted);
         }
 
@@ -365,7 +372,7 @@ namespace CAC.DDD.UnitTests.Controllers
 
             _ = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 
-            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationService.TaskListDeletedMessage>(m => m.TaskListId == taskList.Id)));
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskListDeletedMessage>(m => m.TaskListId == taskList.Id)));
         }
 
         [Test]

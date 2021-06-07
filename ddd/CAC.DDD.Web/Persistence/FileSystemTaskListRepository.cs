@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
 using CAC.Core.Infrastructure.Persistence;
 using CAC.DDD.Web.Domain.TaskListAggregate;
@@ -12,8 +13,8 @@ namespace CAC.DDD.Web.Persistence
 {
     internal sealed class FileSystemTaskListRepository : FileSystemAggregateRepository<TaskList, TaskListId, FileSystemTaskListRepository.TaskListPo>, ITaskListRepository
     {
-        public FileSystemTaskListRepository(IOptions<FileSystemStoragePersistenceOptions> options)
-            : base(options)
+        public FileSystemTaskListRepository(IOptions<FileSystemStoragePersistenceOptions> options, IDomainEventPublisher domainEventPublisher)
+            : base(options, domainEventPublisher)
         {
         }
 

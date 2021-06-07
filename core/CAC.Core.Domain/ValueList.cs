@@ -15,7 +15,7 @@ using System.Linq;
 // ReSharper disable once CheckNamespace (we want this to be in the same namespace as the original `ImmutableList`)
 namespace System.Collections.Immutable
 {
-    public sealed class ValueList<T> : IList<T>, IList, IEquatable<ValueList<T>>
+    public sealed class ValueList<T> : IList<T>, IList, IReadOnlyCollection<T>, IEquatable<ValueList<T>>
         where T : notnull
     {
         public static readonly ValueList<T> Empty = new ValueList<T>(ImmutableList<T>.Empty);
@@ -74,6 +74,12 @@ namespace System.Collections.Immutable
             return value is T || (value == null && default(T) == null);
         }
 
+        public override string ToString() => $"[{string.Join(", ", wrappedList.Select(i => i.ToString()))}]";
+
+        public static bool operator ==(ValueList<T> lhs, ValueList<T> rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ValueList<T> lhs, ValueList<T> rhs) => !(lhs == rhs);
+
         #region ICollection Methods
 
         void ICollection.CopyTo(Array array, int index) => ((ICollection)wrappedList).CopyTo(array, index);
@@ -126,12 +132,6 @@ namespace System.Collections.Immutable
         }
 
         #endregion
-
-        public override string ToString() => $"[{string.Join(", ", wrappedList.Select(i => i.ToString()))}]";
-
-        public static bool operator ==(ValueList<T> lhs, ValueList<T> rhs) => lhs.Equals(rhs);
-
-        public static bool operator !=(ValueList<T> lhs, ValueList<T> rhs) => !(lhs == rhs);
     }
 
     public static class Ex

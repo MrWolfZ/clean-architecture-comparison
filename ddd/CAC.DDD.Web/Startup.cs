@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using CAC.Core.Application;
 using CAC.Core.Domain;
 using CAC.Core.Infrastructure.Persistence;
 using CAC.Core.Infrastructure.Serialization;
@@ -48,8 +49,9 @@ namespace CAC.DDD.Web
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddSingleton<ITaskListStatisticsRepository, InMemoryTaskListStatisticsRepository>();
             
-            services.AddTransient<ITaskListStatisticsService, TaskListStatisticsService>();
-            services.AddTransient<ITaskListNotificationService, TaskListNotificationService>();
+            services.AddDomainEventPublisher();
+            services.AddDomainEventHandler<TaskListStatisticsDomainEventHandler>();
+            services.AddDomainEventHandler<TaskListNotificationDomainEventHandler>();
             
             services.AddTransient<IMessageQueueAdapter, NullMessageQueueAdapter>();
         }

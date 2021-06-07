@@ -2,7 +2,7 @@
 {
     public abstract record DomainEvent;
 
-    public abstract record DomainEvent<TAggregate>
+    public abstract record DomainEvent<TAggregate> : DomainEvent
     {
         protected DomainEvent(TAggregate aggregate)
         {

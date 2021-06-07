@@ -13,21 +13,29 @@ namespace CAC.Core.Infrastructure.Persistence
         where TId : EntityId<TAggregate>
     {
         private readonly ConcurrentDictionary<TId, TAggregate> aggregatesById = new ConcurrentDictionary<TId, TAggregate>();
+        private readonly IDomainEventPublisher domainEventPublisher;
         private long idCounter;
-        
+
+        protected InMemoryAggregateRepository(IDomainEventPublisher domainEventPublisher)
+        {
+            this.domainEventPublisher = domainEventPublisher;
+        }
+
         public Task<TId> GenerateId() => Task.FromResult(CreateId(Interlocked.Increment(ref idCounter)));
 
-        public virtual Task Upsert(TAggregate aggregate)
+        public virtual async Task Upsert(TAggregate aggregate)
         {
             if (aggregate.IsDeleted)
             {
                 _ = aggregatesById.Remove(aggregate.Id, out _);
-                return Task.CompletedTask;
+            }
+            else
+            {
+                _ = aggregatesById.AddOrUpdate(aggregate.Id, _ => aggregate.WithoutEvents(), (_, _) => aggregate.WithoutEvents());
+                _ = Interlocked.Exchange(ref idCounter, aggregatesById.Keys.Select(id => id.NumericValue).Max());
             }
 
-            _ = aggregatesById.AddOrUpdate(aggregate.Id, _ => aggregate.WithoutEvents(), (_, _) => aggregate.WithoutEvents());
-            _ = Interlocked.Exchange(ref idCounter, aggregatesById.Keys.Select(id => id.NumericValue).Max());
-            return Task.CompletedTask;
+            await domainEventPublisher.Publish(aggregate.DomainEvents);
         }
 
         public Task<TAggregate?> GetById(TId id)

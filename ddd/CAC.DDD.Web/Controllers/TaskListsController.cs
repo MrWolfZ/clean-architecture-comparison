@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using CAC.DDD.Web.Domain.TaskListAggregate;
 using CAC.DDD.Web.Dtos;
 using CAC.DDD.Web.Persistence;
-using CAC.DDD.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -19,21 +18,15 @@ namespace CAC.DDD.Web.Controllers
         private const int NonPremiumUserTaskEntryCountLimit = 5;
 
         private readonly ILogger<TaskListsController> logger;
-        private readonly ITaskListStatisticsService statisticsService;
-        private readonly ITaskListNotificationService notificationService;
         private readonly ITaskListRepository taskListRepository;
         private readonly IUserRepository userRepository;
 
         public TaskListsController(ITaskListRepository taskListRepository,
                                    IUserRepository userRepository,
-                                   ITaskListStatisticsService statisticsService,
-                                   ITaskListNotificationService notificationService,
                                    ILogger<TaskListsController> logger)
         {
             this.taskListRepository = taskListRepository;
             this.logger = logger;
-            this.notificationService = notificationService;
-            this.statisticsService = statisticsService;
             this.userRepository = userRepository;
         }
 
@@ -58,9 +51,6 @@ namespace CAC.DDD.Web.Controllers
 
                 logger.LogDebug("created new task list with name '{Name}' and id '{TaskListId}' for owner '{OwnerId}'...", request.Name, id, taskList.OwnerId);
 
-                await statisticsService.OnTaskListCreated(taskList);
-                await notificationService.OnTaskListCreated(taskList);
-
                 return Ok(new CreateNewTaskListResponseDto(id));
             }
             catch (ArgumentException e)
@@ -70,9 +60,8 @@ namespace CAC.DDD.Web.Controllers
         }
 
         [HttpPost("{taskListId}/tasks")]
-        [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> AddTaskToList(TaskListId taskListId, AddTaskToListRequestDto request)
+        public async Task<ActionResult<AddTaskToListResponseDto>> AddTaskToList(TaskListId taskListId, AddTaskToListRequestDto request)
         {
             var taskList = await taskListRepository.GetById(taskListId);
 
@@ -99,10 +88,7 @@ namespace CAC.DDD.Web.Controllers
 
             logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", request.TaskDescription, taskList.Id);
 
-            await statisticsService.OnTaskAddedToList(taskList, id);
-            await notificationService.OnTaskAddedToList(taskList, id);
-
-            return NoContent();
+            return Ok(new AddTaskToListResponseDto(id));
         }
 
         [HttpPut("{taskListId}/tasks/{entryId}/isDone")]
@@ -127,9 +113,6 @@ namespace CAC.DDD.Web.Controllers
             await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("marked task list entry '{EntryId}' in task list '{TaskListName}' as done", entryId, taskList.Name);
-
-            await statisticsService.OnTaskMarkedAsDone(taskList, entryId);
-            await notificationService.OnTaskMarkedAsDone(taskList, entryId);
 
             return NoContent();
         }
@@ -174,9 +157,6 @@ namespace CAC.DDD.Web.Controllers
             await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("deleted task list '{TaskListId}'", taskListId);
-
-            await statisticsService.OnTaskListDeleted(taskListId);
-            await notificationService.OnTaskListDeleted(taskListId);
 
             return NoContent();
         }

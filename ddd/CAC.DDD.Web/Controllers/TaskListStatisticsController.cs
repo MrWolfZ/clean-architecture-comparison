@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using CAC.DDD.Web.Domain;
-using CAC.DDD.Web.Services;
+using CAC.DDD.Web.Persistence;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CAC.DDD.Web.Controllers
@@ -9,17 +9,17 @@ namespace CAC.DDD.Web.Controllers
     [Route("taskListStatistics")]
     public class TaskListStatisticsController : ControllerBase
     {
-        private readonly ITaskListStatisticsService statisticsService;
+        private readonly ITaskListStatisticsRepository repository;
 
-        public TaskListStatisticsController(ITaskListStatisticsService statisticsService)
+        public TaskListStatisticsController(ITaskListStatisticsRepository repository)
         {
-            this.statisticsService = statisticsService;
+            this.repository = repository;
         }
 
         [HttpGet]
         public async Task<TaskListStatistics> GetAll()
         {
-            return await statisticsService.GetStatistics();
+            return await repository.Get();
         }
     }
 }

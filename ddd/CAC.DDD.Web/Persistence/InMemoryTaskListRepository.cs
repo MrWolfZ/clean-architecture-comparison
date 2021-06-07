@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
 using CAC.Core.Infrastructure.Persistence;
 using CAC.DDD.Web.Domain.TaskListAggregate;
@@ -12,6 +13,11 @@ namespace CAC.DDD.Web.Persistence
     internal sealed class InMemoryTaskListRepository : InMemoryAggregateRepository<TaskList, TaskListId>, ITaskListRepository
     {
         private long entryIdCounter;
+
+        public InMemoryTaskListRepository(IDomainEventPublisher domainEventPublisher)
+            : base(domainEventPublisher)
+        {
+        }
 
         public override async Task Upsert(TaskList taskList)
         {

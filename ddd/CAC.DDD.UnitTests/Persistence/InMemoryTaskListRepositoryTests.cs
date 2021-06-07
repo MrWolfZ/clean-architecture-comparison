@@ -6,6 +6,11 @@ namespace CAC.DDD.UnitTests.Persistence
     [TestFixture]
     public sealed class InMemoryTaskListRepositoryTests : TaskListRepositoryTests
     {
-        protected override ITaskListRepository Testee { get; } = new InMemoryTaskListRepository();
+        public InMemoryTaskListRepositoryTests()
+        {
+            Testee = new InMemoryTaskListRepository(DomainEventPublisher);
+        }
+
+        protected override ITaskListRepository Testee { get; }
     }
 }
