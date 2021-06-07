@@ -17,7 +17,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         {
             var expectedResponse = new TaskListStatistics { NumberOfTaskListsCreated = 1 };
 
-            await StatisticsService.OnTaskListCreated(new TaskList(1, 1, "test"));
+            await StatisticsService.OnTaskListCreated(new(1, 1, "test"));
 
             var response = await HttpClient.GetFromJsonAsync<TaskListStatistics>("taskListStatistics");
 

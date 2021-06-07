@@ -2,7 +2,7 @@
 
 This repository contains a comparison of multiple styles for implementing a [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) in .NET (using [.NET 5](https://dotnet.microsoft.com/download/dotnet/5.0) and [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-5.0)).
 
-> Note that _clean architecture_ is arguably just the latest of a long list of names (including [hexagonal / ports and adapters](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) and [onion](https://medium.com/@shivendraodean/software-architecture-the-onion-architecture-1b235bec1dec) among others) that describe the same fundamental concept for defining your architecture: [dependency inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle). Therefore this comparison is also somewhat applicable to those styles, although the naming of concepts slightly differs.
+> Note that _clean architecture_ is arguably just the latest of a long list of names (including [hexagonal / ports and adapters](<https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)>) and [onion](https://medium.com/@shivendraodean/software-architecture-the-onion-architecture-1b235bec1dec) among others) that describe the same fundamental concept for defining your architecture: [dependency inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle). Therefore this comparison is also somewhat applicable to those styles, although the naming of concepts slightly differs.
 
 The scenario we are using for showcasing the different styles is a simple task list management application with the following properties:
 
@@ -41,12 +41,11 @@ Below you can find a list of the various styles we are comparing. We recommend y
 
 ## Open Points
 
-- change inspection settings to allow C# 9 object instantiation shorthands
 - add `README` for `ddd`
 - add `README` for `basic`
 - adjust `basic` based on `ddd`
 - adjust `cqs` based on `basic`
-    - split write and read repositories
+  - split write and read repositories
 - rename `TaskListsController` to `TaskListsApi` in CQS
 - change inspection settings to not mark un-instantiated classes as suggestions but as hints
 - change inspection settings to ignore files whose name ends on `Dto`, `Request`, `Response` etc.

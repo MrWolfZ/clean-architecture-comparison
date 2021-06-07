@@ -203,10 +203,10 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await TaskListRepository.Store(taskList);
 
-            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(3, taskList.Id, "task 3", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(4, taskList.Id, "task 4", false));
+            await TaskListEntryRepository.Store(new(1, taskList.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new(2, taskList.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new(3, taskList.Id, "task 3", false));
+            await TaskListEntryRepository.Store(new(4, taskList.Id, "task 4", false));
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" });
 
@@ -220,11 +220,11 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await TaskListRepository.Store(taskList);
 
-            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(3, taskList.Id, "task 3", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(4, taskList.Id, "task 4", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(5, taskList.Id, "task 5", false));
+            await TaskListEntryRepository.Store(new(1, taskList.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new(2, taskList.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new(3, taskList.Id, "task 3", false));
+            await TaskListEntryRepository.Store(new(4, taskList.Id, "task 4", false));
+            await TaskListEntryRepository.Store(new(5, taskList.Id, "task 5", false));
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" });
 
@@ -265,7 +265,7 @@ namespace CAC.Baseline.UnitTests.Controllers
             await TaskListRepository.Store(taskList);
 
             await TaskListEntryRepository.Store(taskListEntry);
-            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new(2, taskList.Id, "task 2", false));
 
             using var content = new StringContent(string.Empty);
             var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{taskListEntry.Id}/isDone", content);
@@ -284,8 +284,8 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await TaskListRepository.Store(taskList);
 
-            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new(1, taskList.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new(2, taskList.Id, "task 2", false));
 
             using var content = new StringContent(string.Empty);
             var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/3/isDone", content);
@@ -342,8 +342,8 @@ namespace CAC.Baseline.UnitTests.Controllers
             await TaskListRepository.Store(taskList1);
             await TaskListRepository.Store(taskList2);
 
-            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList1.Id, "task 1", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList1.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new(1, taskList1.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new(2, taskList1.Id, "task 2", false));
 
             var response = await HttpClient.GetAsync("taskLists");
 
@@ -363,8 +363,8 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await TaskListRepository.Store(taskList);
 
-            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new(1, taskList.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new(2, taskList.Id, "task 2", false));
 
             var response = await HttpClient.GetAsync($"taskLists/{taskList.Id}");
 
@@ -397,10 +397,10 @@ namespace CAC.Baseline.UnitTests.Controllers
             await TaskListRepository.Store(taskList2);
             await TaskListRepository.Store(taskList3);
 
-            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList1.Id, "task 1", true));
-            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList1.Id, "task 2", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(3, taskList2.Id, "task 1", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(4, taskList3.Id, "task 1", true));
+            await TaskListEntryRepository.Store(new(1, taskList1.Id, "task 1", true));
+            await TaskListEntryRepository.Store(new(2, taskList1.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new(3, taskList2.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new(4, taskList3.Id, "task 1", true));
 
             var response = await HttpClient.GetAsync("taskLists/withPendingEntries");
 
@@ -420,8 +420,8 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await TaskListRepository.Store(taskList);
 
-            await TaskListEntryRepository.Store(new TaskListEntry(1, taskList.Id, "task 1", false));
-            await TaskListEntryRepository.Store(new TaskListEntry(2, taskList.Id, "task 2", false));
+            await TaskListEntryRepository.Store(new(1, taskList.Id, "task 1", false));
+            await TaskListEntryRepository.Store(new(2, taskList.Id, "task 2", false));
 
             var response = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 

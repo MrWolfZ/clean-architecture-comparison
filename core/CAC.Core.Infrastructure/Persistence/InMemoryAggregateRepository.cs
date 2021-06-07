@@ -12,7 +12,7 @@ namespace CAC.Core.Infrastructure.Persistence
         where TAggregate : AggregateRoot<TAggregate, TId>
         where TId : EntityId<TAggregate>
     {
-        private readonly ConcurrentDictionary<TId, TAggregate> aggregatesById = new ConcurrentDictionary<TId, TAggregate>();
+        private readonly ConcurrentDictionary<TId, TAggregate> aggregatesById = new();
         private readonly IDomainEventPublisher domainEventPublisher;
         private long idCounter;
 

@@ -11,7 +11,7 @@ namespace CAC.DDD.UnitTests.Controllers
 {
     public abstract class BaselineControllerTestBase : ControllerTestBase
     {
-        protected Mock<IMessageQueueAdapter> MessageQueueAdapterMock { get; } = new Mock<IMessageQueueAdapter>();
+        protected Mock<IMessageQueueAdapter> MessageQueueAdapterMock { get; } = new();
 
         protected override void ConfigureWebHost(IWebHostBuilder webHost)
         {

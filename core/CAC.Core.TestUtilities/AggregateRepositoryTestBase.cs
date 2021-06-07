@@ -15,7 +15,7 @@ namespace CAC.Core.TestUtilities
     {
         protected abstract IAggregateRepository<TAggregate, TId> Testee { get; }
 
-        protected Mock<IDomainEventPublisher> DomainEventPublisherMock { get; } = new Mock<IDomainEventPublisher>();
+        protected Mock<IDomainEventPublisher> DomainEventPublisherMock { get; } = new();
 
         protected IDomainEventPublisher DomainEventPublisher => DomainEventPublisherMock.Object;
 

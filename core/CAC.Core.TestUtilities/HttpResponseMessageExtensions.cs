@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -14,7 +13,7 @@ namespace CAC.Core.TestUtilities
         {
             if (response.StatusCode != expectedStatusCode)
             {
-                throw new Exception($"expected response to have status {expectedStatusCode} but it had {response.StatusCode}\nproblem details:\n{await FormatResponse()}");
+                throw new($"expected response to have status {expectedStatusCode} but it had {response.StatusCode}\nproblem details:\n{await FormatResponse()}");
 
                 async Task<string> FormatResponse()
                 {

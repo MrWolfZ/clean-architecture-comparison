@@ -12,7 +12,7 @@ namespace CAC.Baseline.Web.Persistence
 {
     internal sealed class FileSystemTaskListEntryRepository : ITaskListEntryRepository
     {
-        private static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions SerializerOptions = new()
         {
             WriteIndented = true,
         };

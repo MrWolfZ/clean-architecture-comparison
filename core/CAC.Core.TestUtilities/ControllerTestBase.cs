@@ -62,7 +62,7 @@ namespace CAC.Core.TestUtilities
             host = await hostBuilder.StartAsync();
             client = host.GetTestClient();
 
-            client.BaseAddress = new Uri(client.BaseAddress!, $"{ApiPrefix}/");
+            client.BaseAddress = new(client.BaseAddress!, $"{ApiPrefix}/");
         }
 
         [TearDown]

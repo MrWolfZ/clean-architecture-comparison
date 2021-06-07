@@ -10,7 +10,7 @@ namespace CAC.Baseline.Web.Persistence
 {
     internal sealed class InMemoryTaskListRepository : ITaskListRepository
     {
-        private readonly ConcurrentDictionary<long, TaskList> listsById = new ConcurrentDictionary<long, TaskList>();
+        private readonly ConcurrentDictionary<long, TaskList> listsById = new();
         private long idCounter;
 
         public Task<long> GenerateId() => Task.FromResult(Interlocked.Increment(ref idCounter));

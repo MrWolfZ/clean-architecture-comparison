@@ -24,7 +24,7 @@ namespace CAC.Baseline.UnitTests.Persistence
             StorageDir.Delete(true);
         }
 
-        private static readonly DirectoryInfo StorageDir = new DirectoryInfo(Path.Join(TestContext.CurrentContext.TestDirectory, nameof(FileSystemTaskListRepositoryTests)));
+        private static readonly DirectoryInfo StorageDir = new(Path.Join(TestContext.CurrentContext.TestDirectory, nameof(FileSystemTaskListRepositoryTests)));
 
         protected override ITaskListRepository Testee { get; } = new FileSystemTaskListRepository(Options.Create(new FileSystemStoragePersistenceOptions { BaseDir = StorageDir.FullName }));
     }

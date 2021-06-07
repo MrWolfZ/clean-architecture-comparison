@@ -11,7 +11,7 @@ namespace CAC.Core.Web
 
         public ApiPrefixRouteConvention(IRouteTemplateProvider routeTemplateProvider)
         {
-            centralPrefix = new AttributeRouteModel(routeTemplateProvider);
+            centralPrefix = new(routeTemplateProvider);
         }
 
         public void Apply(ApplicationModel application)

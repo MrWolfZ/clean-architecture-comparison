@@ -5,8 +5,8 @@ namespace CAC.Baseline.Web.Persistence
 {
     internal sealed class InMemoryTaskListStatisticsRepository : ITaskListStatisticsRepository
     {
-        private readonly object lockObject = new object();
-        private TaskListStatistics storeStatistics = new TaskListStatistics();
+        private readonly object lockObject = new();
+        private TaskListStatistics storeStatistics = new();
 
         public Task<TaskListStatistics> Get() => Task.FromResult(storeStatistics);
 

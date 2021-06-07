@@ -11,10 +11,13 @@ namespace CAC.Core.Application
     internal sealed class DomainEventPublisher : IDomainEventPublisher
     {
         private readonly IReadOnlyCollection<IDomainEventHandler> eventHandlers;
-        private readonly ConcurrentDictionary<Type, Type> handlerTypeByEventType = new ConcurrentDictionary<Type, Type>();
-        private readonly ConcurrentDictionary<(IDomainEventHandler, Type), Func<DomainEvent, Task>> publishFunctions = new ConcurrentDictionary<(IDomainEventHandler, Type), Func<DomainEvent, Task>>();
+        private readonly ConcurrentDictionary<Type, Type> handlerTypeByEventType = new();
+        private readonly ConcurrentDictionary<(IDomainEventHandler, Type), Func<DomainEvent, Task>> publishFunctions = new();
 
-        public DomainEventPublisher(IEnumerable<IDomainEventHandler> eventHandlers) => this.eventHandlers = eventHandlers.ToList();
+        public DomainEventPublisher(IEnumerable<IDomainEventHandler> eventHandlers)
+        {
+            this.eventHandlers = eventHandlers.ToList();
+        }
 
         public Task Publish(DomainEvent evt, params DomainEvent[] otherEvents) => Publish(new[] { evt }.Concat(otherEvents).ToList());
 

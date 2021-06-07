@@ -10,7 +10,7 @@ namespace CAC.Baseline.Web.Persistence
 {
     internal sealed class InMemoryTaskListEntryRepository : ITaskListEntryRepository
     {
-        private readonly ConcurrentDictionary<long, TaskListEntry> entriesById = new ConcurrentDictionary<long, TaskListEntry>();
+        private readonly ConcurrentDictionary<long, TaskListEntry> entriesById = new();
         private long idCounter;
 
         public Task<long> GenerateId()

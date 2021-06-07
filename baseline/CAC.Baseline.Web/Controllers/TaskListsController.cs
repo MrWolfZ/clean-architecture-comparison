@@ -196,6 +196,6 @@ namespace CAC.Baseline.Web.Controllers
             return lists.Select(l => new TaskListDto(l.Id, l.Name, entriesByTaskListId[l.Id].Select(ToDto).ToList())).ToList();
         }
 
-        private static TaskListEntryDto ToDto(TaskListEntry entry) => new TaskListEntryDto(entry.Id, entry.Description, entry.IsDone);
+        private static TaskListEntryDto ToDto(TaskListEntry entry) => new(entry.Id, entry.Description, entry.IsDone);
     }
 }

@@ -74,11 +74,11 @@ namespace CAC.Core.Web.Swashbuckle
             {
                 if (!operationHasResponseContent)
                 {
-                    return new OpenApiMediaType();
+                    return new();
                 }
 
                 var schema = context.SchemaGenerator.GenerateSchema(responseType, context.SchemaRepository);
-                return new OpenApiMediaType { Schema = schema };
+                return new() { Schema = schema };
             }
         }
 
@@ -145,7 +145,7 @@ namespace CAC.Core.Web.Swashbuckle
         private static OpenApiMediaType GetProblemDetailsMediaType(OperationFilterContext context)
         {
             var problemDetailsSchema = context.SchemaGenerator.GenerateSchema(typeof(ProblemDetails), context.SchemaRepository);
-            return new OpenApiMediaType { Schema = problemDetailsSchema };
+            return new() { Schema = problemDetailsSchema };
         }
     }
 }
