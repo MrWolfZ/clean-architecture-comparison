@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Domain;
+using CAC.Core.Domain.Exceptions;
 using CAC.CQS.Domain.TaskLists;
 
 namespace CAC.CQS.Infrastructure.TaskLists
@@ -16,10 +17,10 @@ namespace CAC.CQS.Infrastructure.TaskLists
         {
             if (listsById.Values.Any(l => l.Id != taskList.Id && l.Name == taskList.Name))
             {
-                throw new UniquenessConstraintDomainValidationException(taskList.Id, nameof(TaskList.Name), taskList.Name);
+                throw new UniquenessConstraintViolationException(taskList.Id, nameof(TaskList.Name), taskList.Name);
             }
 
-            listsById.AddOrUpdate(taskList.Id, _ => taskList, (_, _) => taskList);
+            _ = listsById.AddOrUpdate(taskList.Id, _ => taskList, (_, _) => taskList);
             return Task.CompletedTask;
         }
 

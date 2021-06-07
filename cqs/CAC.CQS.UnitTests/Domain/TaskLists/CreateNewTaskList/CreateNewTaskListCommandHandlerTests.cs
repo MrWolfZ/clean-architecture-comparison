@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using CAC.Core.Domain;
+using CAC.Core.Domain.Exceptions;
 using CAC.CQS.Domain.TaskLists;
 using CAC.CQS.Domain.TaskLists.CreateNewTaskList;
 using Microsoft.Extensions.Logging;
@@ -24,7 +24,7 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists.CreateNewTaskList
             var expectedId = TaskListId.Of(1);
             var expectedList = TaskList.New(expectedId, name);
 
-            repositoryMock.Setup(r => r.GenerateId()).ReturnsAsync(expectedId);
+            _ = repositoryMock.Setup(r => r.GenerateId()).ReturnsAsync(expectedId);
 
             var response = await testee.ExecuteCommand(new CreateNewTaskListCommand { Name = name });
 
@@ -37,9 +37,9 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists.CreateNewTaskList
         [Test]
         public void GivenInvalidName_ThrowsDomainException()
         {
-            repositoryMock.Setup(r => r.GenerateId()).ReturnsAsync(1);
+            _ = repositoryMock.Setup(r => r.GenerateId()).ReturnsAsync(1);
 
-            Assert.ThrowsAsync<DomainValidationException>(() => testee.ExecuteCommand(new CreateNewTaskListCommand { Name = " " }));
+            _ = Assert.ThrowsAsync<DomainInvariantViolationException>(() => testee.ExecuteCommand(new CreateNewTaskListCommand { Name = " " }));
         }
     }
 }

@@ -1,5 +1,5 @@
 using System.Reflection;
-using CAC.Core.Domain;
+using CAC.Core.Infrastructure.Serialization;
 using CAC.Core.Web;
 using CAC.CQS.Domain;
 using CAC.CQS.Infrastructure;
@@ -10,7 +10,7 @@ using Microsoft.OpenApi.Models;
 
 namespace CAC.CQS.Web
 {
-    public class Startup
+    public sealed class Startup
     {
         private const string ApiVersion = "v1";
 

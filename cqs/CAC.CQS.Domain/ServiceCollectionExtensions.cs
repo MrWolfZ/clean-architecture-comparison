@@ -17,7 +17,7 @@ namespace CAC.CQS.Domain
             services.AddCommandHandlers();
             services.AddQueryHandlers();
 
-            Assembly.GetExecutingAssembly().AddTypeConverterAttributes();
+            Assembly.GetExecutingAssembly().AddEntityIdTypeConverterAttributes();
         }
 
         private static void AddCommandHandlers(this IServiceCollection services)

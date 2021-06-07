@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using CAC.Core.Domain;
+using CAC.Core.Domain.Exceptions;
 
 namespace CAC.CQS.Domain.TaskLists
 {
@@ -21,12 +22,12 @@ namespace CAC.CQS.Domain.TaskLists
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                throw new DomainValidationException(id, "name must be a non-empty non-whitespace string");
+                throw new DomainInvariantViolationException(id, "name must be a non-empty non-whitespace string");
             }
 
             if (name.Length > MaxTaskListNameLength)
             {
-                throw new DomainValidationException(id, $"task list name must not be longer than {MaxTaskListNameLength} characters, but it was {name.Length} characters long");
+                throw new DomainInvariantViolationException(id, $"task list name must not be longer than {MaxTaskListNameLength} characters, but it was {name.Length} characters long");
             }
 
             return new TaskList(id, name);
@@ -36,7 +37,7 @@ namespace CAC.CQS.Domain.TaskLists
         {
             if (string.IsNullOrWhiteSpace(description))
             {
-                throw new DomainValidationException(Id, "item description must be a non-empty non-whitespace string");
+                throw new DomainInvariantViolationException(Id, "item description must be a non-empty non-whitespace string");
             }
 
             return this with
@@ -49,7 +50,7 @@ namespace CAC.CQS.Domain.TaskLists
         {
             if (itemIdx < 0 || itemIdx >= Items.Count)
             {
-                throw new DomainValidationException(Id, $"item with index {itemIdx} does not exist");
+                throw new DomainInvariantViolationException(Id, $"item with index {itemIdx} does not exist");
             }
 
             return this with

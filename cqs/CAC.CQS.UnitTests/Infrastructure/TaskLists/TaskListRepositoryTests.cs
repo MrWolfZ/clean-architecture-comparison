@@ -18,7 +18,7 @@ namespace CAC.CQS.UnitTests.Infrastructure.TaskLists
             {
                 var id = await Testee.GenerateId();
                 Assert.IsFalse(generatedIds.Contains(id));
-                generatedIds.Add(id);
+                _ = generatedIds.Add(id);
             }
         }
         

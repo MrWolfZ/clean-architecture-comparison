@@ -23,7 +23,7 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists.AddTaskToList
             const string description = "new item";
             var list = TaskList.New(1, "test list");
 
-            repositoryMock.Setup(r => r.GetById(list.Id)).ReturnsAsync(list);
+            _ = repositoryMock.Setup(r => r.GetById(list.Id)).ReturnsAsync(list);
 
             var command = new AddTaskToListCommand(list.Id) { TaskDescription = description };
             var wasFound = await testee.ExecuteCommand(command);
@@ -39,7 +39,7 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists.AddTaskToList
             const string description = "new item";
             var list = TaskList.New(1, "test list").AddItem("existing item");
 
-            repositoryMock.Setup(r => r.GetById(list.Id)).ReturnsAsync(list);
+            _ = repositoryMock.Setup(r => r.GetById(list.Id)).ReturnsAsync(list);
 
             var command = new AddTaskToListCommand(list.Id) { TaskDescription = description };
             var wasFound = await testee.ExecuteCommand(command);
@@ -54,7 +54,7 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists.AddTaskToList
         {
             var id = TaskListId.Of(1);
 
-            repositoryMock.Setup(r => r.GetById(id)).ReturnsAsync(() => null);
+            _ = repositoryMock.Setup(r => r.GetById(id)).ReturnsAsync(() => null);
 
             var command = new AddTaskToListCommand(id) { TaskDescription = "task" };
             var wasFound = await testee.ExecuteCommand(command);

@@ -28,8 +28,7 @@ namespace CAC.CQS.UnitTests.Web.TaskLists
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
-            var responseString = await response.Content.ReadAsStringAsync();
-            var responseContent = Deserialize<CreateNewTaskListCommandResponse>(responseString);
+            var responseContent = await response.Content.ReadFromJsonAsync<CreateNewTaskListCommandResponse>(JsonSerializerOptions);
 
             Assert.AreEqual(expectedResponse, responseContent);
         }
@@ -142,8 +141,7 @@ namespace CAC.CQS.UnitTests.Web.TaskLists
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
-            var responseString = await response.Content.ReadAsStringAsync();
-            var responseContent = Deserialize<GetTaskListByIdQueryResponse>(responseString);
+            var responseContent = await response.Content.ReadFromJsonAsync<GetTaskListByIdQueryResponse>(JsonSerializerOptions);
 
             Assert.AreEqual(expectedResponse, responseContent);
         }
@@ -160,7 +158,7 @@ namespace CAC.CQS.UnitTests.Web.TaskLists
 
         protected override void ConfigureWebHost(IWebHostBuilder webHost)
         {
-            webHost.UseStartup<Startup>();
+            _ = webHost.UseStartup<Startup>();
         }
     }
 }

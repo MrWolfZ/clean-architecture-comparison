@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 using System.Linq;
-using CAC.Core.Domain;
+using CAC.Core.Domain.Exceptions;
 using CAC.CQS.Domain.TaskLists;
 using NUnit.Framework;
 
@@ -24,14 +24,14 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists
         [TestCase(null)]
         public void New_GivenEmptyName_ThrowsDomainValidationException(string name)
         {
-            Assert.Throws<DomainValidationException>(() => TaskList.New(1, name));
+            _ = Assert.Throws<DomainInvariantViolationException>(() => TaskList.New(1, name));
         }
 
         [Test]
         public void New_GivenNameWithTooManyCharacters_ThrowsDomainValidationException()
         {
             var name = string.Join(string.Empty, Enumerable.Repeat("a", TaskList.MaxTaskListNameLength + 1));
-            Assert.Throws<DomainValidationException>(() => TaskList.New(1, name));
+            _ = Assert.Throws<DomainInvariantViolationException>(() => TaskList.New(1, name));
         }
         
         [Test]
@@ -70,7 +70,7 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists
         {
             var list = TaskList.New(1, "test list");
             
-            Assert.Throws<DomainValidationException>(() => list.AddItem(description));
+            _ = Assert.Throws<DomainInvariantViolationException>(() => list.AddItem(description));
         }
         
         [Test]
@@ -94,7 +94,7 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists
         {
             var list = TaskList.New(1, "test list").AddItem("task 1").AddItem("task 2");
             
-            Assert.Throws<DomainValidationException>(() => list.MarkItemAsDone(itemIdx));
+            _ = Assert.Throws<DomainInvariantViolationException>(() => list.MarkItemAsDone(itemIdx));
         }
     }
 }

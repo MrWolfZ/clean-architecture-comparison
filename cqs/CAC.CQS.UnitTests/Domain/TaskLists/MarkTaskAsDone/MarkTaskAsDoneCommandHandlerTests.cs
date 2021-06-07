@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using CAC.Core.Domain;
+using CAC.Core.Domain.Exceptions;
 using CAC.CQS.Domain.TaskLists;
 using CAC.CQS.Domain.TaskLists.MarkTaskAsDone;
 using Microsoft.Extensions.Logging;
@@ -22,7 +22,7 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists.MarkTaskAsDone
         {
             var list = TaskList.New(1, "test list").AddItem("item 1").AddItem("item 2");
 
-            repositoryMock.Setup(r => r.GetById(list.Id)).ReturnsAsync(list);
+            _ = repositoryMock.Setup(r => r.GetById(list.Id)).ReturnsAsync(list);
 
             var command = new MarkTaskAsDoneCommand(list.Id) { ItemIdx = 1 };
             var wasFound = await testee.ExecuteCommand(command);
@@ -37,7 +37,7 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists.MarkTaskAsDone
         {
             var id = TaskListId.Of(1);
 
-            repositoryMock.Setup(r => r.GetById(id)).ReturnsAsync(() => null);
+            _ = repositoryMock.Setup(r => r.GetById(id)).ReturnsAsync(() => null);
 
             var command = new MarkTaskAsDoneCommand(id) { ItemIdx = 1 };
             var wasFound = await testee.ExecuteCommand(command);
@@ -52,10 +52,10 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists.MarkTaskAsDone
         {
             var list = TaskList.New(1, "test list").AddItem("item 1").AddItem("item 2");
 
-            repositoryMock.Setup(r => r.GetById(list.Id)).ReturnsAsync(list);
+            _ = repositoryMock.Setup(r => r.GetById(list.Id)).ReturnsAsync(list);
 
             var command = new MarkTaskAsDoneCommand(list.Id) { ItemIdx = 2 };
-            Assert.ThrowsAsync<DomainValidationException>(() => testee.ExecuteCommand(command));
+            _ = Assert.ThrowsAsync<DomainInvariantViolationException>(() => testee.ExecuteCommand(command));
 
             repositoryMock.Verify(r => r.Upsert(It.IsAny<TaskList>()), Times.Never);
         }

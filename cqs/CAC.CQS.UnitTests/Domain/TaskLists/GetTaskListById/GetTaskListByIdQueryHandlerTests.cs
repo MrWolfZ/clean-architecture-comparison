@@ -20,7 +20,7 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists.GetTaskListById
             var list = TaskList.New(1, "test list").AddItem("item");
             var expectedResponse = new GetTaskListByIdQueryResponse(list);
 
-            repositoryMock.Setup(r => r.GetById(list.Id)).ReturnsAsync(list);
+            _ = repositoryMock.Setup(r => r.GetById(list.Id)).ReturnsAsync(list);
 
             var result = await testee.ExecuteQuery(list.Id);
 
@@ -32,7 +32,7 @@ namespace CAC.CQS.UnitTests.Domain.TaskLists.GetTaskListById
         {
             var id = TaskListId.Of(1);
 
-            repositoryMock.Setup(r => r.GetById(id)).ReturnsAsync(() => null);
+            _ = repositoryMock.Setup(r => r.GetById(id)).ReturnsAsync(() => null);
 
             var result = await testee.ExecuteQuery(id);
 
