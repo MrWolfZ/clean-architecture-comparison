@@ -4,6 +4,7 @@
         <RuleSetName>full</RuleSetName>
         <RuleSetName Condition="$(MSBuildProjectName.EndsWith('UnitTests'))">test</RuleSetName>
         <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)/$(RuleSetName).ruleset</CodeAnalysisRuleSet>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
 </Project>
