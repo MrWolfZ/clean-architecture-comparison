@@ -1,31 +1,32 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using CAC.Basic.Application.TaskLists;
-using CAC.Basic.Domain.TaskLists;
-using CAC.Basic.Infrastructure.TaskLists;
-using CAC.Basic.Web;
+using CAC.Basic.Domain.TaskListAggregate;
+using CAC.Basic.Domain.UserAggregate;
 using CAC.Basic.Web.TaskLists;
 using CAC.Core.TestUtilities;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
 using NUnit.Framework;
 
 namespace CAC.Basic.UnitTests.Web.TaskLists
 {
     [IntegrationTest]
-    public sealed class TaskListsControllerTests : ControllerTestBase
+    public sealed class TaskListsControllerTests : BaselineControllerTestBase
     {
-        private const long PremiumOwnerId = 1;
-        private const long NonPremiumOwnerId = 2;
+        private static readonly User PremiumOwner = User.New(1, "premium", true);
+        private static readonly User NonPremiumOwner = User.New(2, "non-premium", false);
+
+        private long taskListIdCounter;
+        private long taskListEntryIdCounter;
 
         private ITaskListRepository TaskListRepository => Resolve<ITaskListRepository>();
 
-        private ITaskListStatisticsService StatisticsService => Resolve<ITaskListStatisticsService>();
+        private ITaskListStatisticsRepository StatisticsRepository => Resolve<ITaskListStatisticsRepository>();
 
         [Test]
         public async Task CreateNewTaskList_GivenValidName_StoresTaskListAndReturnsTaskListId()
@@ -33,12 +34,11 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
             var expectedResponse = new CreateNewTaskListResponseDto(1);
 
             const string test = "test";
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = test, OwnerId = PremiumOwnerId });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = test, OwnerId = PremiumOwner.Id }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
-            var responseBody = await response.Content.ReadAsStringAsync();
-            var responseContent = Deserialize<CreateNewTaskListResponseDto>(responseBody);
+            var responseContent = await response.Content.ReadFromJsonAsync<CreateNewTaskListResponseDto>(JsonSerializerOptions);
 
             Assert.AreEqual(expectedResponse, responseContent);
 
@@ -50,7 +50,7 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task CreateNewTaskList_GivenNonExistingOwnerId_ReturnsNotFound()
         {
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test", OwnerId = 99 });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test", OwnerId = 99 }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.NotFound);
         }
@@ -60,7 +60,7 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [TestCase(null)]
         public async Task CreateNewTaskList_GivenInvalidName_ReturnsBadRequest(string name)
         {
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwnerId });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwner.Id }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
         }
@@ -70,7 +70,7 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         {
             var name = string.Join(string.Empty, Enumerable.Repeat("a", CreateNewTaskListRequestDto.MaxTaskListNameLength + 1));
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwnerId });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwner.Id }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
         }
@@ -78,11 +78,11 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task CreateNewTaskList_GivenDuplicateNameForSameOwner_ReturnsConflict()
         {
-            var taskList = new TaskList(99, PremiumOwnerId, "test");
+            var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name, OwnerId = PremiumOwnerId });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name, OwnerId = taskList.OwnerId }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.Conflict);
         }
@@ -90,11 +90,11 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task CreateNewTaskList_GivenDuplicateNameForDifferentOwner_ReturnsSuccess()
         {
-            var taskList = new TaskList(99, PremiumOwnerId, "test");
+            var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name, OwnerId = PremiumOwnerId + 1 });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = taskList.Name, OwnerId = NonPremiumOwner.Id }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.OK);
         }
@@ -102,11 +102,11 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task CreateNewTaskList_GivenPremiumOwnerWithExistingTaskList_ReturnsSuccess()
         {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
+            var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = PremiumOwnerId });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = taskList.OwnerId }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.OK);
         }
@@ -114,11 +114,11 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task CreateNewTaskList_GivenNonPremiumOwnerWithExistingTaskList_ReturnsConflict()
         {
-            var taskList = new TaskList(1, NonPremiumOwnerId, "test");
+            var taskList = CreateTaskList(NonPremiumOwner);
 
-            await TaskListRepository.Upsert(taskList);
+            _ = await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = NonPremiumOwnerId });
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "new", OwnerId = NonPremiumOwner.Id }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.Conflict);
         }
@@ -126,23 +126,39 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task CreateNewTaskList_GivenSuccess_UpdatesStatistics()
         {
-            await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test", OwnerId = PremiumOwnerId });
+            _ = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = "test", OwnerId = PremiumOwner.Id }, JsonSerializerOptions);
 
-            var statistics = await Resolve<ITaskListStatisticsService>().GetStatistics();
+            var statistics = await StatisticsRepository.Get();
             Assert.AreEqual(1, statistics.NumberOfTaskListsCreated);
         }
 
         [Test]
-        public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_UpdatesTaskListAndReturnsNoContent()
+        public async Task CreateNewTaskList_GivenSuccess_PublishesNotification()
         {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
+            const string name = "test";
+            var response = await HttpClient.PostAsJsonAsync("taskLists", new CreateNewTaskListRequestDto { Name = name, OwnerId = PremiumOwner.Id }, JsonSerializerOptions);
+            var deserialized = await response.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<CreateNewTaskListResponseDto>(JsonSerializerOptions);
+            var id = deserialized?.Id;
 
-            await TaskListRepository.Upsert(taskList);
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskListCreatedMessage>(m => m.TaskListId == id)));
+        }
+
+        [Test]
+        public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_UpdatesTaskListAndReturnsEntryId()
+        {
+            var expectedResponse = new AddTaskToListResponseDto(1);
+            var taskList = CreateTaskList();
+
+            taskList = await TaskListRepository.Upsert(taskList);
 
             const string taskDescription = "task";
-            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = taskDescription });
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = taskDescription }, JsonSerializerOptions);
 
-            await response.AssertStatusCode(HttpStatusCode.NoContent);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<AddTaskToListResponseDto>(JsonSerializerOptions);
+
+            Assert.AreEqual(expectedResponse, responseContent);
 
             var storedTaskList = await TaskListRepository.GetById(taskList.Id);
 
@@ -154,11 +170,11 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [TestCase(null)]
         public async Task AddTaskToList_GivenExistingTaskListIdAndInvalidDescription_ReturnsBadRequest(string description)
         {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
+            var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = description });
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = description }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
         }
@@ -166,12 +182,12 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task AddTaskToList_GivenExistingTaskListIdAndDescriptionWithTooManyCharacters_ReturnsBadRequest()
         {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
+            var taskList = CreateTaskList();
             var description = string.Join(string.Empty, Enumerable.Repeat("a", AddTaskToListRequestDto.MaxTaskDescriptionLength + 1));
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = description });
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = description }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
         }
@@ -179,40 +195,32 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task AddTaskToList_GivenNonExistingTaskListId_ReturnsNotFound()
         {
-            var response = await HttpClient.PostAsJsonAsync("taskLists/1/tasks", new AddTaskToListRequestDto { TaskDescription = "task" });
+            var nonExistingId = TaskListId.Of(1);
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{nonExistingId}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" });
 
             await response.AssertStatusCode(HttpStatusCode.NotFound);
         }
 
         [Test]
-        public async Task AddTaskToList_GivenTaskListWithLessThanFiveEntriesAndNonPremiumOwner_ReturnsNoContent()
+        public async Task AddTaskToList_GivenTaskListWithLessThanFiveEntriesAndNonPremiumOwner_ReturnsSuccess()
         {
-            var taskList = new TaskList(1, NonPremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
-            taskList.AddEntry("task 3");
-            taskList.AddEntry("task 4");
+            var taskList = CreateTaskList(NonPremiumOwner, 4);
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" });
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" }, JsonSerializerOptions);
 
-            await response.AssertStatusCode(HttpStatusCode.NoContent);
+            await response.AssertStatusCode(HttpStatusCode.OK);
         }
 
         [Test]
         public async Task AddTaskToList_GivenTaskListWithFiveEntriesAndNonPremiumOwner_ReturnsConflict()
         {
-            var taskList = new TaskList(1, NonPremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
-            taskList.AddEntry("task 3");
-            taskList.AddEntry("task 4");
-            taskList.AddEntry("task 5");
+            var taskList = CreateTaskList(NonPremiumOwner, 5);
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" });
+            var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" }, JsonSerializerOptions);
 
             await response.AssertStatusCode(HttpStatusCode.Conflict);
         }
@@ -220,55 +228,68 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task AddTaskToList_GivenSuccess_UpdatesStatistics()
         {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
+            var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
-            await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" });
+            _ = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" }, JsonSerializerOptions);
 
-            var statistics = await Resolve<ITaskListStatisticsService>().GetStatistics();
+            var statistics = await StatisticsRepository.Get();
             Assert.AreEqual(1, statistics.NumberOfTimesTaskListsWereEdited);
         }
 
         [Test]
-        public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryIndex_UpdatesTaskListAndReturnsNoContent()
+        public async Task AddTaskToList_GivenSuccess_PublishesNotification()
         {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
+            var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
+
+            _ = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "task" }, JsonSerializerOptions);
+
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskAddedToListMessage>(m => m.TaskListId == taskList.Id)));
+        }
+
+        [Test]
+        public async Task MarkTaskAsDone_GivenExistingTaskListIdAndValidEntryId_UpdatesTaskListAndReturnsNoContent()
+        {
+            var taskList = CreateTaskList(numberOfEntries: 2);
+            var entryId = taskList.Entries.First().Id;
+
+            taskList = await TaskListRepository.Upsert(taskList);
 
             using var content = new StringContent(string.Empty);
-            var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/1/isDone", content);
+            var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entryId}/isDone", content);
 
             await response.AssertStatusCode(HttpStatusCode.NoContent);
 
             var storedTaskList = await TaskListRepository.GetById(taskList.Id);
 
-            Assert.IsTrue(storedTaskList?.Entries.ElementAt(1).IsDone);
+            Assert.IsTrue(storedTaskList?.Entries.Single(e => e.Id == entryId).IsDone);
         }
 
         [Test]
-        public async Task MarkTaskAsDone_GivenExistingTaskListIdAndNonExistingEntryIndex_ReturnsConflict()
+        public async Task MarkTaskAsDone_GivenExistingTaskListIdAndNonExistingEntryId_ReturnsNotFound()
         {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
+            var taskList = CreateTaskList(numberOfEntries: 2);
+            var nonExistingEntryId = TaskListEntryId.Of(99);
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             using var content = new StringContent(string.Empty);
-            var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/2/isDone", content);
+            var response = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{nonExistingEntryId}/isDone", content);
 
-            await response.AssertStatusCode(HttpStatusCode.Conflict);
+            await response.AssertStatusCode(HttpStatusCode.NotFound);
         }
 
         [Test]
         public async Task MarkTaskAsDone_GivenNonExistingTaskListId_ReturnsNotFound()
         {
+            var nonExistingId = TaskListId.Of(1);
+            var entryId = TaskListEntryId.Of(1);
+            
             using var content = new StringContent(string.Empty);
-            var response = await HttpClient.PutAsync("taskLists/1/tasks/1/isDone", content);
+            var response = await HttpClient.PutAsync($"taskLists/{nonExistingId}/tasks/{entryId}/isDone", content);
 
             await response.AssertStatusCode(HttpStatusCode.NotFound);
         }
@@ -276,109 +297,39 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task MarkTaskAsDone_GivenSuccess_UpdatesStatistics()
         {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.AddEntry("task");
+            var taskList = CreateTaskList(numberOfEntries: 1);
+            var entryId = taskList.Entries.First().Id;
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             using var content = new StringContent(string.Empty);
-            await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/0/isDone", content);
+            _ = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entryId}/isDone", content);
 
-            var statistics = await Resolve<ITaskListStatisticsService>().GetStatistics();
+            var statistics = await StatisticsRepository.Get();
             Assert.AreEqual(1, statistics.NumberOfTimesTaskListsWereEdited);
         }
 
         [Test]
-        public async Task GetAll_GivenExistingTaskLists_ReturnsTaskLists()
+        public async Task MarkTaskAsDone_GivenSuccess_PublishesNotification()
         {
-            var taskList1 = new TaskList(1, PremiumOwnerId, "test 1");
-            taskList1.AddEntry("task 1");
-            taskList1.AddEntry("task 2");
+            var taskList = CreateTaskList();
+            var entryId = TaskListEntryId.Of(1);
+            taskList = taskList.AddEntry(entryId, "task", PremiumOwner);
 
-            var taskList2 = new TaskList(2, PremiumOwnerId, "test 2");
+            taskList = await TaskListRepository.Upsert(taskList);
 
-            await TaskListRepository.Upsert(taskList1);
-            await TaskListRepository.Upsert(taskList2);
+            using var content = new StringContent(string.Empty);
+            _ = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entryId}/isDone", content);
 
-            var response = await HttpClient.GetAsync("taskLists");
-
-            await response.AssertStatusCode(HttpStatusCode.OK);
-
-            var responseString = await response.Content.ReadAsStringAsync();
-            var lists = Deserialize<IReadOnlyCollection<TaskListDto>>(responseString)!;
-
-            Assert.AreEqual(2, lists.Count);
-            Assert.IsTrue(lists.Any(l => l.Name == taskList1.Name));
-            Assert.IsTrue(lists.Any(l => l.Name == taskList2.Name));
-        }
-
-        [Test]
-        public async Task GetById_GivenExistingTaskListId_ReturnsTaskList()
-        {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
-
-            await TaskListRepository.Upsert(taskList);
-
-            var response = await HttpClient.GetAsync($"taskLists/{taskList.Id}");
-
-            await response.AssertStatusCode(HttpStatusCode.OK);
-
-            var responseString = await response.Content.ReadAsStringAsync();
-            var responseContent = Deserialize<TaskListDto>(responseString);
-
-            Assert.AreEqual(taskList.Name, responseContent!.Name);
-            Assert.IsTrue(taskList.Entries.Select(TaskListEntryDto.FromTaskListEntry).SequenceEqual(responseContent.Entries));
-        }
-
-        [Test]
-        public async Task GetById_GivenNonExistingTaskListId_ReturnsNotFound()
-        {
-            var response = await HttpClient.GetAsync("taskLists/1");
-
-            await response.AssertStatusCode(HttpStatusCode.NotFound);
-        }
-
-        [Test]
-        public async Task GetAllWithPendingEntries_GivenExistingTaskLists_ReturnsTaskListsWithPendingEntries()
-        {
-            var taskList1 = new TaskList(1, PremiumOwnerId, "test 1");
-            taskList1.AddEntry("task 1");
-            taskList1.AddEntry("task 2");
-            taskList1.MarkEntryAsDone(0);
-
-            var taskList2 = new TaskList(2, PremiumOwnerId, "test 2");
-            taskList2.AddEntry("task 1");
-
-            var taskList3 = new TaskList(3, PremiumOwnerId, "test 3");
-            taskList3.AddEntry("task 1");
-            taskList3.MarkEntryAsDone(0);
-
-            await TaskListRepository.Upsert(taskList1);
-            await TaskListRepository.Upsert(taskList2);
-            await TaskListRepository.Upsert(taskList3);
-
-            var response = await HttpClient.GetAsync("taskLists/withPendingEntries");
-
-            await response.AssertStatusCode(HttpStatusCode.OK);
-
-            var responseString = await response.Content.ReadAsStringAsync();
-            var lists = Deserialize<IReadOnlyCollection<TaskListDto>>(responseString)!;
-
-            Assert.AreEqual(2, lists.Count);
-            Assert.IsTrue(lists.Any(l => l.Name == taskList1.Name));
-            Assert.IsTrue(lists.Any(l => l.Name == taskList2.Name));
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskMarkedAsDoneMessage>(m => m.TaskListId == taskList.Id && m.TaskListEntryId == entryId)));
         }
 
         [Test]
         public async Task DeleteById_GivenExistingTaskListId_DeletesTaskListAndReturnsNoContent()
         {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
-            taskList.AddEntry("task 1");
-            taskList.AddEntry("task 2");
+            var taskList = CreateTaskList(numberOfEntries: 2);
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
             var response = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 
@@ -392,7 +343,8 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task DeleteById_GivenNonExistingTaskListId_ReturnsNotFound()
         {
-            var response = await HttpClient.DeleteAsync("taskLists/1");
+            var nonExistingId = TaskListId.Of(1);
+            var response = await HttpClient.DeleteAsync($"taskLists/{nonExistingId}");
 
             await response.AssertStatusCode(HttpStatusCode.NotFound);
         }
@@ -400,24 +352,112 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         [Test]
         public async Task DeleteById_GivenSuccess_UpdatesStatistics()
         {
-            var taskList = new TaskList(1, PremiumOwnerId, "test");
+            var taskList = CreateTaskList();
 
-            await TaskListRepository.Upsert(taskList);
+            taskList = await TaskListRepository.Upsert(taskList);
 
-            await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
+            _ = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
 
-            var statistics = await StatisticsService.GetStatistics();
+            var statistics = await StatisticsRepository.Get();
             Assert.AreEqual(1, statistics.NumberOfTaskListsDeleted);
         }
 
-        protected override void ConfigureWebHost(IWebHostBuilder webHost)
+        [Test]
+        public async Task DeleteById_GivenSuccess_PublishesNotification()
         {
-            webHost.UseStartup<Startup>();
+            var taskList = CreateTaskList();
+
+            taskList = await TaskListRepository.Upsert(taskList);
+
+            _ = await HttpClient.DeleteAsync($"taskLists/{taskList.Id}");
+
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskListDeletedMessage>(m => m.TaskListId == taskList.Id)));
         }
 
-        protected override void ConfigureServices(IServiceCollection services)
+        [Test]
+        public async Task GetAll_GivenExistingTaskLists_ReturnsTaskLists()
         {
-            services.Replace(ServiceDescriptor.Singleton<ITaskListRepository, InMemoryTaskListRepository>());
+            var taskList1 = CreateTaskList(numberOfEntries: 2);
+            var taskList2 = CreateTaskList(numberOfEntries: 1);
+
+            taskList1 = await TaskListRepository.Upsert(taskList1);
+            taskList2 = await TaskListRepository.Upsert(taskList2);
+
+            var response = await HttpClient.GetAsync("taskLists");
+
+            await response.AssertStatusCode(HttpStatusCode.OK);
+
+            var lists = await response.Content.ReadFromJsonAsync<IReadOnlyCollection<TaskListDto>>(JsonSerializerOptions);
+
+            Assert.AreEqual(2, lists?.Count);
+            Assert.IsTrue(lists?.Any(l => l.Name == taskList1.Name));
+            Assert.IsTrue(lists?.Any(l => l.Name == taskList2.Name));
+        }
+
+        [Test]
+        public async Task GetById_GivenExistingTaskListId_ReturnsTaskList()
+        {
+            var taskList = CreateTaskList(numberOfEntries: 2);
+            taskList = taskList.MarkEntryAsDone(taskList.Entries.First().Id);
+
+            taskList = await TaskListRepository.Upsert(taskList);
+
+            var response = await HttpClient.GetAsync($"taskLists/{taskList.Id}");
+
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            
+            var responseContent = await response.Content.ReadFromJsonAsync<TaskListDto>(JsonSerializerOptions);
+
+            Assert.AreEqual(taskList.Name, responseContent!.Name);
+            Assert.IsTrue(taskList.Entries.Select(TaskListEntryDto.FromTaskListEntry).SequenceEqual(responseContent.Entries));
+        }
+
+        [Test]
+        public async Task GetById_GivenNonExistingTaskListId_ReturnsNotFound()
+        {
+            var nonExistingId = TaskListId.Of(1);
+            var response = await HttpClient.GetAsync($"taskLists/{nonExistingId}");
+
+            await response.AssertStatusCode(HttpStatusCode.NotFound);
+        }
+
+        [Test]
+        public async Task GetAllWithPendingEntries_GivenExistingTaskLists_ReturnsTaskListsWithPendingEntries()
+        {
+            var taskList1 = CreateTaskList(numberOfEntries: 2);
+            taskList1 = taskList1.MarkEntryAsDone(taskList1.Entries.First().Id);
+
+            var taskList2 = CreateTaskList(numberOfEntries: 1);
+            
+            var taskList3 = CreateTaskList(numberOfEntries: 1);
+            taskList3 = taskList3.MarkEntryAsDone(taskList3.Entries.First().Id);
+
+            taskList1 = await TaskListRepository.Upsert(taskList1);
+            taskList2 = await TaskListRepository.Upsert(taskList2);
+            _ = await TaskListRepository.Upsert(taskList3);
+
+            var response = await HttpClient.GetAsync("taskLists/withPendingEntries");
+
+            await response.AssertStatusCode(HttpStatusCode.OK);
+
+            var lists = await response.Content.ReadFromJsonAsync<IReadOnlyCollection<TaskListDto>>(JsonSerializerOptions);
+
+            Assert.AreEqual(2, lists?.Count);
+            Assert.IsTrue(lists?.Any(l => l.Name == taskList1.Name));
+            Assert.IsTrue(lists?.Any(l => l.Name == taskList2.Name));
+        }
+
+        private TaskList CreateTaskList(User? owner = null, int numberOfEntries = 0)
+        {
+            var listId = ++taskListIdCounter;
+            var entries = Enumerable.Range(1, numberOfEntries).Select(id => CreateEntry(id)).ToValueList();
+            return TaskList.New(listId, (owner ?? PremiumOwner).Id, $"list {listId}", entries);
+        }
+
+        private TaskListEntry CreateEntry(TaskListId owningListId)
+        {
+            var entryId = ++taskListEntryIdCounter;
+            return TaskListEntry.New(owningListId, entryId, $"task {entryId}", false);
         }
     }
 }

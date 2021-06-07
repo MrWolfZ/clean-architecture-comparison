@@ -1,99 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using CAC.Basic.Application.TaskLists;
-using CAC.Basic.Domain.TaskLists;
-using CAC.Core.Infrastructure;
+using CAC.Basic.Domain.TaskListAggregate;
+using CAC.Basic.Domain.UserAggregate;
+using CAC.Core.Application;
+using CAC.Core.Domain.Exceptions;
+using CAC.Core.Infrastructure.Persistence;
 using Microsoft.Extensions.Options;
 
 namespace CAC.Basic.Infrastructure.TaskLists
 {
-    internal sealed class FileSystemTaskListRepository : ITaskListRepository
+    internal sealed class FileSystemTaskListRepository : FileSystemAggregateRepository<TaskList, TaskListId, FileSystemTaskListRepository.TaskListPo>, ITaskListRepository
     {
-        private static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions
+        public FileSystemTaskListRepository(IOptions<FileSystemStoragePersistenceOptions> options, IDomainEventPublisher domainEventPublisher)
+            : base(options, domainEventPublisher)
         {
-            WriteIndented = true,
-        };
+        }
 
-        private readonly string baseDir;
+        public async Task<TaskListEntryId> GenerateEntryId() => await GenerateNumericIdForType<TaskListEntryId>();
 
-        public FileSystemTaskListRepository(IOptions<FileSystemStoragePersistenceOptions> options)
+        public override async Task<TaskList> Upsert(TaskList taskList)
         {
-            baseDir = options.Value.BaseDir;
-
-            if (string.IsNullOrWhiteSpace(baseDir))
+            if (taskList.IsDeleted)
             {
-                throw new ArgumentException("base dir in persistence options must not be empty", nameof(options));
+                return await base.Upsert(taskList);
             }
-        }
 
-        public async Task<long> GenerateId()
-        {
-            var idsFilePath = Path.Join(GetStorageDir(), "ids.json");
-            var fileContent = File.Exists(idsFilePath) ? await File.ReadAllTextAsync(idsFilePath) : "[]";
-            var ids = JsonSerializer.Deserialize<List<long>>(fileContent, SerializerOptions)!;
-            var newId = ids.Count + 1;
-            ids.Add(newId);
-            EnsureStorageDirExists();
-            await File.WriteAllTextAsync(idsFilePath, JsonSerializer.Serialize(ids, SerializerOptions));
-            return newId;
-        }
-
-        public async Task Upsert(TaskList taskList)
-        {
-            var filePath = GetTaskListsFilePath();
             var all = await GetAll();
 
-            var newLists = new List<TaskList>(all);
-
-            if (newLists.Find(l => l.Id != taskList.Id && l.Name == taskList.Name && l.OwnerId == taskList.OwnerId) != null)
+            if (all.Any(l => l.Id != taskList.Id && l.Name == taskList.Name && l.OwnerId == taskList.OwnerId))
             {
-                throw new ArgumentException($"a task list with name '{taskList.Name}' already exists");
+                throw new UniquenessConstraintViolationException(taskList.Id, nameof(TaskList.Name), $"a task list with name '{taskList.Name}' already exists");
             }
 
-            var idx = newLists.FindIndex(l => l.Id == taskList.Id);
-
-            if (idx >= 0)
-            {
-                newLists.RemoveAt(idx);
-            }
-            else
-            {
-                idx = newLists.Count;
-            }
-
-            newLists.Insert(idx, taskList);
-
-            EnsureStorageDirExists();
-            await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(newLists, SerializerOptions));
+            return await base.Upsert(taskList);
         }
 
-        public async Task<IReadOnlyCollection<TaskList>> GetAll()
-        {
-            var filePath = GetTaskListsFilePath();
+        public new async Task<IReadOnlyCollection<TaskList>> GetAll() => await base.GetAll();
 
-            if (!File.Exists(filePath))
-            {
-                return Array.Empty<TaskList>();
-            }
-
-            var fileContent = await File.ReadAllTextAsync(filePath);
-            return JsonSerializer.Deserialize<List<TaskList>>(fileContent, SerializerOptions)!;
-        }
-
-        public async Task<int> GetNumberOfTaskListsByOwner(long ownerId)
+        public async Task<int> GetNumberOfTaskListsByOwner(UserId ownerId)
         {
             var all = await GetAll();
             return all.Count(l => l.OwnerId == ownerId);
-        }
-
-        public async Task<TaskList?> GetById(long id)
-        {
-            var all = await GetAll();
-            return all.FirstOrDefault(l => l.Id == id);
         }
 
         public async Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries()
@@ -102,38 +52,24 @@ namespace CAC.Basic.Infrastructure.TaskLists
             return all.Where(l => l.Entries.Any(i => !i.IsDone)).ToList();
         }
 
-        public async Task<bool> DeleteById(long id)
+        protected override TaskListId CreateId(long numericId) => TaskListId.Of(numericId);
+
+        protected override TaskListPo ToPersistenceObject(TaskList aggregate)
         {
-            var filePath = GetTaskListsFilePath();
-            var all = await GetAll();
-
-            var newLists = new List<TaskList>(all);
-
-            if (newLists.All(l => l.Id != id))
-            {
-                return false;
-            }
-
-            var idx = newLists.FindIndex(l => l.Id == id);
-            newLists.RemoveAt(idx);
-
-            EnsureStorageDirExists();
-            await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(newLists, SerializerOptions));
-            return true;
+            var entryPos = aggregate.Entries.Select(e => new TaskListEntryPo(e.Id, e.Description, e.IsDone)).ToList();
+            return new(aggregate.Id, aggregate.OwnerId, aggregate.Name, entryPos);
         }
 
-        private string GetTaskListsFilePath() => Path.Join(GetStorageDir(), "task-lists.json");
-
-        private string GetStorageDir()
+        protected override TaskList FromPersistenceObject(TaskListPo persistenceObject)
         {
-            if (!Directory.Exists(baseDir))
-            {
-                throw new InvalidOperationException($"file system repository base directory does not exist: '{baseDir}'");
-            }
-
-            return Path.Join(baseDir, "task-lists");
+            var entries = persistenceObject.Entries.Select(e => TaskListEntry.New(persistenceObject.Id, e.Id, e.Description, e.IsDone)).ToValueList();
+            return TaskList.New(persistenceObject.Id, persistenceObject.OwnerId, persistenceObject.Name, entries);
         }
 
-        private void EnsureStorageDirExists() => Directory.CreateDirectory(GetStorageDir());
+        // persistence objects
+
+        public sealed record TaskListPo(TaskListId Id, UserId OwnerId, string Name, IList<TaskListEntryPo> Entries);
+
+        public sealed record TaskListEntryPo(TaskListEntryId Id, string Description, bool IsDone);
     }
 }

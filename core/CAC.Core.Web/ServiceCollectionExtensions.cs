@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using CAC.Core.Domain.Exceptions;
 using Hellang.Middleware.ProblemDetails;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -16,7 +17,8 @@ namespace CAC.Core.Web
             {
                 setup.IncludeExceptionDetails = (_, _) => environment.IsDevelopment() || environment.IsStaging();
 
-                setup.Map<DomainEntityException>(ex => new DomainExceptionProblemDetails(ex));
+                setup.Map<DomainEntityNotFoundException>(ex => new DomainExceptionProblemDetails(ex, StatusCodes.Status404NotFound));
+                setup.Map<DomainEntityException>(ex => new DomainExceptionProblemDetails(ex, StatusCodes.Status409Conflict));
             });
         }
     }

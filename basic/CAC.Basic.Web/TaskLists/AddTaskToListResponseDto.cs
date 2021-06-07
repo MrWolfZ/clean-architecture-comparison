@@ -2,5 +2,5 @@
 
 namespace CAC.Basic.Web.TaskLists
 {
-    public sealed record CreateNewTaskListResponseDto(TaskListId Id);
+    public sealed record AddTaskToListResponseDto(TaskListEntryId EntryId);
 }

@@ -1,19 +1,21 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using CAC.Basic.Application;
+using CAC.Basic.Domain.TaskListAggregate;
 using CAC.Basic.Infrastructure;
 using CAC.Core.Domain;
+using CAC.Core.Infrastructure.Persistence;
+using CAC.Core.Infrastructure.Serialization;
 using CAC.Core.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
 
 [assembly: InternalsVisibleTo("CAC.Basic.UnitTests")]
 
 namespace CAC.Basic.Web
 {
-    public class Startup
+    public sealed class Startup
     {
         private const string ApiVersion = "v1";
         
@@ -31,14 +33,19 @@ namespace CAC.Basic.Web
             services.AddControllers(c => c.UseApiPrefix()).AddJsonOptions(setup => setup.JsonSerializerOptions.AddCoreConverters());
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc(ApiVersion, new OpenApiInfo { Title = AssemblyName, Version = ApiVersion });
+                c.SwaggerDoc(ApiVersion, new() { Title = AssemblyName, Version = ApiVersion });
                 c.ConfigureCore();
             });
 
             services.AddCoreWeb(Environment);
+            
+            typeof(TaskListId).Assembly.AddEntityIdTypeConverterAttributes();
 
-            services.AddDomain();
+            services.AddApplication();
             services.AddInfrastructure();
+
+            services.AddOptions<PersistenceOptions>("Persistence");
+            services.ConfigureOptions<FileSystemStoragePersistenceOptionsDevelopmentConfiguration>();
         }
 
         public void Configure(IApplicationBuilder app)

@@ -1,23 +1,19 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CAC.Basic.Domain.TaskLists;
+using CAC.Basic.Domain.TaskListAggregate;
+using CAC.Basic.Domain.UserAggregate;
+using CAC.Core.Application;
 
 namespace CAC.Basic.Application.TaskLists
 {
-    public interface ITaskListRepository
+    public interface ITaskListRepository : IAggregateRepository<TaskList, TaskListId>
     {
-        public Task<long> GenerateId();
-
-        public Task Upsert(TaskList taskList);
+        public Task<TaskListEntryId> GenerateEntryId();
 
         public Task<IReadOnlyCollection<TaskList>> GetAll();
 
-        public Task<int> GetNumberOfTaskListsByOwner(long ownerId);
-
-        public Task<TaskList?> GetById(long id);
+        public Task<int> GetNumberOfTaskListsByOwner(UserId ownerId);
 
         public Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries();
-
-        public Task<bool> DeleteById(long id);
     }
 }

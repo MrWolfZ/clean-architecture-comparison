@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using CAC.Basic.Application;
 using CAC.Basic.Application.TaskLists;
 using CAC.Basic.Application.Users;
 using CAC.Basic.Infrastructure.TaskLists;
@@ -15,7 +16,9 @@ namespace CAC.Basic.Infrastructure
         public static void AddInfrastructure(this IServiceCollection services)
         {
             services.AddTransient<ITaskListRepository, FileSystemTaskListRepository>();
-            services.AddTransient<IUserRepository, InMemoryUserRepository>();
+            services.AddSingleton<ITaskListStatisticsRepository, InMemoryTaskListStatisticsRepository>();
+            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+            services.AddTransient<IMessageQueueAdapter, NullMessageQueueAdapter>();
         }
     }
 }

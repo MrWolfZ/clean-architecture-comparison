@@ -1,8 +1,10 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CAC.Basic.Application.Users;
-using CAC.Basic.Domain.TaskLists;
+using CAC.Basic.Domain.TaskListAggregate;
+using CAC.Basic.Domain.UserAggregate;
+using CAC.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace CAC.Basic.Application.TaskLists
@@ -11,146 +13,121 @@ namespace CAC.Basic.Application.TaskLists
     {
         public const int MaxTaskListNameLength = 64;
         public const int MaxTaskDescriptionLength = 256;
-        
-        private const int NonPremiumUserTaskEntryCountLimit = 5;
 
         private readonly ILogger<TaskListService> logger;
-        private readonly ITaskListStatisticsService statisticsService;
         private readonly ITaskListRepository taskListRepository;
         private readonly IUserRepository userRepository;
 
         public TaskListService(ITaskListRepository taskListRepository,
                                IUserRepository userRepository,
-                               ITaskListStatisticsService statisticsService,
                                ILogger<TaskListService> logger)
         {
             this.taskListRepository = taskListRepository;
             this.logger = logger;
-            this.statisticsService = statisticsService;
             this.userRepository = userRepository;
         }
 
-        public async Task<TaskList?> CreateNewTaskList(long ownerId, string name)
+        public async Task<TaskList> CreateNewTaskList(UserId ownerId, string name)
         {
-            name = name ?? throw new ArgumentNullException(nameof(name));
-            
-            if (name.Length > MaxTaskListNameLength)
-            {
-                throw new ArgumentException($"task list name can be at most {MaxTaskListNameLength} characters long, but was {name.Length}", nameof(name));
-            }
-            
-            var user = await userRepository.GetById(ownerId);
+            var owner = await userRepository.GetById(ownerId);
 
-            if (user == null)
+            if (owner == null)
             {
-                return null;
+                throw new DomainEntityNotFoundException(ownerId, $"user {ownerId} does not exist");
             }
 
-            if (!user.IsPremium)
-            {
-                var numberOfListsOwnedByOwner = await taskListRepository.GetNumberOfTaskListsByOwner(ownerId);
-
-                if (numberOfListsOwnedByOwner > 0)
-                {
-                    throw new ArgumentException($"non-premium user {ownerId} already owns a task list");
-                }
-            }
+            var numberOfListsOwnedByOwner = await taskListRepository.GetNumberOfTaskListsByOwner(ownerId);
 
             var id = await taskListRepository.GenerateId();
-            var taskList = new TaskList(id, ownerId, name);
+            var taskList = TaskList.New(id, owner, name, numberOfListsOwnedByOwner);
 
-            await taskListRepository.Upsert(taskList);
+            taskList = await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("created new task list with name '{Name}' and id '{TaskListId}' for owner '{OwnerId}'...", name, id, taskList.OwnerId);
-
-            await statisticsService.OnTaskListCreated(taskList);
 
             return taskList;
         }
 
-        public async Task<TaskList?> AddTaskToList(long taskListId, string taskDescription)
+        public async Task<(TaskList taskList, TaskListEntryId entryId)> AddTaskToList(TaskListId taskListId, string taskDescription)
         {
-            taskDescription = taskDescription ?? throw new ArgumentNullException(nameof(taskDescription));
-            
-            if (taskDescription.Length > MaxTaskDescriptionLength)
-            {
-                throw new ArgumentException($"task description can be at most {MaxTaskDescriptionLength} characters long, but was {taskDescription.Length}", nameof(taskDescription));
-            }
-
             var taskList = await taskListRepository.GetById(taskListId);
 
             if (taskList == null)
             {
-                return null;
+                throw new DomainEntityNotFoundException(taskListId, $"task list {taskListId} does not exist");
             }
 
             var user = await userRepository.GetById(taskList.OwnerId);
 
             if (user == null)
             {
-                return null;
+                throw new DomainEntityNotFoundException(taskList.OwnerId, $"user {taskList.OwnerId} does not exist");
             }
 
-            if (!user.IsPremium && taskList.Entries.Count >= NonPremiumUserTaskEntryCountLimit)
-            {
-                throw new ArgumentException($"non-premium user {taskList.OwnerId} can only have at most {NonPremiumUserTaskEntryCountLimit} tasks in their list");
-            }
-
-            taskList.AddEntry(taskDescription);
-            await taskListRepository.Upsert(taskList);
+            var id = await taskListRepository.GenerateEntryId();
+            taskList = taskList.AddEntry(id, taskDescription, user);
+            taskList = await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", taskDescription, taskList.Id);
 
-            await statisticsService.OnTaskAddedToList(taskList, taskList.Entries.Count - 1);
-
-            return taskList;
+            return (taskList, id);
         }
 
-        public async Task<TaskList?> MarkTaskAsDone(long taskListId, int entryIdx)
+        public async Task<TaskList> MarkTaskAsDone(TaskListId taskListId, TaskListEntryId entryId)
         {
             var taskList = await taskListRepository.GetById(taskListId);
 
             if (taskList == null)
             {
-                return null;
+                throw new DomainEntityNotFoundException(taskListId, $"task list '{taskListId}' does not exist");
             }
 
-            if (entryIdx < 0 || entryIdx >= taskList.Entries.Count)
+            if (taskList.Entries.All(e => e.Id != entryId))
             {
-                throw new ArgumentException($"entry with index {entryIdx} does not exist");
+                throw new DomainEntityNotFoundException(entryId, $"entry '{entryId}' does not exist");
             }
 
-            taskList.MarkEntryAsDone(entryIdx);
+            taskList = taskList.MarkEntryAsDone(entryId);
 
-            await taskListRepository.Upsert(taskList);
+            taskList = await taskListRepository.Upsert(taskList);
 
-            logger.LogDebug("marked task list entry '{EntryIdx}' in task list '{TaskListName}' as done", entryIdx, taskList.Name);
-
-            await statisticsService.OnTaskMarkedAsDone(taskList, entryIdx);
+            logger.LogDebug("marked task list entry '{EntryId}' in task list '{TaskListName}' as done", entryId, taskList.Name);
 
             return taskList;
         }
 
         public Task<IReadOnlyCollection<TaskList>> GetAll() => taskListRepository.GetAll();
 
-        public Task<TaskList?> GetById(long taskListId) => taskListRepository.GetById(taskListId);
+        public async Task<TaskList> GetById(TaskListId taskListId)
+        {
+            var taskList = await taskListRepository.GetById(taskListId);
+
+            if (taskList == null)
+            {
+                throw new DomainEntityNotFoundException(taskListId, $"task list {taskListId} does not exist");
+            }
+
+            return taskList;
+        }
 
         public Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries() => taskListRepository.GetAllWithPendingEntries();
 
-        public async Task<bool> DeleteById(long taskListId)
+        public async Task<TaskList> DeleteById(TaskListId taskListId)
         {
-            var wasDeleted = await taskListRepository.DeleteById(taskListId);
+            var taskList = await taskListRepository.GetById(taskListId);
 
-            if (!wasDeleted)
+            if (taskList == null)
             {
-                return false;
+                throw new DomainEntityNotFoundException(taskListId, $"task list '{taskListId}' does not exist");
             }
+
+            taskList = taskList.MarkAsDeleted();
+
+            _ = await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("deleted task list '{TaskListId}'", taskListId);
 
-            await statisticsService.OnTaskListDeleted(taskListId);
-
-            return true;
+            return taskList;
         }
     }
 }

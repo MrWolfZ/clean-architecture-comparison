@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using CAC.Basic.Application.TaskLists;
-using CAC.Basic.Domain.TaskLists;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CAC.Basic.Web.TaskLists
@@ -9,17 +8,17 @@ namespace CAC.Basic.Web.TaskLists
     [Route("taskListStatistics")]
     public class TaskListStatisticsController : ControllerBase
     {
-        private readonly ITaskListStatisticsService statisticsService;
+        private readonly ITaskListStatisticsRepository repository;
 
-        public TaskListStatisticsController(ITaskListStatisticsService statisticsService)
+        public TaskListStatisticsController(ITaskListStatisticsRepository repository)
         {
-            this.statisticsService = statisticsService;
+            this.repository = repository;
         }
 
         [HttpGet]
         public async Task<TaskListStatistics> GetAll()
         {
-            return await statisticsService.GetStatistics();
+            return await repository.Get();
         }
     }
 }
