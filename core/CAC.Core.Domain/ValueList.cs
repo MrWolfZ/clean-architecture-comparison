@@ -18,11 +18,14 @@ namespace System.Collections.Immutable
     public sealed class ValueList<T> : IList<T>, IList, IReadOnlyCollection<T>, IEquatable<ValueList<T>>
         where T : notnull
     {
-        public static readonly ValueList<T> Empty = new ValueList<T>(ImmutableList<T>.Empty);
-
+        public static readonly ValueList<T> Empty = new(ImmutableList<T>.Empty);
+        
         private readonly ImmutableList<T> wrappedList;
 
-        internal ValueList(ImmutableList<T> wrappedList) => this.wrappedList = wrappedList;
+        internal ValueList(ImmutableList<T> wrappedList)
+        {
+            this.wrappedList = wrappedList;
+        }
 
         public T this[int index] => wrappedList[index];
 
@@ -134,9 +137,18 @@ namespace System.Collections.Immutable
         #endregion
     }
 
-    public static class Ex
+    public static class ValueList
     {
+        public static ValueList<T> Of<T>(params T[] items)
+            where T : notnull
+            => items.ToValueList();
+
         public static ValueList<T> ToValueList<T>(this IEnumerable<T> list)
-            where T : notnull => new ValueList<T>(list.ToImmutableList());
+            where T : notnull
+            => new(list.ToImmutableList());
+
+        public static ValueList<T> EmptyIfNull<T>(this ValueList<T>? list)
+            where T : notnull =>
+            list ?? ValueList<T>.Empty;
     }
 }
