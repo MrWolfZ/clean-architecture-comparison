@@ -15,8 +15,6 @@ namespace CAC.DDD.Web.Controllers
     [Route("taskLists")]
     public class TaskListsController : ControllerBase
     {
-        private const int NonPremiumUserTaskEntryCountLimit = 5;
-
         private readonly ILogger<TaskListsController> logger;
         private readonly ITaskListRepository taskListRepository;
         private readonly IUserRepository userRepository;
@@ -77,13 +75,8 @@ namespace CAC.DDD.Web.Controllers
                 return Conflict($"user {taskList.OwnerId} does not exist");
             }
 
-            if (!user.IsPremium && taskList.Entries.Count >= NonPremiumUserTaskEntryCountLimit)
-            {
-                return Conflict($"non-premium user {taskList.OwnerId} can only have at most {NonPremiumUserTaskEntryCountLimit} tasks in their list");
-            }
-
             var id = await taskListRepository.GenerateEntryId();
-            taskList = taskList.AddEntry(id, request.TaskDescription);
+            taskList = taskList.AddEntry(id, request.TaskDescription, user);
             taskList = await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", request.TaskDescription, taskList.Id);

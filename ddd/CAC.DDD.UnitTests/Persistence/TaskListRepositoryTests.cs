@@ -112,7 +112,8 @@ namespace CAC.DDD.UnitTests.Persistence
         protected override TaskList UpdateAggregate(TaskList aggregate)
         {
             var entry = CreateEntry(aggregate.Id);
-            return aggregate.AddEntry(entry.Id, entry.Description);
+            var entries = aggregate.Entries.Add(entry);
+            return TaskList.New(aggregate.Id, aggregate.OwnerId, aggregate.Name, entries);
         }
 
         private TaskList CreateTaskList(int numberOfEntries = 0, UserId? ownerId = null, string? name = null)

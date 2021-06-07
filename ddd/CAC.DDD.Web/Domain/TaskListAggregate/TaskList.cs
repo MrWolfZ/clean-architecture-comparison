@@ -8,6 +8,8 @@ namespace CAC.DDD.Web.Domain.TaskListAggregate
 {
     public sealed record TaskList : AggregateRoot<TaskList, TaskListId>
     {
+        internal const int NonPremiumUserTaskEntryCountLimit = 5;
+        
         private TaskList(TaskListId id, UserId ownerId, string name, ValueList<TaskListEntry> entries)
             : base(id)
         {
@@ -39,11 +41,16 @@ namespace CAC.DDD.Web.Domain.TaskListAggregate
                 throw new DomainInvariantViolationException(id, "name must be a non-empty non-whitespace string");
             }
 
-            return new(id, ownerId, name, entries);
+            return new TaskList(id, ownerId, name, entries);
         }
 
-        public TaskList AddEntry(TaskListEntryId id, string description)
+        public TaskList AddEntry(TaskListEntryId id, string description, User owner)
         {
+            if (!owner.IsPremium && Entries.Count >= NonPremiumUserTaskEntryCountLimit)
+            {
+                throw new DomainInvariantViolationException(Id, $"non-premium user {owner.Id} can only have at most {NonPremiumUserTaskEntryCountLimit} tasks in their list");
+            }
+            
             var entry = TaskListEntry.New(Id, id, description, false);
             var updatedList = this with { Entries = Entries.Add(entry) };
             return updatedList.WithEvent(new TaskAddedToTaskListEvent(entry));

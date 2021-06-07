@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using CAC.Core.Domain.Exceptions;
 using CAC.DDD.Web.Domain.TaskListAggregate;
 using CAC.DDD.Web.Domain.UserAggregate;
@@ -49,7 +50,7 @@ namespace CAC.DDD.UnitTests.Domain.TaskListAggregate
             const string description = "task";
 
             var entryId = TaskListEntryId.Of(1);
-            var updatedList = list.AddEntry(entryId, description);
+            var updatedList = list.AddEntry(entryId, description, PremiumOwner);
 
             Assert.Contains(TaskListEntry.New(list.Id, entryId, description, false), updatedList.Entries);
         }
@@ -63,8 +64,8 @@ namespace CAC.DDD.UnitTests.Domain.TaskListAggregate
 
             var entryId1 = TaskListEntryId.Of(1);
             var entryId2 = TaskListEntryId.Of(2);
-            var updatedList = list.AddEntry(entryId1, description1);
-            updatedList = updatedList.AddEntry(entryId2, description2);
+            var updatedList = list.AddEntry(entryId1, description1, PremiumOwner);
+            updatedList = updatedList.AddEntry(entryId2, description2, PremiumOwner);
 
             Assert.AreEqual(2, updatedList.Entries.Count);
             Assert.Contains(TaskListEntry.New(list.Id, entryId1, description1, false), updatedList.Entries);
@@ -78,7 +79,46 @@ namespace CAC.DDD.UnitTests.Domain.TaskListAggregate
         {
             var list = TaskList.New(1, PremiumOwner, "list", 0);
 
-            _ = Assert.Throws<DomainInvariantViolationException>(() => list.AddEntry(1, description));
+            _ = Assert.Throws<DomainInvariantViolationException>(() => list.AddEntry(1, description, PremiumOwner));
+        }
+
+        [Test]
+        public void AddEntry_GivenPremiumOwnerAndListWithEntriesAtNonPremiumLimit_AddsPendingEntriesToList()
+        {
+            var list = TaskList.New(1, PremiumOwner.Id, "list", ValueList<TaskListEntry>.Empty);
+
+            for (var i = 1; i <= TaskList.NonPremiumUserTaskEntryCountLimit; i += 1)
+            {
+                list = list.AddEntry(i, $"task {i}", PremiumOwner);
+            }
+            
+            Assert.DoesNotThrow(() => list.AddEntry(1, "task", PremiumOwner));
+        }
+
+        [Test]
+        public void AddEntry_GivenNonPremiumOwnerAndListWithEntriesAtNonPremiumLimit_ThrowsException()
+        {
+            var list = TaskList.New(1, NonPremiumOwner.Id, "list", ValueList<TaskListEntry>.Empty);
+
+            for (var i = 1; i <= TaskList.NonPremiumUserTaskEntryCountLimit; i += 1)
+            {
+                list = list.AddEntry(i, $"task {i}", NonPremiumOwner);
+            }
+            
+            _ = Assert.Throws<DomainInvariantViolationException>(() => list.AddEntry(1, "task", NonPremiumOwner));
+        }
+
+        [Test]
+        public void AddEntry_GivenNonPremiumOwnerAndListWithEntriesBelowNonPremiumLimit_AddsPendingEntriesToList()
+        {
+            var list = TaskList.New(1, NonPremiumOwner.Id, "list", ValueList<TaskListEntry>.Empty);
+
+            for (var i = 1; i <= TaskList.NonPremiumUserTaskEntryCountLimit - 1; i += 1)
+            {
+                list = list.AddEntry(i, $"task {i}", NonPremiumOwner);
+            }
+            
+            Assert.DoesNotThrow(() => list.AddEntry(1, "task", NonPremiumOwner));
         }
 
         [Test]
@@ -90,8 +130,8 @@ namespace CAC.DDD.UnitTests.Domain.TaskListAggregate
 
             var entryId1 = TaskListEntryId.Of(1);
             var entryId2 = TaskListEntryId.Of(2);
-            list = list.AddEntry(entryId1, description1);
-            list = list.AddEntry(entryId2, description2);
+            list = list.AddEntry(entryId1, description1, PremiumOwner);
+            list = list.AddEntry(entryId2, description2, PremiumOwner);
 
             var updatedList = list.MarkEntryAsDone(entryId2);
 
@@ -102,7 +142,7 @@ namespace CAC.DDD.UnitTests.Domain.TaskListAggregate
         [Test]
         public void MarkEntryAsDone_GivenInvalidEntryId_ThrowsException()
         {
-            var list = TaskList.New(1, PremiumOwner, "list", 0).AddEntry(1, "task");
+            var list = TaskList.New(1, PremiumOwner, "list", 0).AddEntry(1, "task", PremiumOwner);
 
             _ = Assert.Throws<DomainInvariantViolationException>(() => list.MarkEntryAsDone(99));
         }

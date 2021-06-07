@@ -315,7 +315,7 @@ namespace CAC.DDD.UnitTests.Controllers
         {
             var taskList = CreateTaskList();
             var entryId = TaskListEntryId.Of(1);
-            taskList = taskList.AddEntry(entryId, "task");
+            taskList = taskList.AddEntry(entryId, "task", PremiumOwner);
 
             taskList = await TaskListRepository.Upsert(taskList);
 
