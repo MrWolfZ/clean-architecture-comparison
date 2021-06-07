@@ -36,7 +36,7 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<CreateNewTaskListResponseDto>(JsonSerializerOptions);
+            var responseContent = await response.Content.ReadFromJsonAsync<CreateNewTaskListResponseDto>();
 
             Assert.AreEqual(expectedResponse, responseContent);
 
@@ -140,8 +140,9 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
-        public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_StoresEntryAndReturnsNoContent()
+        public async Task AddTaskToList_GivenExistingTaskListIdAndValidDescription_StoresEntryAndReturnsId()
         {
+            var expectedResponse = new AddTaskToListResponseDto(1);
             var taskList = new TaskList(1, PremiumOwnerId, "test");
 
             await TaskListRepository.Store(taskList);
@@ -149,7 +150,11 @@ namespace CAC.Baseline.UnitTests.Controllers
             const string taskDescription = "task";
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = taskDescription });
 
-            await response.AssertStatusCode(HttpStatusCode.NoContent);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<AddTaskToListResponseDto>();
+
+            Assert.AreEqual(expectedResponse, responseContent);
 
             var storedEntries = await TaskListEntryRepository.GetEntriesForTaskList(taskList.Id);
 
@@ -192,7 +197,7 @@ namespace CAC.Baseline.UnitTests.Controllers
         }
 
         [Test]
-        public async Task AddTaskToList_GivenTaskListWithLessThanFiveEntriesAndNonPremiumOwner_ReturnsNoContent()
+        public async Task AddTaskToList_GivenTaskListWithLessThanFiveEntriesAndNonPremiumOwner_ReturnsSuccess()
         {
             var taskList = new TaskList(1, NonPremiumOwnerId, "test");
 
@@ -205,7 +210,7 @@ namespace CAC.Baseline.UnitTests.Controllers
 
             var response = await HttpClient.PostAsJsonAsync($"taskLists/{taskList.Id}/tasks", new AddTaskToListRequestDto { TaskDescription = "new" });
 
-            await response.AssertStatusCode(HttpStatusCode.NoContent);
+            await response.AssertStatusCode(HttpStatusCode.OK);
         }
 
         [Test]

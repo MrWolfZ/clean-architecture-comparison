@@ -81,9 +81,8 @@ namespace CAC.Baseline.Web.Controllers
         }
 
         [HttpPost("{taskListId:long}/tasks")]
-        [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> AddTaskToList(long taskListId, AddTaskToListRequestDto request)
+        public async Task<ActionResult<AddTaskToListResponseDto>> AddTaskToList(long taskListId, AddTaskToListRequestDto request)
         {
             var ownerId = await taskListRepository.GetOwnerId(taskListId);
 
@@ -116,7 +115,7 @@ namespace CAC.Baseline.Web.Controllers
             await statisticsService.OnTaskAddedToList(entry);
             await notificationService.OnTaskAddedToList(entry);
 
-            return NoContent();
+            return Ok(new AddTaskToListResponseDto(id));
         }
 
         [HttpPut("{taskListId:long}/tasks/{entryId:int}/isDone")]
