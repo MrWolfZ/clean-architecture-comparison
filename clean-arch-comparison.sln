@@ -45,6 +45,9 @@ ProjectSection(SolutionItems) = preProject
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basic", "basic", "{99A94482-F487-4391-BEC3-ACBA35EC95D6}"
+ProjectSection(SolutionItems) = preProject
+	basic\README.md = basic\README.md
+EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAC.Basic.Domain", "basic\CAC.Basic.Domain\CAC.Basic.Domain.csproj", "{1086DD68-4B49-4A4E-914C-1784DAD6A934}"
 EndProject
