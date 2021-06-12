@@ -62,12 +62,10 @@ Below you can find a list of the various styles we are comparing for implementin
 
 - add `README` for `ddd`
 - add `README` for `basic`
-- adjust `basic` based on `ddd`
 - adjust `cqs` based on `basic`
   - split write and read repositories
-- rename `TaskListsController` to `TaskListsApi` in CQS
-- change inspection settings to not mark un-instantiated classes as suggestions but as hints
-- change inspection settings to ignore files whose name ends on `Dto`, `Request`, `Response` etc.
 - create `mediatr`
 - create `cqs-decorator`
 - create `cqs-proxy`
+- add tests for task list reminder feature in `basic` and `cqs`
+- add tests for domain objects that verify that domain events are added correctly
