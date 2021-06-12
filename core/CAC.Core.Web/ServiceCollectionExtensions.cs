@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using CAC.Core.Application.Exceptions;
 using CAC.Core.Domain.Exceptions;
 using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Http;
@@ -19,6 +20,7 @@ namespace CAC.Core.Web
 
                 setup.Map<DomainEntityNotFoundException>(ex => new DomainExceptionProblemDetails(ex, StatusCodes.Status404NotFound));
                 setup.Map<DomainEntityException>(ex => new DomainExceptionProblemDetails(ex, StatusCodes.Status409Conflict));
+                setup.Map<ValidationException>(ex => new ValidationExceptionProblemDetails(ex));
             });
         }
     }

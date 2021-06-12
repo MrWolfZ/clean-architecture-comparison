@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CAC.Basic.Application.Users;
 using CAC.Basic.Domain.TaskListAggregate;
 using CAC.Basic.Domain.UserAggregate;
+using CAC.Core.Application.Exceptions;
 using CAC.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
@@ -29,6 +30,11 @@ namespace CAC.Basic.Application.TaskLists
 
         public async Task<TaskList> CreateNewTaskList(UserId ownerId, string name)
         {
+            if (name.Length > MaxTaskListNameLength)
+            {
+                throw new ValidationException($"task list name must not be longer than {MaxTaskListNameLength} characters, but it was {name.Length} characters long");
+            }
+            
             var owner = await userRepository.GetById(ownerId);
 
             if (owner == null)
@@ -50,6 +56,11 @@ namespace CAC.Basic.Application.TaskLists
 
         public async Task<(TaskList taskList, TaskListEntryId entryId)> AddTaskToList(TaskListId taskListId, string taskDescription)
         {
+            if (taskDescription.Length > MaxTaskDescriptionLength)
+            {
+                throw new ValidationException($"task list entry description must not be longer than {MaxTaskDescriptionLength} characters, but it was {taskDescription.Length} characters long");
+            }
+            
             var taskList = await taskListRepository.GetById(taskListId);
 
             if (taskList == null)
