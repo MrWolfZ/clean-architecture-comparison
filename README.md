@@ -2,7 +2,7 @@
 
 This repository contains a comparison of multiple styles for implementing a [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) in .NET (using [.NET 5](https://dotnet.microsoft.com/download/dotnet/5.0) and [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-5.0)).
 
-> Note that _clean architecture_ is arguably just the latest of a long list of names (including [hexagonal / ports and adapters](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) and [onion](https://medium.com/@shivendraodean/software-architecture-the-onion-architecture-1b235bec1dec) among others) that describe the same fundamental concept for defining your architecture: [dependency inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle). Therefore this comparison is also somewhat applicable to those styles, although the naming of concepts slightly differs.
+> Note that _clean architecture_ is arguably just the latest of a long list of names (including [hexagonal / ports and adapters](<https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)>) and [onion](https://medium.com/@shivendraodean/software-architecture-the-onion-architecture-1b235bec1dec) among others) that describe the same fundamental concept for defining your architecture: [dependency inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle). Therefore this comparison is also somewhat applicable to those styles, although the naming of concepts slightly differs.
 
 The scenario we are using for showcasing the different styles is a simple task list management application.
 
@@ -37,11 +37,21 @@ While not strictly necessary for a clean architecture, [domain-driven design](ht
 
 Each compared style is a standalone application that has some common cross-cutting concerns (e.g. API documentation, testing infrastructure, base classes). To prevent having the code for these concerns duplicated in each application, we have a number of [core](core#readme) projects that provide this common code.
 
-## Compared Styles
+## Moving to a clean architecture
 
-Below you can find a list of the various styles we are comparing. We recommend you to go through the list in order since some styles re-use concepts from other styles. We also encourage you to clone the repository and look at the code in your favorite IDE for easier navigation.
+Every architectural change should have a clear _driver_ and moving to a clean architecture is no different. Many applications would work just fine with a simple architecture. For our scenario the driver for this change is a new business requirement. The business wants to send out reminders to users that have task lists with pending items that have not changed for a long time. Let's phrase this as a complete requirement with some more details:
 
-- (work-in-progress) [basic](basic#readme): in this style we simply split the _DDD_ example into layers according to clean architecture (i.e. _domain_, _application_, _infrastructure_, and _web_)
+- the system sends reminders to premium users that have task lists with at least one pending entry
+- any task lists that have not been changed in 7 days are included in the reminder
+- reminders are repeated every 7 days if still applicable
+
+If we think about how to implement this requirement, one solution that comes to mind is a [cron job](https://en.wikipedia.org/wiki/Cron) that runs every hour and checks for task lists for which reminders should be sent. Looking at the structure of our _baseline_ and _DDD_ solution it is not fully clear how to add such a job to the project. One solution would be to add web APIs that implement the required behavior and then using a script or a small console app to call those APIs regularly (through some kind of job scheduler). This solution would work, but given that our system may be storing millions of task lists, running this kind of work load on the web server is not optimal. An alternative solution - and the one we will be exploring here - is to implement the new business logic in a dedicated console application that runs offline and is triggered periodically by a job scheduler. These kinds of console apps are perfect for potentially long running processes.
+
+Now that we have settled on a solution design, we need to determine how to incorporate the new behavior into our application. In our _baseline_ and _DDD_ we had all logic (business rules, persistence, APIs) in a single web project. For our new job we should now create a new console application. The simplest way to do this would be to just reference the web project from the console project or to implement the required logic from scratch in the new project. However, the former pollutes the console app with web code it does not require and the latter reduces maintainability by introducing redundancy. This is where we can use clean architecture to provide a structure that allows sharing our domain logic, business rules, repositories etc. between a web app and the console app.
+
+Below you can find a list of the various styles we are comparing for implementing the scenario outlined above. We recommend you to go through the list in order since some styles re-use concepts from other styles. We also encourage you to clone the repository and look at the code in your favorite IDE for easier navigation.
+
+- (work-in-progress) [basic](basic#readme): in this style we simply split the _DDD_ example into layers according to clean architecture (i.e. _domain_, _application_, _infrastructure_, _jobs_, and _web_)
 - (work-in-progress) [command query separation](cqs#readme) (_CQS_): an extension of the _basic_ style that models operations as _commands_ and _queries_
 - (work-in-progress) [mediator](mediatr#readme): a variant of _CQS_ that uses the [mediator pattern](https://en.wikipedia.org/wiki/Mediator_pattern) for handling _commands_, _queries_, and _domain events_ (using the [MediatR](https://github.com/jbogard/MediatR) library)
 - (work-in-progress) [decorator](decorator#readme): a variant of _CQS_ that uses the [decorator pattern](https://en.wikipedia.org/wiki/Decorator_pattern) for handling cross-cutting concerns (e.g. logging and validation) of our _command_ and _query_ handlers
@@ -50,6 +60,7 @@ Below you can find a list of the various styles we are comparing. We recommend y
 
 ## Open Points
 
+- figure out how to instantiate domain objects without side-stepping domain invariants or at least making it explicit that the invariants are side-stepped
 - add `README` for `ddd`
 - add `README` for `basic`
 - adjust `basic` based on `ddd`
