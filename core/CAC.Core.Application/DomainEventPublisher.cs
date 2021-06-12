@@ -11,49 +11,52 @@ namespace CAC.Core.Application
     internal sealed class DomainEventPublisher : IDomainEventPublisher
     {
         private readonly IReadOnlyCollection<IDomainEventHandler> eventHandlers;
-        private readonly ConcurrentDictionary<Type, Type> handlerTypeByEventType = new();
-        private readonly ConcurrentDictionary<(IDomainEventHandler, Type), Func<DomainEvent, Task>> publishFunctions = new();
+        private readonly ConcurrentDictionary<Type, IReadOnlyCollection<IDomainEventHandler>> handlersByEventType = new();
+        private readonly ConcurrentDictionary<Type, Func<DomainEvent, Task>> publishFunctions = new();
 
         public DomainEventPublisher(IEnumerable<IDomainEventHandler> eventHandlers)
         {
             this.eventHandlers = eventHandlers.ToList();
         }
 
-        public Task Publish(DomainEvent evt, params DomainEvent[] otherEvents) => Publish(new[] { evt }.Concat(otherEvents).ToList());
+        public Task Publish(DomainEvent evt, params DomainEvent[] otherEvents)
+            => Publish(new[] { evt }.Concat(otherEvents).ToList());
 
         public async Task Publish(IReadOnlyCollection<DomainEvent> events)
         {
             foreach (var evt in events)
             {
-                await Publish(evt);
+                await PublishSingle(evt);
             }
         }
 
-        private async Task Publish(DomainEvent evt)
+        private async Task PublishSingle(DomainEvent evt)
         {
-            foreach (var handler in GetRelevantHandlers(evt))
+            var publishFn = publishFunctions.GetOrAdd(evt.GetType(), CreatePublishFunction);
+            await publishFn(evt);
+        }
+
+        private async Task PublishSingleGeneric<TDomainEvent>(TDomainEvent evt)
+            where TDomainEvent : DomainEvent
+        {
+            foreach (var handler in GetRelevantHandlers<TDomainEvent>())
             {
-                await Publish(handler, evt);
+                await handler.Handle(evt);
             }
         }
 
-        private async Task Publish(IDomainEventHandler eventHandler, DomainEvent evt)
+        private IEnumerable<IDomainEventHandler<TDomainEvent>> GetRelevantHandlers<TDomainEvent>()
+            where TDomainEvent : DomainEvent
         {
-            var publishFunction = publishFunctions.GetOrAdd((eventHandler, evt.GetType()), t => CreatePublishFunction(t.Item1, t.Item2));
-            await publishFunction(evt);
+            var handlers = handlersByEventType.GetOrAdd(typeof(TDomainEvent), _ => eventHandlers.Where(h => h is IDomainEventHandler<TDomainEvent>).ToList());
+            return handlers.Cast<IDomainEventHandler<TDomainEvent>>();
         }
 
-        private IEnumerable<IDomainEventHandler> GetRelevantHandlers(DomainEvent evt)
-        {
-            var handlerType = handlerTypeByEventType.GetOrAdd(evt.GetType(), t => typeof(IDomainEventHandler<>).MakeGenericType(t));
-            return eventHandlers.Where(h => h.GetType().IsAssignableTo(handlerType));
-        }
-
-        private static Func<DomainEvent, Task> CreatePublishFunction(IDomainEventHandler eventHandler, Type eventType)
+        private Func<DomainEvent, Task> CreatePublishFunction(Type eventType)
         {
             var parameterExpression = Expression.Parameter(typeof(DomainEvent));
             var castedParameter = Expression.Convert(parameterExpression, eventType);
-            var callExpr = Expression.Call(Expression.Constant(eventHandler), nameof(IDomainEventHandler<DomainEvent>.Handle), null, castedParameter);
+            var callExpr = Expression.Call(Expression.Constant(this), nameof(PublishSingleGeneric), new[] { eventType }, castedParameter);
             var lambda = Expression.Lambda(callExpr, parameterExpression);
             var compiled = lambda.Compile();
             return (Func<DomainEvent, Task>)compiled;
