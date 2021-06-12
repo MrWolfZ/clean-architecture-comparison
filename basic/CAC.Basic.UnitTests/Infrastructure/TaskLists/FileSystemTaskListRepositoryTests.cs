@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using CAC.Basic.Application.TaskLists;
 using CAC.Basic.Infrastructure.TaskLists;
 using CAC.Core.Infrastructure.Persistence;
@@ -10,26 +11,26 @@ namespace CAC.Basic.UnitTests.Infrastructure.TaskLists
 {
     [TestFixture]
     [IntegrationTest]
-    [Parallelizable(ParallelScope.None)]
     public sealed class FileSystemTaskListRepositoryTests : TaskListRepositoryTests
     {
+        private readonly string storageDir; 
+        
         [SetUp]
         public void SetUp()
         {
-            StorageDir.Create();
+            _ = Directory.CreateDirectory(storageDir);
         }
 
         [TearDown]
         public void TearDown()
         {
-            StorageDir.Delete(true);
+            Directory.Delete(storageDir, true);
         }
-
-        private static readonly DirectoryInfo StorageDir = new(Path.Join(TestContext.CurrentContext.TestDirectory, nameof(FileSystemTaskListRepositoryTests)));
 
         public FileSystemTaskListRepositoryTests()
         {
-            Testee = new FileSystemTaskListRepository(Options.Create(new FileSystemStoragePersistenceOptions { BaseDir = StorageDir.FullName }), DomainEventPublisher);
+            storageDir = new(Path.Join(TestContext.CurrentContext.TestDirectory, Guid.NewGuid().ToString()));
+            Testee = new FileSystemTaskListRepository(Options.Create(new FileSystemStoragePersistenceOptions { BaseDir = storageDir }), DomainEventPublisher);
         }
 
         protected override ITaskListRepository Testee { get; }
