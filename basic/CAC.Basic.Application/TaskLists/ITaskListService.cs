@@ -9,7 +9,7 @@ namespace CAC.Basic.Application.TaskLists
     {
         Task<TaskList> CreateNewTaskList(UserId ownerId, string name);
         
-        Task<(TaskList taskList, TaskListEntryId entryId)> AddTaskToList(TaskListId taskListId, string taskDescription);
+        Task<(TaskList TaskList, TaskListEntryId EntryId)> AddTaskToList(TaskListId taskListId, string taskDescription);
         
         Task<TaskList> MarkTaskAsDone(TaskListId taskListId, TaskListEntryId entryId);
         

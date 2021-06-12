@@ -54,7 +54,7 @@ namespace CAC.Basic.Application.TaskLists
             return taskList;
         }
 
-        public async Task<(TaskList taskList, TaskListEntryId entryId)> AddTaskToList(TaskListId taskListId, string taskDescription)
+        public async Task<(TaskList TaskList, TaskListEntryId EntryId)> AddTaskToList(TaskListId taskListId, string taskDescription)
         {
             if (taskDescription.Length > MaxTaskDescriptionLength)
             {
