@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CAC.Basic.Application.TaskLists;
 using CAC.Basic.Domain.TaskListAggregate;
 using CAC.Basic.Domain.UserAggregate;
+using CAC.Core.Domain;
 using CAC.Core.Domain.Exceptions;
 using CAC.Core.TestUtilities;
 using NUnit.Framework;
@@ -25,7 +26,7 @@ namespace CAC.Basic.UnitTests.Infrastructure.TaskLists
             var existingList = CreateTaskList();
             existingList = await Testee.Upsert(existingList);
 
-            var list = TaskList.FromRawData(2, OwnerId, true, existingList.Name, ValueList<TaskListEntry>.Empty);
+            var list = TaskList.FromRawData(2, OwnerId, true, existingList.Name, ValueList<TaskListEntry>.Empty, SystemTime.Now, null);
             _ = Assert.ThrowsAsync<UniquenessConstraintViolationException>(() => Testee.Upsert(list));
         }
 
@@ -61,6 +62,29 @@ namespace CAC.Basic.UnitTests.Infrastructure.TaskLists
             list2 = await Testee.Upsert(list2);
 
             var lists = await Testee.GetAll();
+            Assert.AreEqual(2, lists.Count);
+            Assert.IsTrue(lists.Any(l => l.Name == list1.Name));
+            Assert.IsTrue(lists.Any(l => l.Name == list2.Name));
+        }
+
+        [Test]
+        public async Task GetAllByOwner_GivenNoTaskListsForOwner_ReturnsEmptyCollection()
+        {
+            var lists = await Testee.GetAllByOwner(OwnerId);
+            Assert.AreEqual(0, lists.Count);
+        }
+
+        [Test]
+        public async Task GetAllByOwner_GivenTaskListsForOwner_ReturnsCollectionOfLists()
+        {
+            var list1 = CreateTaskList();
+            list1 = await Testee.Upsert(list1);
+
+            var list2 = CreateTaskList(1);
+
+            list2 = await Testee.Upsert(list2);
+
+            var lists = await Testee.GetAllByOwner(OwnerId);
             Assert.AreEqual(2, lists.Count);
             Assert.IsTrue(lists.Any(l => l.Name == list1.Name));
             Assert.IsTrue(lists.Any(l => l.Name == list2.Name));
@@ -113,14 +137,14 @@ namespace CAC.Basic.UnitTests.Infrastructure.TaskLists
         {
             var entry = CreateEntry();
             var entries = aggregate.Entries.Add(entry);
-            return TaskList.FromRawData(aggregate.Id, aggregate.OwnerId, true, aggregate.Name, entries);
+            return TaskList.FromRawData(aggregate.Id, aggregate.OwnerId, true, aggregate.Name, entries, SystemTime.Now, null);
         }
 
         private TaskList CreateTaskList(int numberOfEntries = 0, UserId? ownerId = null, string? name = null)
         {
             var listId = ++taskListIdCounter;
             var entries = Enumerable.Range(1, numberOfEntries).Select(_ => CreateEntry()).ToValueList();
-            return TaskList.FromRawData(listId, ownerId ?? OwnerId, true, name ?? $"list {listId}", entries);
+            return TaskList.FromRawData(listId, ownerId ?? OwnerId, true, name ?? $"list {listId}", entries, SystemTime.Now, null);
         }
 
         private TaskListEntry CreateEntry()

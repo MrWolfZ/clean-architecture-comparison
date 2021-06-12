@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CAC.Basic.Application.Users;
 using CAC.Basic.Domain.UserAggregate;
@@ -15,5 +16,11 @@ namespace CAC.Basic.Infrastructure.Users
         };
 
         public Task<User?> GetById(UserId id) => Task.FromResult(Users.TryGetValue(id, out var user) ? user : null);
+        
+        public async Task<IReadOnlyCollection<User>> GetPremiumUsers()
+        {
+            await Task.Yield();
+            return Users.Values.Where(u => u.IsPremium).ToList();
+        }
     }
 }

@@ -1,5 +1,7 @@
+using System;
 using CAC.Basic.Domain.TaskListAggregate;
 using CAC.Basic.Domain.UserAggregate;
+using CAC.Core.Domain;
 using CAC.Core.Domain.Exceptions;
 using NUnit.Framework;
 
@@ -11,33 +13,36 @@ namespace CAC.Basic.UnitTests.Domain.TaskListAggregate
         private static readonly User NonPremiumOwner = User.FromRawData(2, "non-premium", false);
 
         [Test]
-        public void New_GivenValidName_CreatesList()
+        public void ForOwner_GivenValidName_CreatesList()
         {
+            using var d = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch);
             var id = TaskListId.Of(1);
             const string name = "list";
             var list = TaskList.ForOwner(PremiumOwner, id, name, 0);
             Assert.AreEqual(id, list.Id);
             Assert.AreEqual(PremiumOwner.Id, list.OwnerId);
             Assert.AreEqual(name, list.Name);
+            Assert.AreEqual(DateTimeOffset.UnixEpoch, list.LastChangedAt);
+            Assert.IsNull(list.LastReminderSentAt);
             Assert.IsEmpty(list.Entries);
         }
 
         [TestCase("")]
         [TestCase(" ")]
         [TestCase(null)]
-        public void New_GivenEmptyName_ThrowsException(string name)
+        public void ForOwner_GivenEmptyName_ThrowsException(string name)
         {
             _ = Assert.Throws<DomainInvariantViolationException>(() => TaskList.ForOwner(PremiumOwner, 1, name, 0));
         }
 
         [Test]
-        public void New_GivenPremiumOwnerWithExistingList_CreatesList()
+        public void ForOwner_GivenPremiumOwnerWithExistingList_CreatesList()
         {
             Assert.DoesNotThrow(() => TaskList.ForOwner(PremiumOwner, 1, "list", 1));
         }
 
         [Test]
-        public void New_GivenNonPremiumOwnerWithExistingList_ThrowsException()
+        public void ForOwner_GivenNonPremiumOwnerWithExistingList_ThrowsException()
         {
             _ = Assert.Throws<DomainInvariantViolationException>(() => TaskList.ForOwner(NonPremiumOwner, 1, "list", 1));
         }
@@ -120,6 +125,18 @@ namespace CAC.Basic.UnitTests.Domain.TaskListAggregate
             var newEntry = TaskListEntry.ForAddingToTaskList(list.Id, TaskList.NonPremiumUserTaskEntryCountLimit, "new task");
             Assert.DoesNotThrow(() => list.AddEntry(newEntry));
         }
+        
+        [Test]
+        public void AddEntry_UpdatesLastChangedAt()
+        {
+            var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0);
+            var entry = TaskListEntry.ForAddingToTaskList(list.Id, 1, "task");
+            
+            using var d = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch);
+            var updatedList = list.AddEntry(entry);
+            
+            Assert.AreEqual(DateTimeOffset.UnixEpoch, updatedList.LastChangedAt);
+        }
 
         [Test]
         public void MarkEntryAsDone_GivenValidEntryId_MarksEntryAsDone()
@@ -143,6 +160,111 @@ namespace CAC.Basic.UnitTests.Domain.TaskListAggregate
             var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0).AddEntry(entry);
 
             _ = Assert.Throws<DomainInvariantViolationException>(() => list.MarkEntryAsDone(99));
+        }
+        
+        [Test]
+        public void MarkEntryAsDone_UpdatesLastChangedAt()
+        {
+            var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0);
+            var entry = TaskListEntry.ForAddingToTaskList(list.Id, 1, "task");
+            list = list.AddEntry(entry);
+            
+            using var d = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch);
+            var updatedList = list.MarkEntryAsDone(entry.Id);
+            
+            Assert.AreEqual(DateTimeOffset.UnixEpoch, updatedList.LastChangedAt);
+        }
+
+        [Test]
+        public void MarkAsDeleted_MarksListAsDeleted()
+        {
+            var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0);
+
+            var updatedList = list.MarkAsDeleted();
+
+            Assert.IsTrue(updatedList.IsDeleted);
+        }
+
+        [Test]
+        public void MarkAsDeleted_UpdatesLastChangedAt()
+        {
+            var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0);
+
+            using var d = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch);
+            var updatedList = list.MarkAsDeleted();
+
+            Assert.AreEqual(DateTimeOffset.UnixEpoch, updatedList.LastChangedAt);
+        }
+
+        [Test]
+        public void WithReminderSentAt_SetsLastReminderSentAt()
+        {
+            var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0);
+
+            var updatedList = list.WithReminderSentAt(DateTimeOffset.UnixEpoch);
+
+            Assert.AreEqual(DateTimeOffset.UnixEpoch, updatedList.LastReminderSentAt);
+        }
+
+        [Test]
+        public void WithReminderSentAt_UpdatesLastChangedAt()
+        {
+            var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0);
+
+            using var d = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch);
+            var updatedList = list.WithReminderSentAt(DateTimeOffset.UnixEpoch);
+
+            Assert.AreEqual(DateTimeOffset.UnixEpoch, updatedList.LastChangedAt);
+        }
+
+        [Test]
+        public void IsDueForReminder_GivenLastChangedLessThanThresholdAgo_ReturnsFalse()
+        {
+            using var d = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch);
+            var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0);
+            
+            using var d2 = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch.Add(TaskList.ReminderDueAfter).AddDays(-1));
+
+            Assert.IsFalse(list.IsDueForReminder());
+        }
+
+        [Test]
+        public void IsDueForReminder_GivenLastChangedMoreThanThresholdAgoAndListHasNoPendingEntries_ReturnsFalse()
+        {
+            using var d = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch);
+            var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0);
+            var entry = TaskListEntry.ForAddingToTaskList(list.Id, 1, "task");
+            list = list.AddEntry(entry).MarkEntryAsDone(entry.Id);
+            
+            using var d2 = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch.Add(TaskList.ReminderDueAfter).AddDays(1));
+
+            Assert.IsFalse(list.IsDueForReminder());
+        }
+
+        [Test]
+        public void IsDueForReminder_GivenLastChangedMoreThanThresholdAgoAndLastReminderSentLessThanThresholdAgo_ReturnsFalse()
+        {
+            using var d = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch);
+            var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0);
+            var entry = TaskListEntry.ForAddingToTaskList(list.Id, 1, "task");
+            list = list.AddEntry(entry).WithReminderSentAt(DateTimeOffset.UnixEpoch.Add(TaskList.ReminderDueAfter));
+            
+            using var d2 = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch.Add(TaskList.ReminderDueAfter).AddDays(1));
+
+            Assert.IsFalse(list.IsDueForReminder());
+        }
+
+        [Test]
+        public void IsDueForReminder_GivenLastChangedMoreThanThresholdAgoAndLastReminderSentAtMoreThanThresholdAgoAndListHasPendingEntries_ReturnsTrue()
+        {
+            using var d = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch);
+            var list = TaskList.ForOwner(PremiumOwner, 1, "list", 0);
+            var entry = TaskListEntry.ForAddingToTaskList(list.Id, 1, "task");
+            list = list.AddEntry(entry).WithReminderSentAt(DateTimeOffset.UnixEpoch);
+            
+            using var d2 = SystemTime.WithCurrentTime(DateTimeOffset.UnixEpoch.Add(TaskList.ReminderDueAfter).AddDays(1));
+
+            Assert.IsTrue(list.IsDueForReminder());
         }
     }
 }

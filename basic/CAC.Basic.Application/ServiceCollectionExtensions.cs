@@ -15,6 +15,7 @@ namespace CAC.Basic.Application
         public static void AddApplication(this IServiceCollection services)
         {
             services.AddTransient<ITaskListService, TaskListService>();
+            services.AddTransient<ITaskListReminderService, TaskListReminderService>();
             
             services.AddDomainEventPublisher();
             services.AddDomainEventHandler<TaskListStatisticsDomainEventHandler>();

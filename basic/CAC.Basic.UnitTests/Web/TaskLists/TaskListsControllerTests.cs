@@ -9,6 +9,7 @@ using CAC.Basic.Application.TaskLists;
 using CAC.Basic.Domain.TaskListAggregate;
 using CAC.Basic.Domain.UserAggregate;
 using CAC.Basic.Web.TaskLists;
+using CAC.Core.Domain;
 using CAC.Core.TestUtilities;
 using Moq;
 using NUnit.Framework;
@@ -451,7 +452,7 @@ namespace CAC.Basic.UnitTests.Web.TaskLists
         {
             var listId = ++taskListIdCounter;
             var entries = Enumerable.Range(1, numberOfEntries).Select(_ => CreateEntry()).ToValueList();
-            return TaskList.FromRawData(listId, (owner ?? PremiumOwner).Id, (owner ?? PremiumOwner).IsPremium, $"list {listId}", entries);
+            return TaskList.FromRawData(listId, (owner ?? PremiumOwner).Id, (owner ?? PremiumOwner).IsPremium, $"list {listId}", entries, SystemTime.Now, null);
         }
 
         private TaskListEntry CreateEntry()

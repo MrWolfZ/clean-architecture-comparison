@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using CAC.Basic.Application;
 using CAC.Basic.Infrastructure;
 using CAC.Core.Jobs;
@@ -21,6 +21,8 @@ namespace CAC.Basic.Jobs
             services.AddApplication();
             services.AddInfrastructure(hostContext.Configuration);
             services.AddJobTriggerService(hostContext.Configuration);
+
+            services.AddJob<SendTaskListRemindersJob>();
         }
     }
 }

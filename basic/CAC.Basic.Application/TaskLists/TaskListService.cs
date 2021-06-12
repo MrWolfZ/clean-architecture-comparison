@@ -34,7 +34,7 @@ namespace CAC.Basic.Application.TaskLists
             {
                 throw new ValidationException($"task list name must not be longer than {MaxTaskListNameLength} characters, but it was {name.Length} characters long");
             }
-            
+
             var owner = await userRepository.GetById(ownerId);
 
             if (owner == null)
@@ -60,7 +60,7 @@ namespace CAC.Basic.Application.TaskLists
             {
                 throw new ValidationException($"task list entry description must not be longer than {MaxTaskDescriptionLength} characters, but it was {taskDescription.Length} characters long");
             }
-            
+
             var taskList = await taskListRepository.GetById(taskListId);
 
             if (taskList == null)

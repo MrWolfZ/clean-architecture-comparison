@@ -1,4 +1,5 @@
-﻿using CAC.Basic.Domain.UserAggregate;
+﻿using System;
+using CAC.Basic.Domain.UserAggregate;
 using CAC.Core.Domain;
 
 namespace CAC.Basic.Domain.TaskListAggregate
@@ -17,6 +18,8 @@ namespace CAC.Basic.Domain.TaskListAggregate
     public sealed record TaskAddedToTaskListEvent(TaskListEntry Entry);
 
     public sealed record TaskMarkedAsDoneEvent(TaskListEntry Entry);
+
+    public sealed record TaskListReminderSent(DateTimeOffset ReminderSentAt);
 
     public sealed record TaskListDeletedEvent;
 }

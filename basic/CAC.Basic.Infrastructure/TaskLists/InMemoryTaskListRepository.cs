@@ -38,11 +38,17 @@ namespace CAC.Basic.Infrastructure.TaskLists
         public Task<TaskListEntryId> GenerateEntryId() => Task.FromResult(TaskListEntryId.Of(Interlocked.Increment(ref entryIdCounter)));
 
         public new Task<IReadOnlyCollection<TaskList>> GetAll() => base.GetAll();
+        
+        public async Task<IReadOnlyCollection<TaskList>> GetAllByOwner(UserId ownerId)
+        {
+            var all = await GetAll();
+            return all.Where(l => l.OwnerId == ownerId).ToList();
+        }
 
         public async Task<int> GetNumberOfTaskListsByOwner(UserId ownerId)
         {
-            var all = await GetAll();
-            return all.Count(l => l.OwnerId == ownerId);
+            var all = await GetAllByOwner(ownerId);
+            return all.Count;
         }
 
         public async Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries()

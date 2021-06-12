@@ -12,7 +12,7 @@ namespace CAC.Basic.Application.TaskLists
         Task<(TaskList TaskList, TaskListEntryId EntryId)> AddTaskToList(TaskListId taskListId, string taskDescription);
         
         Task<TaskList> MarkTaskAsDone(TaskListId taskListId, TaskListEntryId entryId);
-        
+
         Task<IReadOnlyCollection<TaskList>> GetAll();
         
         Task<TaskList> GetById(TaskListId taskListId);

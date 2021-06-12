@@ -12,6 +12,8 @@ namespace CAC.Basic.Application.TaskLists
 
         public Task<IReadOnlyCollection<TaskList>> GetAll();
 
+        public Task<IReadOnlyCollection<TaskList>> GetAllByOwner(UserId ownerId);
+
         public Task<int> GetNumberOfTaskListsByOwner(UserId ownerId);
 
         public Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries();

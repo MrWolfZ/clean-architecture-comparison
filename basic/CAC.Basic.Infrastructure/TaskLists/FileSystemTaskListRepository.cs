@@ -6,6 +6,7 @@ using CAC.Basic.Application.TaskLists;
 using CAC.Basic.Domain.TaskListAggregate;
 using CAC.Basic.Domain.UserAggregate;
 using CAC.Core.Application;
+using CAC.Core.Domain;
 using CAC.Core.Domain.Exceptions;
 using CAC.Core.Infrastructure.Persistence;
 using Microsoft.Extensions.Options;
@@ -40,10 +41,16 @@ namespace CAC.Basic.Infrastructure.TaskLists
 
         public new async Task<IReadOnlyCollection<TaskList>> GetAll() => await base.GetAll();
 
-        public async Task<int> GetNumberOfTaskListsByOwner(UserId ownerId)
+        public async Task<IReadOnlyCollection<TaskList>> GetAllByOwner(UserId ownerId)
         {
             var all = await GetAll();
-            return all.Count(l => l.OwnerId == ownerId);
+            return all.Where(l => l.OwnerId == ownerId).ToList();
+        }
+
+        public async Task<int> GetNumberOfTaskListsByOwner(UserId ownerId)
+        {
+            var all = await GetAllByOwner(ownerId);
+            return all.Count;
         }
 
         public async Task<IReadOnlyCollection<TaskList>> GetAllWithPendingEntries()
@@ -54,21 +61,21 @@ namespace CAC.Basic.Infrastructure.TaskLists
 
         protected override TaskListId CreateId(long numericId) => TaskListId.Of(numericId);
 
-        protected override TaskListPo ToPersistenceObject(TaskList aggregate)
+        protected override TaskListPo ToPersistenceObject(TaskList list)
         {
-            var entryPos = aggregate.Entries.Select(e => new TaskListEntryPo(e.Id, e.Description, e.IsDone)).ToList();
-            return new(aggregate.Id, aggregate.OwnerId, aggregate.OwnerIsPremium, aggregate.Name, entryPos);
+            var entryPos = list.Entries.Select(e => new TaskListEntryPo(e.Id, e.Description, e.IsDone)).ToList();
+            return new(list.Id, list.OwnerId, list.OwnerIsPremium, list.Name, entryPos, list.LastChangedAt.ToIsoString(), list.LastReminderSentAt?.ToIsoString());
         }
 
         protected override TaskList FromPersistenceObject(TaskListPo po)
         {
             var entries = po.Entries.Select(e => TaskListEntry.FromRawData(e.Id, e.Description, e.IsDone)).ToValueList();
-            return TaskList.FromRawData(po.Id, po.OwnerId, po.OwnerIsPremium, po.Name, entries);
+            return TaskList.FromRawData(po.Id, po.OwnerId, po.OwnerIsPremium, po.Name, entries, po.LastChangedAt.FromIsoString(), po.LastReminderSentAt?.FromIsoString());
         }
 
         // persistence objects
 
-        public sealed record TaskListPo(TaskListId Id, UserId OwnerId, bool OwnerIsPremium, string Name, IList<TaskListEntryPo> Entries);
+        public sealed record TaskListPo(TaskListId Id, UserId OwnerId, bool OwnerIsPremium, string Name, IList<TaskListEntryPo> Entries, string LastChangedAt, string? LastReminderSentAt);
 
         public sealed record TaskListEntryPo(TaskListEntryId Id, string Description, bool IsDone);
     }
