@@ -2,13 +2,14 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using CAC.Core.Application;
 using CAC.Core.Domain;
-using CAC.Core.Infrastructure.Persistence;
+using CAC.Core.Infrastructure;
 using CAC.Core.Infrastructure.Serialization;
 using CAC.Core.Web;
 using CAC.DDD.Web.Persistence;
 using CAC.DDD.Web.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: InternalsVisibleTo("CAC.DDD.UnitTests")]
@@ -19,12 +20,15 @@ namespace CAC.DDD.Web
     {
         private const string ApiVersion = "v1";
 
-        public Startup(IWebHostEnvironment environment)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
+            Configuration = configuration;
             Environment = environment;
         }
 
         private static string? AssemblyName => Assembly.GetExecutingAssembly().GetName().Name;
+
+        private IConfiguration Configuration { get; }
 
         private IWebHostEnvironment Environment { get; }
 
@@ -38,20 +42,19 @@ namespace CAC.DDD.Web
             });
 
             services.AddCoreWeb(Environment);
-            
+
             Assembly.GetExecutingAssembly().AddEntityIdTypeConverterAttributes();
 
-            services.AddOptions<PersistenceOptions>("Persistence");
-            services.ConfigureOptions<FileSystemStoragePersistenceOptionsDevelopmentConfiguration>();
+            services.AddPersistenceOptions(Configuration);
 
             services.AddTransient<ITaskListRepository, FileSystemTaskListRepository>();
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddSingleton<ITaskListStatisticsRepository, InMemoryTaskListStatisticsRepository>();
-            
+
             services.AddDomainEventPublisher();
             services.AddDomainEventHandler<TaskListStatisticsDomainEventHandler>();
             services.AddDomainEventHandler<TaskListNotificationDomainEventHandler>();
-            
+
             services.AddTransient<IMessageQueueAdapter, NullMessageQueueAdapter>();
         }
 

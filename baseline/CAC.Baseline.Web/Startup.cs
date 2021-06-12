@@ -2,11 +2,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using CAC.Baseline.Web.Persistence;
 using CAC.Baseline.Web.Services;
-using CAC.Core.Infrastructure.Persistence;
+using CAC.Core.Infrastructure;
 using CAC.Core.Infrastructure.Serialization;
 using CAC.Core.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: InternalsVisibleTo("CAC.Baseline.UnitTests")]
@@ -17,12 +18,15 @@ namespace CAC.Baseline.Web
     {
         private const string ApiVersion = "v1";
 
-        public Startup(IWebHostEnvironment environment)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
+            Configuration = configuration;
             Environment = environment;
         }
 
         private static string? AssemblyName => Assembly.GetExecutingAssembly().GetName().Name;
+
+        private IConfiguration Configuration { get; }
 
         private IWebHostEnvironment Environment { get; }
 
@@ -37,17 +41,16 @@ namespace CAC.Baseline.Web
 
             services.AddCoreWeb(Environment);
 
-            services.AddOptions<PersistenceOptions>("Persistence");
-            services.ConfigureOptions<FileSystemStoragePersistenceOptionsDevelopmentConfiguration>();
+            services.AddPersistenceOptions(Configuration);
 
             services.AddTransient<ITaskListRepository, FileSystemTaskListRepository>();
             services.AddTransient<ITaskListEntryRepository, FileSystemTaskListEntryRepository>();
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddSingleton<ITaskListStatisticsRepository, InMemoryTaskListStatisticsRepository>();
-            
+
             services.AddTransient<ITaskListStatisticsService, TaskListStatisticsService>();
             services.AddTransient<ITaskListNotificationService, TaskListNotificationService>();
-            
+
             services.AddTransient<IMessageQueueAdapter, NullMessageQueueAdapter>();
         }
 

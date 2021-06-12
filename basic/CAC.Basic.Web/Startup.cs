@@ -1,14 +1,12 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using CAC.Basic.Application;
-using CAC.Basic.Domain.TaskListAggregate;
 using CAC.Basic.Infrastructure;
-using CAC.Core.Domain;
-using CAC.Core.Infrastructure.Persistence;
 using CAC.Core.Infrastructure.Serialization;
 using CAC.Core.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: InternalsVisibleTo("CAC.Basic.UnitTests")]
@@ -18,13 +16,16 @@ namespace CAC.Basic.Web
     public sealed class Startup
     {
         private const string ApiVersion = "v1";
-        
-        public Startup(IWebHostEnvironment environment)
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
+            Configuration = configuration;
             Environment = environment;
         }
 
         private static string? AssemblyName => Assembly.GetExecutingAssembly().GetName().Name;
+
+        private IConfiguration Configuration { get; }
 
         private IWebHostEnvironment Environment { get; }
 
@@ -38,14 +39,9 @@ namespace CAC.Basic.Web
             });
 
             services.AddCoreWeb(Environment);
-            
-            typeof(TaskListId).Assembly.AddEntityIdTypeConverterAttributes();
 
             services.AddApplication();
-            services.AddInfrastructure();
-
-            services.AddOptions<PersistenceOptions>("Persistence");
-            services.ConfigureOptions<FileSystemStoragePersistenceOptionsDevelopmentConfiguration>();
+            services.AddInfrastructure(Configuration);
         }
 
         public void Configure(IApplicationBuilder app)

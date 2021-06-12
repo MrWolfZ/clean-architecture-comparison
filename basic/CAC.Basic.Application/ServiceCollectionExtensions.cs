@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
 using CAC.Basic.Application.TaskLists;
+using CAC.Basic.Domain.TaskListAggregate;
 using CAC.Core.Application;
+using CAC.Core.Domain;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: InternalsVisibleTo("CAC.Basic.UnitTests")]
@@ -17,6 +19,8 @@ namespace CAC.Basic.Application
             services.AddDomainEventPublisher();
             services.AddDomainEventHandler<TaskListStatisticsDomainEventHandler>();
             services.AddDomainEventHandler<TaskListNotificationDomainEventHandler>();
+            
+            typeof(TaskListId).Assembly.AddEntityIdTypeConverterAttributes();
         }
     }
 }
