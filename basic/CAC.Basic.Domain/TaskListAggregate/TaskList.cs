@@ -9,65 +9,79 @@ namespace CAC.Basic.Domain.TaskListAggregate
     public sealed record TaskList : AggregateRoot<TaskList, TaskListId>
     {
         internal const int NonPremiumUserTaskEntryCountLimit = 5;
-        
-        private TaskList(TaskListId id, UserId ownerId, string name, ValueList<TaskListEntry> entries)
+
+        private TaskList(TaskListId id, UserId ownerId, bool ownerIsPremium, string name, ValueList<TaskListEntry> entries)
             : base(id)
         {
             OwnerId = ownerId;
             Name = name;
             Entries = entries;
+            OwnerIsPremium = ownerIsPremium;
         }
 
         public UserId OwnerId { get; }
+
+        public bool OwnerIsPremium { get; }
 
         public string Name { get; }
 
         public ValueList<TaskListEntry> Entries { get; private init; }
 
-        public static TaskList New(TaskListId id, User owner, string name, int numberOfListsOwnedByOwner)
+        public static TaskList ForOwner(User owner, TaskListId id, string name, int numberOfListsOwnedByOwner)
         {
-            if (!owner.IsPremium && numberOfListsOwnedByOwner > 0)
-            {
-                throw new DomainInvariantViolationException(id, $"non-premium user '{owner.Id}' already owns a task list");
-            }
+            CheckInvariants();
 
-            return New(id, owner.Id, name, ValueList<TaskListEntry>.Empty).WithEvent(new TaskListCreatedEvent(owner));
+            return FromRawData(id, owner.Id, owner.IsPremium, name, ValueList<TaskListEntry>.Empty).WithEvent(new TaskListCreatedEvent(owner));
+
+            void CheckInvariants()
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    throw new DomainInvariantViolationException(id, "name must be a non-empty non-whitespace string");
+                }
+
+                if (!owner.IsPremium && numberOfListsOwnedByOwner > 0)
+                {
+                    throw new DomainInvariantViolationException(id, $"non-premium user '{owner.Id}' already owns a task list");
+                }
+            }
         }
 
-        public static TaskList New(TaskListId id, UserId ownerId, string name, ValueList<TaskListEntry> entries)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new DomainInvariantViolationException(id, "name must be a non-empty non-whitespace string");
-            }
+        public static TaskList FromRawData(TaskListId id, UserId ownerId, bool ownerIsPremium, string name, ValueList<TaskListEntry> entries) => new(id, ownerId, ownerIsPremium, name, entries);
 
-            return new TaskList(id, ownerId, name, entries);
-        }
-
-        public TaskList AddEntry(TaskListEntryId id, string description, User owner)
+        public TaskList AddEntry(TaskListEntry entry)
         {
-            if (!owner.IsPremium && Entries.Count >= NonPremiumUserTaskEntryCountLimit)
-            {
-                throw new DomainInvariantViolationException(Id, $"non-premium user {owner.Id} can only have at most {NonPremiumUserTaskEntryCountLimit} tasks in their list");
-            }
-            
-            var entry = TaskListEntry.New(Id, id, description, false);
+            CheckInvariants();
+
             var updatedList = this with { Entries = Entries.Add(entry) };
             return updatedList.WithEvent(new TaskAddedToTaskListEvent(entry));
+
+            void CheckInvariants()
+            {
+                if (!OwnerIsPremium && Entries.Count >= NonPremiumUserTaskEntryCountLimit)
+                {
+                    throw new DomainInvariantViolationException(Id, $"non-premium user {OwnerId} can only have at most {NonPremiumUserTaskEntryCountLimit} tasks in their list");
+                }
+            }
         }
 
         public TaskList MarkEntryAsDone(TaskListEntryId entryId)
         {
-            if (Entries.All(e => e.Id != entryId))
-            {
-                throw new DomainInvariantViolationException(Id, $"entry '{entryId}' does not exist");
-            }
+            CheckInvariants();
 
             var entry = Entries.Single(e => e.Id == entryId);
             var updatedEntry = entry.MarkAsDone();
             var updatedEntries = Entries.Replace(entry, updatedEntry);
             var updatedList = this with { Entries = updatedEntries };
             return updatedList.WithEvent(new TaskMarkedAsDoneEvent(updatedEntry));
+
+            void CheckInvariants()
+            {
+                if (Entries.All(e => e.Id != entryId))
+                {
+                    throw new DomainInvariantViolationException(Id, $"entry '{entryId}' does not exist");
+                }
+            }
         }
 
         public new TaskList MarkAsDeleted() => base.MarkAsDeleted().WithEvent(new TaskListDeletedEvent());

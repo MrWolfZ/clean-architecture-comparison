@@ -11,7 +11,7 @@ namespace CAC.Basic.Domain.TaskListAggregate
 
         public static implicit operator TaskListId(long value) => Of(value);
 
-        public static TaskListId Of(long value) => new TaskListId(value);
+        public static TaskListId Of(long value) => new(value);
 
         public override string ToString() => Value;
     }

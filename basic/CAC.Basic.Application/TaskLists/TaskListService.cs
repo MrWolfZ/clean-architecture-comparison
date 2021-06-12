@@ -45,7 +45,7 @@ namespace CAC.Basic.Application.TaskLists
             var numberOfListsOwnedByOwner = await taskListRepository.GetNumberOfTaskListsByOwner(ownerId);
 
             var id = await taskListRepository.GenerateId();
-            var taskList = TaskList.New(id, owner, name, numberOfListsOwnedByOwner);
+            var taskList = TaskList.ForOwner(owner, id, name, numberOfListsOwnedByOwner);
 
             taskList = await taskListRepository.Upsert(taskList);
 
@@ -68,15 +68,9 @@ namespace CAC.Basic.Application.TaskLists
                 throw new DomainEntityNotFoundException(taskListId, $"task list {taskListId} does not exist");
             }
 
-            var user = await userRepository.GetById(taskList.OwnerId);
-
-            if (user == null)
-            {
-                throw new DomainEntityNotFoundException(taskList.OwnerId, $"user {taskList.OwnerId} does not exist");
-            }
-
             var id = await taskListRepository.GenerateEntryId();
-            taskList = taskList.AddEntry(id, taskDescription, user);
+            var newEntry = TaskListEntry.ForAddingToTaskList(taskList.Id, id, taskDescription);
+            taskList = taskList.AddEntry(newEntry);
             taskList = await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", taskDescription, taskList.Id);

@@ -60,7 +60,6 @@ Below you can find a list of the various styles we are comparing for implementin
 
 ## Open Points
 
-- figure out how to instantiate domain objects without side-stepping domain invariants or at least making it explicit that the invariants are side-stepped
 - add `README` for `ddd`
 - add `README` for `basic`
 - adjust `basic` based on `ddd`

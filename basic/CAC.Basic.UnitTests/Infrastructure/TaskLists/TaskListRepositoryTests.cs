@@ -25,7 +25,7 @@ namespace CAC.Basic.UnitTests.Infrastructure.TaskLists
             var existingList = CreateTaskList();
             existingList = await Testee.Upsert(existingList);
 
-            var list = TaskList.New(2, OwnerId, existingList.Name, ValueList<TaskListEntry>.Empty);
+            var list = TaskList.FromRawData(2, OwnerId, true, existingList.Name, ValueList<TaskListEntry>.Empty);
             _ = Assert.ThrowsAsync<UniquenessConstraintViolationException>(() => Testee.Upsert(list));
         }
 
@@ -111,22 +111,22 @@ namespace CAC.Basic.UnitTests.Infrastructure.TaskLists
 
         protected override TaskList UpdateAggregate(TaskList aggregate)
         {
-            var entry = CreateEntry(aggregate.Id);
+            var entry = CreateEntry();
             var entries = aggregate.Entries.Add(entry);
-            return TaskList.New(aggregate.Id, aggregate.OwnerId, aggregate.Name, entries);
+            return TaskList.FromRawData(aggregate.Id, aggregate.OwnerId, true, aggregate.Name, entries);
         }
 
         private TaskList CreateTaskList(int numberOfEntries = 0, UserId? ownerId = null, string? name = null)
         {
             var listId = ++taskListIdCounter;
-            var entries = Enumerable.Range(1, numberOfEntries).Select(id => CreateEntry(id)).ToValueList();
-            return TaskList.New(listId, ownerId ?? OwnerId, name ?? $"list {listId}", entries);
+            var entries = Enumerable.Range(1, numberOfEntries).Select(_ => CreateEntry()).ToValueList();
+            return TaskList.FromRawData(listId, ownerId ?? OwnerId, true, name ?? $"list {listId}", entries);
         }
 
-        private TaskListEntry CreateEntry(TaskListId owningListId)
+        private TaskListEntry CreateEntry()
         {
             var entryId = ++taskListEntryIdCounter;
-            return TaskListEntry.New(owningListId, entryId, $"task {entryId}", false);
+            return TaskListEntry.FromRawData(entryId, $"task {entryId}", false);
         }
     }
 }

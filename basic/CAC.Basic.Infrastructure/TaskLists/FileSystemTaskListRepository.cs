@@ -57,18 +57,18 @@ namespace CAC.Basic.Infrastructure.TaskLists
         protected override TaskListPo ToPersistenceObject(TaskList aggregate)
         {
             var entryPos = aggregate.Entries.Select(e => new TaskListEntryPo(e.Id, e.Description, e.IsDone)).ToList();
-            return new(aggregate.Id, aggregate.OwnerId, aggregate.Name, entryPos);
+            return new(aggregate.Id, aggregate.OwnerId, aggregate.OwnerIsPremium, aggregate.Name, entryPos);
         }
 
-        protected override TaskList FromPersistenceObject(TaskListPo persistenceObject)
+        protected override TaskList FromPersistenceObject(TaskListPo po)
         {
-            var entries = persistenceObject.Entries.Select(e => TaskListEntry.New(persistenceObject.Id, e.Id, e.Description, e.IsDone)).ToValueList();
-            return TaskList.New(persistenceObject.Id, persistenceObject.OwnerId, persistenceObject.Name, entries);
+            var entries = po.Entries.Select(e => TaskListEntry.FromRawData(e.Id, e.Description, e.IsDone)).ToValueList();
+            return TaskList.FromRawData(po.Id, po.OwnerId, po.OwnerIsPremium, po.Name, entries);
         }
 
         // persistence objects
 
-        public sealed record TaskListPo(TaskListId Id, UserId OwnerId, string Name, IList<TaskListEntryPo> Entries);
+        public sealed record TaskListPo(TaskListId Id, UserId OwnerId, bool OwnerIsPremium, string Name, IList<TaskListEntryPo> Entries);
 
         public sealed record TaskListEntryPo(TaskListEntryId Id, string Description, bool IsDone);
     }

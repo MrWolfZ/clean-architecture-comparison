@@ -16,7 +16,7 @@ namespace CAC.DDD.Web.Domain.UserAggregate
 
         public bool IsPremium { get; }
 
-        public static User New(UserId id, string name, bool isPremium)
+        public static User FromRawData(UserId id, string name, bool isPremium)
         {
             if (string.IsNullOrWhiteSpace(name))
             {

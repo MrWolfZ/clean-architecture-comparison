@@ -16,14 +16,14 @@ namespace CAC.Basic.Domain.UserAggregate
 
         public bool IsPremium { get; }
 
-        public static User New(UserId id, string name, bool isPremium)
+        public static User FromRawData(UserId id, string name, bool isPremium)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new DomainInvariantViolationException(id, "name must be a non-empty non-whitespace string");
             }
 
-            return new User(id, name, isPremium);
+            return new(id, name, isPremium);
         }
 
         protected override DomainEvent<User> CreateEvent<TPayload>(TPayload payload) => new UserDomainEvent<TPayload>(this, payload);

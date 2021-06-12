@@ -19,15 +19,22 @@ namespace CAC.Basic.Domain.TaskListAggregate
 
         public bool IsDone { get; private init; }
 
-        public static TaskListEntry New(TaskListId owningTaskListId, TaskListEntryId id, string description, bool isDone)
+        public static TaskListEntry ForAddingToTaskList(TaskListId owningTaskListId, TaskListEntryId id, string description)
         {
-            if (string.IsNullOrWhiteSpace(description))
-            {
-                throw new DomainInvariantViolationException(owningTaskListId, "item description must be a non-empty non-whitespace string");
-            }
+            CheckInvariants();
 
-            return new TaskListEntry(id, description, isDone);
+            return FromRawData(id, description, false);
+
+            void CheckInvariants()
+            {
+                if (string.IsNullOrWhiteSpace(description))
+                {
+                    throw new DomainInvariantViolationException(owningTaskListId, "entry description must be a non-empty non-whitespace string");
+                }
+            }
         }
+
+        public static TaskListEntry FromRawData(TaskListEntryId id, string description, bool isDone) => new(id, description, isDone);
 
         public TaskListEntry MarkAsDone() => this with { IsDone = true };
     }

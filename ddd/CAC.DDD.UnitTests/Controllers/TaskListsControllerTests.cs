@@ -19,8 +19,8 @@ namespace CAC.DDD.UnitTests.Controllers
     [IntegrationTest]
     public sealed class TaskListsControllerTests : BaselineControllerTestBase
     {
-        private static readonly User PremiumOwner = User.New(1, "premium", true);
-        private static readonly User NonPremiumOwner = User.New(2, "non-premium", false);
+        private static readonly User PremiumOwner = User.FromRawData(1, "premium", true);
+        private static readonly User NonPremiumOwner = User.FromRawData(2, "non-premium", false);
 
         private long taskListIdCounter;
         private long taskListEntryIdCounter;
@@ -314,15 +314,15 @@ namespace CAC.DDD.UnitTests.Controllers
         public async Task MarkTaskAsDone_GivenSuccess_PublishesNotification()
         {
             var taskList = CreateTaskList();
-            var entryId = TaskListEntryId.Of(1);
-            taskList = taskList.AddEntry(entryId, "task", PremiumOwner);
+            var newEntry = TaskListEntry.ForAddingToTaskList(taskList.Id, 1, "task");
+            taskList = taskList.AddEntry(newEntry);
 
             taskList = await TaskListRepository.Upsert(taskList);
 
             using var content = new StringContent(string.Empty);
-            _ = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{entryId}/isDone", content);
+            _ = await HttpClient.PutAsync($"taskLists/{taskList.Id}/tasks/{newEntry.Id}/isDone", content);
 
-            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskMarkedAsDoneMessage>(m => m.TaskListId == taskList.Id && m.TaskListEntryId == entryId)));
+            MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskMarkedAsDoneMessage>(m => m.TaskListId == taskList.Id && m.TaskListEntryId == newEntry.Id)));
         }
 
         [Test]
@@ -451,14 +451,14 @@ namespace CAC.DDD.UnitTests.Controllers
         private TaskList CreateTaskList(User? owner = null, int numberOfEntries = 0)
         {
             var listId = ++taskListIdCounter;
-            var entries = Enumerable.Range(1, numberOfEntries).Select(id => CreateEntry(id)).ToValueList();
-            return TaskList.New(listId, (owner ?? PremiumOwner).Id, $"list {listId}", entries);
+            var entries = Enumerable.Range(1, numberOfEntries).Select(_ => CreateEntry()).ToValueList();
+            return TaskList.FromRawData(listId, (owner ?? PremiumOwner).Id, (owner ?? PremiumOwner).IsPremium, $"list {listId}", entries);
         }
 
-        private TaskListEntry CreateEntry(TaskListId owningListId)
+        private TaskListEntry CreateEntry()
         {
             var entryId = ++taskListEntryIdCounter;
-            return TaskListEntry.New(owningListId, entryId, $"task {entryId}", false);
+            return TaskListEntry.FromRawData(entryId, $"task {entryId}", false);
         }
     }
 }

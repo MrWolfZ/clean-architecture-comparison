@@ -40,7 +40,7 @@ namespace CAC.DDD.Web.Controllers
             var numberOfListsOwnedByOwner = await taskListRepository.GetNumberOfTaskListsByOwner(request.OwnerId);
 
             var id = await taskListRepository.GenerateId();
-            var taskList = TaskList.New(id, owner, request.Name, numberOfListsOwnedByOwner);
+            var taskList = TaskList.ForOwner(owner, id, request.Name, numberOfListsOwnedByOwner);
 
             taskList = await taskListRepository.Upsert(taskList);
 
@@ -60,15 +60,9 @@ namespace CAC.DDD.Web.Controllers
                 return NotFound($"task list {taskListId} does not exist");
             }
 
-            var user = await userRepository.GetById(taskList.OwnerId);
-
-            if (user == null)
-            {
-                return Conflict($"user {taskList.OwnerId} does not exist");
-            }
-
             var id = await taskListRepository.GenerateEntryId();
-            taskList = taskList.AddEntry(id, request.TaskDescription, user);
+            var newEntry = TaskListEntry.ForAddingToTaskList(taskList.Id, id, request.TaskDescription);
+            taskList = taskList.AddEntry(newEntry);
             taskList = await taskListRepository.Upsert(taskList);
 
             logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", request.TaskDescription, taskList.Id);
