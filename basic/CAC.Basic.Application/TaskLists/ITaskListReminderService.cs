@@ -1,10 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace CAC.Basic.Application.TaskLists
 {
     public interface ITaskListReminderService
     {
-        Task SendTaskListRemindersDueBefore(DateTimeOffset dueBefore);
+        Task SendTaskListReminders();
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using CAC.Basic.Application.TaskLists;
 using CAC.Core.Jobs;
 
@@ -16,7 +15,7 @@ namespace CAC.Basic.Jobs
 
         public async Task RunAsync()
         {
-            await reminderService.SendTaskListRemindersDueBefore(DateTimeOffset.UtcNow);
+            await reminderService.SendTaskListReminders();
         }
     }
 }

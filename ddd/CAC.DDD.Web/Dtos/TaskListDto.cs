@@ -6,7 +6,7 @@ namespace CAC.DDD.Web.Dtos
 {
     public sealed record TaskListDto(TaskListId Id, string Name, IList<TaskListEntryDto> Entries)
     {
-        public static TaskListDto FromTaskListEntry(TaskList list) =>
+        public static TaskListDto FromTaskList(TaskList list) =>
             new(list.Id, list.Name, list.Entries.Select(TaskListEntryDto.FromTaskListEntry).ToList());
     }
 

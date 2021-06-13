@@ -48,7 +48,7 @@ namespace CAC.Basic.Web.TaskLists
         public async Task<IReadOnlyCollection<TaskListDto>> GetAll()
         {
             var lists = await taskListService.GetAll();
-            return lists.Select(TaskListDto.FromTaskListEntry).ToList();
+            return lists.Select(TaskListDto.FromTaskList).ToList();
         }
 
         [HttpGet("{taskListId}")]
@@ -56,7 +56,7 @@ namespace CAC.Basic.Web.TaskLists
         public async Task<TaskListDto> GetById(TaskListId taskListId)
         {
             var taskList = await taskListService.GetById(taskListId);
-            return TaskListDto.FromTaskListEntry(taskList);
+            return TaskListDto.FromTaskList(taskList);
         }
 
         [HttpGet("withPendingEntries")]
@@ -64,7 +64,7 @@ namespace CAC.Basic.Web.TaskLists
         public async Task<IReadOnlyCollection<TaskListDto>> GetAllWithPendingEntries()
         {
             var lists = await taskListService.GetAllWithPendingEntries();
-            return lists.Select(TaskListDto.FromTaskListEntry).ToList();
+            return lists.Select(TaskListDto.FromTaskList).ToList();
         }
 
         [HttpDelete("{taskListId}")]

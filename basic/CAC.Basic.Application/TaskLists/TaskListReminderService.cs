@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using CAC.Basic.Application.Users;
 using CAC.Basic.Domain.UserAggregate;
@@ -25,7 +24,7 @@ namespace CAC.Basic.Application.TaskLists
 
         // in a real application you may want to use batching to deal with large
         // numbers of users and/or task lists
-        public async Task SendTaskListRemindersDueBefore(DateTimeOffset dueBefore)
+        public async Task SendTaskListReminders()
         {
             var premiumUsers = await userRepository.GetPremiumUsers();
             var results = await Task.WhenAll(premiumUsers.Select(SendTaskListReminderToUserIfApplicable));

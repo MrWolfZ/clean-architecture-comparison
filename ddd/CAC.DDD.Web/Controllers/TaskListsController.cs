@@ -101,7 +101,7 @@ namespace CAC.DDD.Web.Controllers
         public async Task<IReadOnlyCollection<TaskListDto>> GetAll()
         {
             var lists = await taskListRepository.GetAll();
-            return lists.Select(TaskListDto.FromTaskListEntry).ToList();
+            return lists.Select(TaskListDto.FromTaskList).ToList();
         }
 
         [HttpGet("{taskListId}")]
@@ -109,7 +109,7 @@ namespace CAC.DDD.Web.Controllers
         public async Task<ActionResult<TaskListDto>> GetById(TaskListId taskListId)
         {
             var taskList = await taskListRepository.GetById(taskListId);
-            return taskList == null ? NotFound($"task list {taskListId} does not exist") : Ok(TaskListDto.FromTaskListEntry(taskList));
+            return taskList == null ? NotFound($"task list {taskListId} does not exist") : Ok(TaskListDto.FromTaskList(taskList));
         }
 
         [HttpGet("withPendingEntries")]
@@ -117,7 +117,7 @@ namespace CAC.DDD.Web.Controllers
         public async Task<IReadOnlyCollection<TaskListDto>> GetAllWithPendingEntries()
         {
             var lists = await taskListRepository.GetAllWithPendingEntries();
-            return lists.Select(TaskListDto.FromTaskListEntry).ToList();
+            return lists.Select(TaskListDto.FromTaskList).ToList();
         }
 
         [HttpDelete("{taskListId}")]
