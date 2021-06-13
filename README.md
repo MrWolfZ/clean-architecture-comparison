@@ -21,7 +21,7 @@ The following are our application's business rules:
 In addition to our business rules, our application has a few more behaviors:
 
 - the system gathers statistics about changes that are made to the _task lists_ it manages
-- whenever a _task list_ is created or changed the system publishes change notification to other systems
+- whenever a _task list_ is created or changed the system publishes a change notification to other systems
 
 For the sake of simplicity our system contains no user interface, but only APIs. It also does not have any authentication or authorization, i.e. _users_ only exist as business objects.
 

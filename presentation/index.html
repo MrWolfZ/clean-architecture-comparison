@@ -1,0 +1,315 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>Moving to a clean architecture</title>
+
+  <link rel="stylesheet"
+        href="css/reset.css">
+  <link rel="stylesheet"
+        href="css/reveal.css">
+  <link rel="stylesheet"
+        href="css/overrides.css">
+  <link rel="stylesheet"
+        href="css/theme/black.css">
+
+  <link rel="stylesheet"
+        href="lib/css/monokai.css">
+</head>
+
+<script>
+  if (window.location.search.match(/print-pdf/gi)) {
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = 'css/print/pdf.css'; // Notice: I changed the path
+    document.getElementsByTagName('head')[0].appendChild(link);
+  }
+</script>
+
+<body id="presentation">
+  <div class="reveal">
+    <div class="slides">
+      <section>
+        <p style="font-size: 1.55em"><b>Moving to a clean architecture</b></p>
+      </section>
+
+      <section>
+        <section>
+          Baseline
+        </section>
+
+        <section>
+          <p>Application domain</p>
+          <ul>
+            <li class="fragment">there are <em>task lists</em> that are owned by <em>users</em></li>
+            <li class="fragment">a <em>task list</em> has a <em>name</em> and contains <em>task list entries</em></li>
+            <li class="fragment">a <em>task list entry</em> has a description and can be marked as <em>done</em></li>
+            <li class="fragment">there are <em>premium</em> and non-<em>premium</em> users</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>Business rules</p>
+          <ul>
+            <li class="fragment">a <em>task list</em>'s name must be unique per owner</li>
+            <li class="fragment">
+              non-<em>premium</em> users are limited to at most one <em>task list</em> with at most 5 <em>entries</em>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <p>Other behaviors</p>
+          <ul>
+            <li class="fragment">
+              the system gathers statistics about changes that are made to the <em>task lists</em> it manages
+            </li>
+            <li class="fragment">
+              whenever a <em>task list</em> is created or changed the system publishes a change notification to other
+              systems
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <p>in C#</p>
+          <img src="images/baseline_file_tree.png" />
+        </section>
+      </section>
+
+      <section>
+        <section>
+          <p>Domain-driven design</p>
+          <ul>
+            <li class="fragment">rich business objects</li>
+            <li class="fragment">encapsulate business rules</li>
+            <li class="fragment">ensure invariants</li>
+            <li class="fragment">domain events</li>
+            <li class="fragment">persistence on aggregate level</li>
+            <li class="fragment">
+              often used in conjunction with clean architecture, but also worthwhile without it
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <p>in C#</p>
+          <img src="images/ddd_file_tree.png" />
+        </section>
+
+        <section>
+          <p>in C#</p>
+          <img src="images/ddd_anemic_vs_rich.png" />
+        </section>
+      </section>
+
+      <section>
+        <section>
+          What's wrong with this?
+        </section>
+
+        <section>
+          nothing
+        </section>
+      </section>
+
+      <section>
+        <section>
+          <p>Motivation for moving to a clean architecture</p>
+          <ul>
+            <li class="fragment">new business requirements</li>
+            <li class="fragment">sending reminders to premium users</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>how would you implement this in our DDD application?</p>
+          <img src="images/ddd_file_tree.png" />
+        </section>
+
+        <section>
+          <p>Clean architecture</p>
+          <img src="images/clean_architecture.png" />
+        </section>
+
+        <section>
+          <p>Clean architecture</p>
+          <ul>
+            <li class="fragment">separate logic from the interfaces to the outside world</li>
+            <li class="fragment">separate business rules from application rules</li>
+            <li class="fragment">depend on abstractions, not concrete implementations</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>in C#</p>
+          <img src="images/basic_file_tree.png" />
+        </section>
+
+        <section>
+          <p>Domain</p>
+          <ul>
+            <li class="fragment">business rules</li>
+            <li class="fragment">everything sync</li>
+            <li class="fragment">no interfaces</li>
+            <li class="fragment">ensure invariants</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>Application</p>
+          <ul>
+            <li class="fragment">application rules</li>
+            <li class="fragment">contains orchestration logic in services</li>
+            <li class="fragment">validates inputs</li>
+            <li class="fragment">loads and stores domain object</li>
+            <li class="fragment">defines abstractions for "communicating with the outside world"</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>Infrastructure</p>
+          <ul>
+            <li class="fragment">implementations of the application abstractions</li>
+            <li class="fragment">persistence, message queues, HTTP clients etc.</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>Web</p>
+          <ul>
+            <li class="fragment">thin layer that wraps application API in HTTP API</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>Jobs</p>
+          <ul>
+            <li class="fragment">thin layer that invokes our application API</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>Advantages</p>
+          <ul>
+            <li class="fragment">re-use same business logic for different interfaces</li>
+            <li class="fragment">application APIs are simpler to test</li>
+            <li class="fragment">
+              different projects force you to keep the dependency arrows pointed in the right direction
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <p>Disadvantages</p>
+          <ul>
+            <li class="fragment">often not trivial to distinguish between application and business rules</li>
+            <li class="fragment">what to test? web API? application API? both?</li>
+            <li class="fragment">duplication of validation between web API and application API</li>
+          </ul>
+        </section>
+      </section>
+
+      <section>
+        <section>
+          <p>Command query separation (CQS)</p>
+          <ul>
+            <li class="fragment">often services tend to grow in size uncontrolled</li>
+            <li class="fragment">services are often entity-centric instead of use-case-centric</li>
+            <li class="fragment">
+              read and write operations are mixed, even though their implementations differ heavily
+            </li>
+            <li class="fragment">
+              CQS aims to solve these issues by separating read and write operations and centering code around use-cases
+            </li>
+            <li class="fragment">different from CQRS</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>in C#</p>
+          <img src="images/cqs_file_tree.png" />
+        </section>
+
+        <section>
+          <p>in C#</p>
+          <ul>
+            <li class="fragment">each command and query has a dedicated handler</li>
+            <li class="fragment">command, query, and response objects can be used as DTOs</li>
+            <li class="fragment">no duplication of validation between web API and application API</li>
+            <li class="fragment">
+              still duplication of cross-cutting concerns (e.g. logging, validation execution, authorization)
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <p>MediatR</p>
+          <ul>
+            <li class="fragment">well-known library</li>
+            <li class="fragment">cross-cutting concerns via behaviors</li>
+            <li class="fragment">layer of indirection that makes code difficult to navigate</li>
+            <li class="fragment">no distinction between commands and queries</li>
+            <li class="fragment">behaviors not configurable</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>in C#</p>
+          <pre class="fragment"><code data-trim data-noescape class="cs">
+            public static class Foo
+            {
+              public const string Bar = "Baz";
+            }
+          </code></pre>
+        </section>
+
+        <section>
+          <p>Decorators</p>
+          <ul>
+            <li class="fragment">use dependency injection to decorate command and query handlers</li>
+            <li class="fragment">code stays obvious and navigable</li>
+            <li class="fragment">allow configuration of cross-cutting concerns through options or attributes</li>
+          </ul>
+        </section>
+
+        <section>
+          <p>in C#</p>
+          <pre class="fragment"><code data-trim data-noescape class="cs">
+            public static class Foo
+            {
+              public const string Bar = "Baz";
+            }
+          </code></pre>
+        </section>
+      </section>
+
+      <section>
+        thank you
+      </section>
+    </div>
+  </div>
+
+  <script src="js/reveal.js"></script>
+
+  <script>
+    Reveal.initialize({
+      controlsTutorial: false,
+      hash: true,
+      fragmentInURL: true,
+      dependencies: [
+        { src: 'plugin/markdown/marked.js' },
+        { src: 'plugin/markdown/markdown.js' },
+        { src: 'plugin/notes/notes.js', async: true },
+        { src: 'plugin/highlight/highlight.js', async: true }
+      ]
+    });
+  </script>
+</body>
+
+</html>
