@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -12,7 +13,7 @@ namespace CAC.Core.Domain
         }
     }
 
-    public abstract record EntityId
+    public abstract record EntityId : IComparable, IComparable<EntityId>
     {
         protected EntityId(long numericId, Type entityType)
         {
@@ -33,6 +34,36 @@ namespace CAC.Core.Domain
         public long NumericValue { get; }
 
         public string Value { get; }
+
+        public int CompareTo(object? obj) => obj is EntityId otherId ? CompareTo(otherId) : 0;
+
+        public int CompareTo(EntityId? other)
+        {
+            if (ReferenceEquals(this, other))
+            {
+                return 0;
+            }
+
+            if (other is null)
+            {
+                return 1;
+            }
+
+            if (other.GetType() == GetType())
+            {
+                return NumericValue.CompareTo(other.NumericValue);
+            }
+
+            return string.Compare(Value, other.Value, StringComparison.Ordinal);
+        }
+
+        public static bool operator <(EntityId? left, EntityId? right) => Comparer<EntityId>.Default.Compare(left, right) < 0;
+
+        public static bool operator >(EntityId? left, EntityId? right) => Comparer<EntityId>.Default.Compare(left, right) > 0;
+
+        public static bool operator <=(EntityId? left, EntityId? right) => Comparer<EntityId>.Default.Compare(left, right) <= 0;
+
+        public static bool operator >=(EntityId? left, EntityId? right) => Comparer<EntityId>.Default.Compare(left, right) >= 0;
 
         public override string ToString() => Value;
 

@@ -21,6 +21,7 @@ namespace CAC.Core.Web
 
             // Use method name as operationId
             options.CustomOperationIds(apiDesc => apiDesc.TryGetMethodInfo(out MethodInfo methodInfo) ? $"{methodInfo.DeclaringType?.Name}.{methodInfo.Name}" : null);
+            options.CustomSchemaIds(GenerateSchemaId);
 
             var xmlFiles = Directory.EnumerateFiles(AppContext.BaseDirectory, "CAC.*.xml");
 
@@ -28,6 +29,19 @@ namespace CAC.Core.Web
             {
                 options.IncludeXmlComments(file, true);
             }
+        }
+
+        private static string GenerateSchemaId(Type t)
+        {
+            var name = t.Name;
+
+            while (t.DeclaringType != null)
+            {
+                name = $"{t.DeclaringType.Name}.{name}";
+                t = t.DeclaringType;
+            }
+
+            return name;
         }
     }
 }

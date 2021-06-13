@@ -1,6 +1,11 @@
 using System.Runtime.CompilerServices;
-using CAC.CQS.Domain.TaskLists;
+using CAC.Core.Infrastructure;
+using CAC.CQS.Application;
+using CAC.CQS.Application.TaskLists;
+using CAC.CQS.Application.Users;
 using CAC.CQS.Infrastructure.TaskLists;
+using CAC.CQS.Infrastructure.Users;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: InternalsVisibleTo("CAC.CQS.UnitTests")]
@@ -10,9 +15,14 @@ namespace CAC.CQS.Infrastructure
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddInfrastructure(this IServiceCollection services)
+        public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddSingleton<ITaskListRepository, InMemoryTaskListRepository>();
+            services.AddTransient<ITaskListRepository, FileSystemTaskListRepository>();
+            services.AddSingleton<ITaskListStatisticsRepository, InMemoryTaskListStatisticsRepository>();
+            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+            services.AddTransient<IMessageQueueAdapter, NullMessageQueueAdapter>();
+
+            services.AddPersistenceOptions(configuration);
         }
     }
 }

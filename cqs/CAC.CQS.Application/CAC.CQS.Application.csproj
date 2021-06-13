@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../../core/CAC.Core.Analyzers/analyzers.targets" />
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\core\CAC.Core.Application\CAC.Core.Application.csproj" />
+        <ProjectReference Include="..\CAC.CQS.Domain\CAC.CQS.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

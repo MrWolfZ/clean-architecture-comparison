@@ -1,12 +1,15 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using CAC.Core.Infrastructure.Serialization;
 using CAC.Core.Web;
-using CAC.CQS.Domain;
+using CAC.CQS.Application;
 using CAC.CQS.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+
+[assembly: InternalsVisibleTo("CAC.CQS.UnitTests")]
 
 namespace CAC.CQS.Web
 {
@@ -14,12 +17,15 @@ namespace CAC.CQS.Web
     {
         private const string ApiVersion = "v1";
 
-        public Startup(IWebHostEnvironment environment)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
+            Configuration = configuration;
             Environment = environment;
         }
 
         private static string? AssemblyName => Assembly.GetExecutingAssembly().GetName().Name;
+
+        private IConfiguration Configuration { get; }
 
         private IWebHostEnvironment Environment { get; }
 
@@ -28,14 +34,14 @@ namespace CAC.CQS.Web
             services.AddControllers(c => c.UseApiPrefix()).AddJsonOptions(setup => setup.JsonSerializerOptions.AddCoreConverters());
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc(ApiVersion, new OpenApiInfo { Title = AssemblyName, Version = ApiVersion });
+                c.SwaggerDoc(ApiVersion, new() { Title = AssemblyName, Version = ApiVersion });
                 c.ConfigureCore();
             });
 
             services.AddCoreWeb(Environment);
 
-            services.AddDomain();
-            services.AddInfrastructure();
+            services.AddApplication();
+            services.AddInfrastructure(Configuration);
         }
 
         public void Configure(IApplicationBuilder app)

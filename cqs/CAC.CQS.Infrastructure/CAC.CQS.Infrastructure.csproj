@@ -8,7 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CAC.CQS.Domain\CAC.CQS.Domain.csproj" />
+        <ProjectReference Include="..\..\core\CAC.Core.Infrastructure\CAC.Core.Infrastructure.csproj" />
+        <ProjectReference Include="..\CAC.CQS.Application\CAC.CQS.Application.csproj" />
     </ItemGroup>
 
 </Project>
