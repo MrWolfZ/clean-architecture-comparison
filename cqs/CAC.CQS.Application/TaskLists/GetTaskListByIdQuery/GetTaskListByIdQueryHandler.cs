@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
@@ -14,7 +15,7 @@ namespace CAC.CQS.Application.TaskLists.GetTaskListByIdQuery
             this.taskListRepository = taskListRepository;
         }
 
-        public async Task<GetTaskListByIdQueryResponse> ExecuteQuery(GetTaskListByIdQuery query)
+        public async Task<GetTaskListByIdQueryResponse> ExecuteQuery(GetTaskListByIdQuery query, CancellationToken cancellationToken)
         {
             Validator.ValidateObject(query, new(query), true);
 

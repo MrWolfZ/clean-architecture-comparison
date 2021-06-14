@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 // empty interface used as marker interface for other operations
 #pragma warning disable CA1040
@@ -11,11 +12,11 @@ namespace CAC.Core.Application
     
     public interface ICommandHandler<in TCommand, TResponse> : ICommandHandler
     {
-        Task<TResponse> ExecuteCommand(TCommand command);
+        Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken);
     }
 
     public interface ICommandHandler<in TCommand> : ICommandHandler
     {
-        Task ExecuteCommand(TCommand command);
+        Task ExecuteCommand(TCommand command, CancellationToken cancellationToken);
     }
 }

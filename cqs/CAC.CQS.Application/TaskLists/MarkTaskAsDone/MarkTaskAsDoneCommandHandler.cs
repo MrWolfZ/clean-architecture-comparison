@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
@@ -18,7 +19,7 @@ namespace CAC.CQS.Application.TaskLists.MarkTaskAsDone
             this.logger = logger;
         }
 
-        public async Task ExecuteCommand(MarkTaskAsDoneCommand command)
+        public async Task ExecuteCommand(MarkTaskAsDoneCommand command, CancellationToken cancellationToken)
         {
             Validator.ValidateObject(command, new(command), true);
 

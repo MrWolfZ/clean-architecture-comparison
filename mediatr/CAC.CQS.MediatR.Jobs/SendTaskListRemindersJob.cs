@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using CAC.Core.Jobs;
 using CAC.CQS.MediatR.Application.TaskLists.SendTaskListReminders;
 using MediatR;
@@ -14,9 +15,9 @@ namespace CAC.CQS.MediatR.Jobs
             this.mediator = mediator;
         }
 
-        public async Task RunAsync()
+        public async Task RunAsync(CancellationToken cancellationToken)
         {
-            _ = await mediator.Send(new SendTaskListRemindersCommand());
+            _ = await mediator.Send(new SendTaskListRemindersCommand(), cancellationToken);
         }
     }
 }

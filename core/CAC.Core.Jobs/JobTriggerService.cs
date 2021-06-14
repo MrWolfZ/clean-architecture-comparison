@@ -45,8 +45,13 @@ namespace CAC.Core.Jobs
                         return;
                     }
 
-                    await job.RunAsync();
+                    await job.RunAsync(cancellationToken);
                     exitCode = 0;
+                }
+                catch (TaskCanceledException ex)
+                {
+                    logger.LogError(ex, "Job was canceled!");
+                    exitCode = 1;
                 }
                 catch (Exception ex)
                 {

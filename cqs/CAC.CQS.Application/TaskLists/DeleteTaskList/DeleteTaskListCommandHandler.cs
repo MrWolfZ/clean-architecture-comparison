@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
@@ -17,7 +18,7 @@ namespace CAC.CQS.Application.TaskLists.DeleteTaskList
             this.logger = logger;
         }
 
-        public async Task ExecuteCommand(DeleteTaskListCommand command)
+        public async Task ExecuteCommand(DeleteTaskListCommand command, CancellationToken cancellationToken)
         {
             Validator.ValidateObject(command, new(command), true);
 

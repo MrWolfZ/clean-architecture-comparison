@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.CQS.Application.TaskLists.GetAllTaskLists;
@@ -26,23 +27,23 @@ namespace CAC.CQS.Web.TaskLists
         }
 
         [HttpPost("getAllTaskLists")]
-        public async Task<GetAllTaskListsQueryResponse> GetAll(GetAllTaskListsQuery query)
+        public async Task<GetAllTaskListsQueryResponse> GetAll(GetAllTaskListsQuery query, CancellationToken cancellationToken)
         {
-            return await getAllTaskListsQueryHandler.ExecuteQuery(query);
+            return await getAllTaskListsQueryHandler.ExecuteQuery(query, cancellationToken);
         }
 
         [HttpPost("getTaskListById")]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<GetTaskListByIdQueryResponse> GetById(GetTaskListByIdQuery query)
+        public async Task<GetTaskListByIdQueryResponse> GetById(GetTaskListByIdQuery query, CancellationToken cancellationToken)
         {
-            return await getTaskListByIdQueryHandler.ExecuteQuery(query);
+            return await getTaskListByIdQueryHandler.ExecuteQuery(query, cancellationToken);
         }
 
         [HttpPost("getAllTaskListsWithPendingEntries")]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<GetAllTaskListsWithPendingEntriesQueryResponse> GetAllWithPendingEntries(GetAllTaskListsWithPendingEntriesQuery query)
+        public async Task<GetAllTaskListsWithPendingEntriesQueryResponse> GetAllWithPendingEntries(GetAllTaskListsWithPendingEntriesQuery query, CancellationToken cancellationToken)
         {
-            return await getAllTaskListsWithPendingEntriesQueryHandler.ExecuteQuery(query);
+            return await getAllTaskListsWithPendingEntriesQueryHandler.ExecuteQuery(query, cancellationToken);
         }
     }
 }

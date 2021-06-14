@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain;
@@ -22,7 +23,7 @@ namespace CAC.CQS.Application.TaskLists.SendTaskListReminders
             this.logger = logger;
         }
 
-        public async Task ExecuteCommand(SendTaskListRemindersCommand command)
+        public async Task ExecuteCommand(SendTaskListRemindersCommand command, CancellationToken cancellationToken)
         {
             Validator.ValidateObject(command, new(command), true);
 

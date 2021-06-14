@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
@@ -21,7 +22,7 @@ namespace CAC.CQS.Application.TaskLists.CreateNewTaskList
             this.logger = logger;
         }
 
-        public async Task<CreateNewTaskListCommandResponse> ExecuteCommand(CreateNewTaskListCommand command)
+        public async Task<CreateNewTaskListCommandResponse> ExecuteCommand(CreateNewTaskListCommand command, CancellationToken cancellationToken)
         {
             Validator.ValidateObject(command, new(command), true);
 

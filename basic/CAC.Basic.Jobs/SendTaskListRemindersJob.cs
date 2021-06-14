@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using CAC.Basic.Application.TaskLists;
 using CAC.Core.Jobs;
 
@@ -13,7 +14,7 @@ namespace CAC.Basic.Jobs
             this.reminderService = reminderService;
         }
 
-        public async Task RunAsync()
+        public async Task RunAsync(CancellationToken cancellationToken)
         {
             await reminderService.SendTaskListReminders();
         }
