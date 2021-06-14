@@ -9,13 +9,15 @@ namespace CAC.Core.Application
     public interface ICommandHandler
     {
     }
-    
+
     public interface ICommandHandler<in TCommand, TResponse> : ICommandHandler
+        where TCommand : notnull
     {
         Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken);
     }
 
     public interface ICommandHandler<in TCommand> : ICommandHandler
+        where TCommand : notnull
     {
         Task ExecuteCommand(TCommand command, CancellationToken cancellationToken);
     }

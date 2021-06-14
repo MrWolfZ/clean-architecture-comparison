@@ -11,7 +11,8 @@ namespace CAC.Core.Application
     }
 
     public interface IQueryHandler<in TQuery, TResponse> : IQueryHandler
+        where TQuery : notnull
     {
-        Task<TResponse> ExecuteQuery(TQuery taskListId, CancellationToken cancellationToken);
+        Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken);
     }
 }
