@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -17,13 +18,21 @@ namespace CAC.CQS.MediatR.Application
 
         public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
         {
-            logger.LogInformation("Handling request of type {RequestType}", typeof(TRequest).Name);
+            try
+            {
+                logger.LogInformation("Handling request of type {RequestType}", typeof(TRequest).Name);
+                
+                var response = await next();
             
-            var response = await next();
-            
-            logger.LogInformation("Handling request of type {RequestType} and got response of type {ResponseType}", typeof(TRequest).Name, typeof(TResponse).Name);
+                logger.LogInformation("Handled request of type {RequestType} and got response of type {ResponseType}", typeof(TRequest).Name, typeof(TResponse).Name);
 
-            return response;
+                return response;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "An exception occurred while handling request of type {RequestType}!", typeof(TRequest).Name);
+                throw;
+            }
         }
     }
 }
