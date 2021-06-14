@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
 using CAC.CQS.Domain.TaskListAggregate;
@@ -19,6 +20,8 @@ namespace CAC.CQS.Application.TaskLists.AddTaskToList
 
         public async Task<AddTaskToListCommandResponse> ExecuteCommand(AddTaskToListCommand command)
         {
+            Validator.ValidateObject(command, new(command), true);
+
             var taskList = await taskListRepository.GetById(command.TaskListId);
 
             if (taskList == null)

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain;
@@ -23,6 +24,8 @@ namespace CAC.CQS.Application.TaskLists.SendTaskListReminders
 
         public async Task ExecuteCommand(SendTaskListRemindersCommand command)
         {
+            Validator.ValidateObject(command, new(command), true);
+
             var premiumUsers = await userRepository.GetPremiumUsers();
             var results = await Task.WhenAll(premiumUsers.Select(SendTaskListReminderToUserIfApplicable));
             var nrOfRemindersSent = results.Count(b => b);

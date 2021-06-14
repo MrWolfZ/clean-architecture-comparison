@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 using CAC.Core.Application;
 
 namespace CAC.CQS.Application.TaskLists.GetAllTaskListsWithPendingEntries
@@ -14,6 +15,8 @@ namespace CAC.CQS.Application.TaskLists.GetAllTaskListsWithPendingEntries
 
         public async Task<GetAllTaskListsWithPendingEntriesQueryResponse> ExecuteQuery(GetAllTaskListsWithPendingEntriesQuery query)
         {
+            Validator.ValidateObject(query, new(query), true);
+
             var lists = await taskListRepository.GetAllWithPendingEntries();
             return GetAllTaskListsWithPendingEntriesQueryResponse.FromTaskLists(lists);
         }

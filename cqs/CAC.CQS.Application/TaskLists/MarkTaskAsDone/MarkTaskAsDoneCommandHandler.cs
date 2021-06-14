@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
@@ -19,6 +20,8 @@ namespace CAC.CQS.Application.TaskLists.MarkTaskAsDone
 
         public async Task ExecuteCommand(MarkTaskAsDoneCommand command)
         {
+            Validator.ValidateObject(command, new(command), true);
+
             var taskList = await taskListRepository.GetById(command.TaskListId);
 
             if (taskList == null)

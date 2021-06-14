@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
 
@@ -15,6 +16,8 @@ namespace CAC.CQS.Application.TaskLists.GetTaskListByIdQuery
 
         public async Task<GetTaskListByIdQueryResponse> ExecuteQuery(GetTaskListByIdQuery query)
         {
+            Validator.ValidateObject(query, new(query), true);
+
             var taskList = await taskListRepository.GetById(query.TaskListId);
 
             if (taskList == null)

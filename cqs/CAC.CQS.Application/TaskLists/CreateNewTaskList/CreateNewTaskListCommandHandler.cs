@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
 using CAC.CQS.Application.Users;
@@ -22,6 +23,8 @@ namespace CAC.CQS.Application.TaskLists.CreateNewTaskList
 
         public async Task<CreateNewTaskListCommandResponse> ExecuteCommand(CreateNewTaskListCommand command)
         {
+            Validator.ValidateObject(command, new(command), true);
+
             var owner = await userRepository.GetById(command.OwnerId);
 
             if (owner == null)
