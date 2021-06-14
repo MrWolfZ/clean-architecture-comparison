@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using CAC.Core.Domain;
 
 // EventHandler is a fitting suffix in this case
@@ -12,7 +13,7 @@ namespace CAC.Core.Application
     public interface IDomainEventHandler<in TEvent> : IDomainEventHandler
         where TEvent : DomainEvent
     {
-        Task Handle(TEvent evt);
+        Task Handle(TEvent evt, CancellationToken cancellationToken);
     }
 
     public interface IDomainEventHandler

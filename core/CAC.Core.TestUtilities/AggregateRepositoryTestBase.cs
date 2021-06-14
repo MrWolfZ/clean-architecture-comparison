@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain;
@@ -85,12 +86,12 @@ namespace CAC.Core.TestUtilities
             var originalAggregate = CreateAggregate();
             originalAggregate = await Testee.Upsert(originalAggregate);
             
-            DomainEventPublisherMock.Verify(p => p.Publish(originalAggregate.DomainEvents));
+            DomainEventPublisherMock.Verify(p => p.Publish(originalAggregate.DomainEvents, It.IsAny<CancellationToken>()));
 
             var updatedAggregate = UpdateAggregate(originalAggregate);
             updatedAggregate = await Testee.Upsert(updatedAggregate);
             
-            DomainEventPublisherMock.Verify(p => p.Publish(updatedAggregate.DomainEvents));
+            DomainEventPublisherMock.Verify(p => p.Publish(updatedAggregate.DomainEvents, It.IsAny<CancellationToken>()));
         }
 
         [Test]
@@ -99,12 +100,12 @@ namespace CAC.Core.TestUtilities
             var originalAggregate = CreateAggregate();
             originalAggregate = await Testee.Upsert(originalAggregate);
             
-            DomainEventPublisherMock.Verify(p => p.Publish(originalAggregate.DomainEvents));
+            DomainEventPublisherMock.Verify(p => p.Publish(originalAggregate.DomainEvents, It.IsAny<CancellationToken>()));
 
             var updatedAggregate = UpdateAggregate(originalAggregate).MarkAsDeleted();
             updatedAggregate = await Testee.Upsert(updatedAggregate);
             
-            DomainEventPublisherMock.Verify(p => p.Publish(updatedAggregate.DomainEvents));
+            DomainEventPublisherMock.Verify(p => p.Publish(updatedAggregate.DomainEvents, It.IsAny<CancellationToken>()));
         }
 
         [Test]

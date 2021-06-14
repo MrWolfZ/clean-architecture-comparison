@@ -31,7 +31,7 @@ namespace CAC.CQS.Application.TaskLists.DeleteTaskList
 
             taskList = taskList.MarkAsDeleted();
 
-            _ = await taskListRepository.Upsert(taskList);
+            _ = await taskListRepository.Upsert(taskList, cancellationToken);
 
             logger.LogDebug("deleted task list '{TaskListId}'", command.TaskListId);
         }

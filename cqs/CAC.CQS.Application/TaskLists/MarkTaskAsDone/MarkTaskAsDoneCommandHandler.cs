@@ -37,7 +37,7 @@ namespace CAC.CQS.Application.TaskLists.MarkTaskAsDone
 
             taskList = taskList.MarkEntryAsDone(command.EntryId);
 
-            taskList = await taskListRepository.Upsert(taskList);
+            taskList = await taskListRepository.Upsert(taskList, cancellationToken);
 
             logger.LogDebug("marked task list entry '{EntryId}' in task list '{TaskListName}' as done", command.EntryId, taskList.Name);
         }

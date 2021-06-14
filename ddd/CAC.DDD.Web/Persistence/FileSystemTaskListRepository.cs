@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain.Exceptions;
@@ -20,11 +21,11 @@ namespace CAC.DDD.Web.Persistence
 
         public async Task<TaskListEntryId> GenerateEntryId() => await GenerateNumericIdForType<TaskListEntryId>();
 
-        public override async Task<TaskList> Upsert(TaskList taskList)
+        public override async Task<TaskList> Upsert(TaskList taskList, CancellationToken cancellationToken)
         {
             if (taskList.IsDeleted)
             {
-                return await base.Upsert(taskList);
+                return await base.Upsert(taskList, cancellationToken);
             }
 
             var all = await GetAll();
@@ -34,7 +35,7 @@ namespace CAC.DDD.Web.Persistence
                 throw new UniquenessConstraintViolationException(taskList.Id, nameof(TaskList.Name), $"a task list with name '{taskList.Name}' already exists");
             }
 
-            return await base.Upsert(taskList);
+            return await base.Upsert(taskList, cancellationToken);
         }
 
         public new async Task<IReadOnlyCollection<TaskList>> GetAll() => await base.GetAll();

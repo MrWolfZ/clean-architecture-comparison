@@ -20,7 +20,7 @@ namespace CAC.Basic.Infrastructure.TaskLists
         {
         }
 
-        public override async Task<TaskList> Upsert(TaskList taskList)
+        public override async Task<TaskList> Upsert(TaskList taskList, CancellationToken cancellationToken)
         {
             var all = await GetAll();
             if (all.Any(l => l.Id != taskList.Id && l.Name == taskList.Name && l.OwnerId == taskList.OwnerId))
@@ -28,7 +28,7 @@ namespace CAC.Basic.Infrastructure.TaskLists
                 throw new UniquenessConstraintViolationException(taskList.Id, nameof(TaskList.Name), $"a task list with name '{taskList.Name}' already exists");
             }
 
-            taskList = await base.Upsert(taskList);
+            taskList = await base.Upsert(taskList, cancellationToken);
             all = await GetAll();
 
             _ = Interlocked.Exchange(ref entryIdCounter, all.SelectMany(l => l.Entries).Select(e => e.Id.NumericValue).Concat(new[] { 0L }).Max());

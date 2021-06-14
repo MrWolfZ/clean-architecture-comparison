@@ -38,7 +38,7 @@ namespace CAC.CQS.Application.TaskLists.CreateNewTaskList
             var id = await taskListRepository.GenerateId();
             var taskList = TaskList.ForOwner(owner, id, command.Name, numberOfListsOwnedByOwner);
 
-            taskList = await taskListRepository.Upsert(taskList);
+            taskList = await taskListRepository.Upsert(taskList, cancellationToken);
 
             logger.LogDebug("created new task list with name '{Name}' and id '{TaskListId}' for owner '{OwnerId}'...", command.Name, id, taskList.OwnerId);
 

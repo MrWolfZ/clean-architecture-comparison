@@ -23,7 +23,9 @@ namespace CAC.Core.Infrastructure.Persistence
 
         public Task<TId> GenerateId() => Task.FromResult(CreateId(Interlocked.Increment(ref idCounter)));
 
-        public virtual async Task<TAggregate> Upsert(TAggregate aggregate)
+        public Task<TAggregate> Upsert(TAggregate aggregate) => Upsert(aggregate, CancellationToken.None);
+
+        public virtual async Task<TAggregate> Upsert(TAggregate aggregate, CancellationToken cancellationToken)
         {
             if (aggregate.IsDeleted)
             {
@@ -35,7 +37,7 @@ namespace CAC.Core.Infrastructure.Persistence
                 _ = Interlocked.Exchange(ref idCounter, aggregatesById.Keys.Select(id => id.NumericValue).Max());
             }
 
-            await domainEventPublisher.Publish(aggregate.DomainEvents);
+            await domainEventPublisher.Publish(aggregate.DomainEvents, cancellationToken);
             return aggregate.WithoutEvents();
         }
 

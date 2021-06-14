@@ -33,7 +33,7 @@ namespace CAC.CQS.Application.TaskLists.AddTaskToList
             var id = await taskListRepository.GenerateEntryId();
             var newEntry = TaskListEntry.ForAddingToTaskList(taskList.Id, id, command.TaskDescription);
             taskList = taskList.AddEntry(newEntry);
-            taskList = await taskListRepository.Upsert(taskList);
+            taskList = await taskListRepository.Upsert(taskList, cancellationToken);
 
             logger.LogDebug("added task list entry with description '{Description}' to task list '{TaskListId}'", command.TaskDescription, taskList.Id);
 

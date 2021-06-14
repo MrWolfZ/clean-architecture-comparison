@@ -28,12 +28,12 @@ namespace CAC.CQS.Application.TaskLists.SendTaskListReminders
             Validator.ValidateObject(command, new(command), true);
 
             var premiumUsers = await userRepository.GetPremiumUsers();
-            var results = await Task.WhenAll(premiumUsers.Select(SendTaskListReminderToUserIfApplicable));
+            var results = await Task.WhenAll(premiumUsers.Select(u => SendTaskListReminderToUserIfApplicable(u, cancellationToken)));
             var nrOfRemindersSent = results.Count(b => b);
             logger.LogInformation("sent reminder to {NrOfUsers} users", nrOfRemindersSent);
         }
 
-        private async Task<bool> SendTaskListReminderToUserIfApplicable(User user)
+        private async Task<bool> SendTaskListReminderToUserIfApplicable(User user, CancellationToken cancellationToken)
         {
             if (!user.IsEligibleForReminders())
             {
@@ -57,7 +57,7 @@ namespace CAC.CQS.Application.TaskLists.SendTaskListReminders
 
             var updatedTaskLists = listsDueForReminder.Select(tl => tl.WithReminderSentAt(lastReminderSentAt));
 
-            _ = await Task.WhenAll(updatedTaskLists.Select(taskListRepository.Upsert));
+            _ = await Task.WhenAll(updatedTaskLists.Select(tl => taskListRepository.Upsert(tl, cancellationToken)));
 
             return true;
         }

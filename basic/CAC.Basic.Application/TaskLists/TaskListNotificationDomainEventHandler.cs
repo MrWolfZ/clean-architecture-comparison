@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using CAC.Basic.Domain.TaskListAggregate;
 using CAC.Core.Application;
 
@@ -16,22 +17,22 @@ namespace CAC.Basic.Application.TaskLists
             this.messageQueueAdapter = messageQueueAdapter;
         }
 
-        public async Task Handle(TaskListDomainEvent<TaskAddedToTaskListEvent> evt)
+        public async Task Handle(TaskListDomainEvent<TaskAddedToTaskListEvent> evt, CancellationToken cancellationToken)
         {
             await messageQueueAdapter.Send(new TaskAddedToListMessage(evt.Aggregate.Id, evt.Payload.Entry.Id));
         }
 
-        public async Task Handle(TaskListDomainEvent<TaskListCreatedEvent> evt)
+        public async Task Handle(TaskListDomainEvent<TaskListCreatedEvent> evt, CancellationToken cancellationToken)
         {
             await messageQueueAdapter.Send(new TaskListCreatedMessage(evt.Aggregate.Id));
         }
 
-        public async Task Handle(TaskListDomainEvent<TaskListDeletedEvent> evt)
+        public async Task Handle(TaskListDomainEvent<TaskListDeletedEvent> evt, CancellationToken cancellationToken)
         {
             await messageQueueAdapter.Send(new TaskListDeletedMessage(evt.Aggregate.Id));
         }
 
-        public async Task Handle(TaskListDomainEvent<TaskMarkedAsDoneEvent> evt)
+        public async Task Handle(TaskListDomainEvent<TaskMarkedAsDoneEvent> evt, CancellationToken cancellationToken)
         {
             await messageQueueAdapter.Send(new TaskMarkedAsDoneMessage(evt.Aggregate.Id, evt.Payload.Entry.Id));
         }

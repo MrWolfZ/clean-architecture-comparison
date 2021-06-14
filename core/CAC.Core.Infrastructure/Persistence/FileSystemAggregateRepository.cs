@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain;
@@ -36,12 +37,14 @@ namespace CAC.Core.Infrastructure.Persistence
 
         public async Task<TId> GenerateId() => CreateId(await GenerateNumericIdForType<TId>());
 
-        public virtual async Task<TAggregate> Upsert(TAggregate aggregate)
+        public Task<TAggregate> Upsert(TAggregate aggregate) => Upsert(aggregate, CancellationToken.None);
+
+        public virtual async Task<TAggregate> Upsert(TAggregate aggregate, CancellationToken cancellationToken)
         {
             if (aggregate.IsDeleted)
             {
                 await DeleteById(aggregate.Id);
-                await domainEventPublisher.Publish(aggregate.DomainEvents);
+                await domainEventPublisher.Publish(aggregate.DomainEvents, cancellationToken);
                 return aggregate.WithoutEvents();
             }
 
@@ -64,7 +67,7 @@ namespace CAC.Core.Infrastructure.Persistence
 
             await StoreAll(newLists);
             
-            await domainEventPublisher.Publish(aggregate.DomainEvents);
+            await domainEventPublisher.Publish(aggregate.DomainEvents, cancellationToken);
             return aggregate.WithoutEvents();
         }
 

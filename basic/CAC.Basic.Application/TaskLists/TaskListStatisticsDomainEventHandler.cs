@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Basic.Domain.TaskListAggregate;
 using CAC.Core.Application;
@@ -17,15 +18,15 @@ namespace CAC.Basic.Application.TaskLists
             this.repository = repository;
         }
 
-        public Task Handle(TaskListDomainEvent<TaskAddedToTaskListEvent> evt) => OnTaskListEdited();
+        public Task Handle(TaskListDomainEvent<TaskAddedToTaskListEvent> evt, CancellationToken cancellationToken) => OnTaskListEdited();
 
-        public Task Handle(TaskListDomainEvent<TaskListCreatedEvent> evt) =>
+        public Task Handle(TaskListDomainEvent<TaskListCreatedEvent> evt, CancellationToken cancellationToken) =>
             UpdateStatistics(s => s with { NumberOfTaskListsCreated = s.NumberOfTaskListsCreated + 1 });
 
-        public Task Handle(TaskListDomainEvent<TaskListDeletedEvent> evt) =>
+        public Task Handle(TaskListDomainEvent<TaskListDeletedEvent> evt, CancellationToken cancellationToken) =>
             UpdateStatistics(s => s with { NumberOfTaskListsDeleted = s.NumberOfTaskListsDeleted + 1 });
 
-        public Task Handle(TaskListDomainEvent<TaskMarkedAsDoneEvent> evt) => OnTaskListEdited();
+        public Task Handle(TaskListDomainEvent<TaskMarkedAsDoneEvent> evt, CancellationToken cancellationToken) => OnTaskListEdited();
 
         private Task OnTaskListEdited() => UpdateStatistics(s => s with { NumberOfTimesTaskListsWereEdited = s.NumberOfTimesTaskListsWereEdited + 1 });
 

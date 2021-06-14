@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using CAC.Core.Application;
 using CAC.Core.Domain;
@@ -37,10 +38,14 @@ namespace CAC.CQS.MediatR.Application
                 this.mediator = mediator;
             }
 
-            public Task Publish(DomainEvent evt, params DomainEvent[] otherEvents)
-                => Publish(new[] { evt }.Concat(otherEvents).ToList());
+            public Task Publish(DomainEvent evt, params DomainEvent[] otherEvents) => Publish(evt, CancellationToken.None, otherEvents);
 
-            public async Task Publish(IReadOnlyCollection<DomainEvent> events)
+            public Task Publish(DomainEvent evt, CancellationToken cancellationToken, params DomainEvent[] otherEvents)
+                => Publish(new[] { evt }.Concat(otherEvents).ToList(), cancellationToken);
+
+            public Task Publish(IReadOnlyCollection<DomainEvent> events) => Publish(events, CancellationToken.None);
+
+            public async Task Publish(IReadOnlyCollection<DomainEvent> events, CancellationToken cancellationToken)
             {
                 foreach (var notification in events.OfType<INotification>())
                 {
