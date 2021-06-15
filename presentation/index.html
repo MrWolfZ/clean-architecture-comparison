@@ -7,6 +7,9 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <title>Moving to a clean architecture</title>
+  <link rel="icon"
+        type="image/png"
+        href="/favicon.ico" />
 
   <link rel="stylesheet"
         href="css/reset.css">
@@ -46,9 +49,15 @@
         <section>
           <p>Application domain</p>
           <ul>
-            <li class="fragment">there are <em>task lists</em> that are owned by <em>users</em></li>
-            <li class="fragment">a <em>task list</em> has a <em>name</em> and contains <em>task list entries</em></li>
-            <li class="fragment">a <em>task list entry</em> has a description and can be marked as <em>done</em></li>
+            <li class="fragment fade-in-then-semi-out">
+              there are <em>task lists</em> that are owned by <em>users</em>
+            </li>
+            <li class="fragment fade-in-then-semi-out">
+              a <em>task list</em> has a <em>name</em> and contains <em>task list entries</em>
+            </li>
+            <li class="fragment fade-in-then-semi-out">
+              a <em>task list entry</em> has a description and can be marked as <em>done</em>
+            </li>
             <li class="fragment">there are <em>premium</em> and non-<em>premium</em> users</li>
           </ul>
         </section>
@@ -56,7 +65,7 @@
         <section>
           <p>Business rules</p>
           <ul>
-            <li class="fragment">a <em>task list</em>'s name must be unique per owner</li>
+            <li class="fragment fade-in-then-semi-out">a <em>task list</em>'s name must be unique per owner</li>
             <li class="fragment">
               non-<em>premium</em> users are limited to at most one <em>task list</em> with at most 5 <em>entries</em>
             </li>
@@ -66,7 +75,7 @@
         <section>
           <p>Other behaviors</p>
           <ul>
-            <li class="fragment">
+            <li class="fragment fade-in-then-semi-out">
               the system gathers statistics about changes that are made to the <em>task lists</em> it manages
             </li>
             <li class="fragment">
@@ -91,25 +100,15 @@
         <section>
           <p>Domain-driven design</p>
           <ul>
-            <li class="fragment">rich business objects</li>
-            <li class="fragment">encapsulate business rules</li>
-            <li class="fragment">ensure invariants</li>
-            <li class="fragment">domain events</li>
+            <li class="fragment fade-in-then-semi-out">encapsulate business rules in domain objects</li>
+            <li class="fragment fade-in-then-semi-out">domain events</li>
             <li class="fragment">persistence on aggregate level</li>
-            <li class="fragment">
-              often used in conjunction with clean architecture, but also worthwhile without it
-            </li>
           </ul>
         </section>
 
         <section>
           <p>in C#</p>
           <img src="images/ddd_file_tree.png" />
-        </section>
-
-        <section>
-          <p>in C#</p>
-          <img src="images/ddd_anemic_vs_rich.png" />
         </section>
       </section>
 
@@ -127,8 +126,9 @@
         <section>
           <p>Motivation for moving to a clean architecture</p>
           <ul>
-            <li class="fragment">new business requirements</li>
-            <li class="fragment">sending reminders to premium users</li>
+            <li class="fragment fade-in-then-semi-out">new business requirements</li>
+            <li class="fragment fade-in-then-semi-out">sending reminders to premium users</li>
+            <li class="fragment">reminders for task lists with pending entries every 7 days</li>
           </ul>
         </section>
 
@@ -139,14 +139,14 @@
 
         <section>
           <p>Clean architecture</p>
-          <img src="images/clean_architecture.png" />
+          <img src="images/clean_architecture.jpg" />
         </section>
 
         <section>
           <p>Clean architecture</p>
           <ul>
-            <li class="fragment">separate logic from the interfaces to the outside world</li>
-            <li class="fragment">separate business rules from application rules</li>
+            <li class="fragment fade-in-then-semi-out">separate logic from the interfaces to the outside world</li>
+            <li class="fragment fade-in-then-semi-out">separate business rules from application rules</li>
             <li class="fragment">depend on abstractions, not concrete implementations</li>
           </ul>
         </section>
@@ -159,20 +159,18 @@
         <section>
           <p>Domain</p>
           <ul>
-            <li class="fragment">business rules</li>
-            <li class="fragment">everything sync</li>
+            <li class="fragment fade-in-then-semi-out">business rules</li>
+            <li class="fragment fade-in-then-semi-out">everything sync</li>
             <li class="fragment">no interfaces</li>
-            <li class="fragment">ensure invariants</li>
           </ul>
         </section>
 
         <section>
           <p>Application</p>
           <ul>
-            <li class="fragment">application rules</li>
-            <li class="fragment">contains orchestration logic in services</li>
-            <li class="fragment">validates inputs</li>
-            <li class="fragment">loads and stores domain object</li>
+            <li class="fragment fade-in-then-semi-out">application rules</li>
+            <li class="fragment fade-in-then-semi-out">contains orchestration logic in services</li>
+            <li class="fragment fade-in-then-semi-out">validates inputs</li>
             <li class="fragment">defines abstractions for "communicating with the outside world"</li>
           </ul>
         </section>
@@ -180,7 +178,7 @@
         <section>
           <p>Infrastructure</p>
           <ul>
-            <li class="fragment">implementations of the application abstractions</li>
+            <li class="fragment fade-in-then-semi-out">implementations of the application abstractions</li>
             <li class="fragment">persistence, message queues, HTTP clients etc.</li>
           </ul>
         </section>
@@ -202,8 +200,8 @@
         <section>
           <p>Advantages</p>
           <ul>
-            <li class="fragment">re-use same business logic for different interfaces</li>
-            <li class="fragment">application APIs are simpler to test</li>
+            <li class="fragment fade-in-then-semi-out">re-use same business logic for different application types</li>
+            <li class="fragment fade-in-then-semi-out">application APIs are simpler to test</li>
             <li class="fragment">
               different projects force you to keep the dependency arrows pointed in the right direction
             </li>
@@ -213,8 +211,9 @@
         <section>
           <p>Disadvantages</p>
           <ul>
-            <li class="fragment">often not trivial to distinguish between application and business rules</li>
-            <li class="fragment">what to test? web API? application API? both?</li>
+            <li class="fragment fade-in-then-semi-out">often not trivial to distinguish between application and business
+              rules</li>
+            <li class="fragment fade-in-then-semi-out">what to test? web API? application API? both?</li>
             <li class="fragment">duplication of validation between web API and application API</li>
           </ul>
         </section>
@@ -224,16 +223,24 @@
         <section>
           <p>Command query separation (CQS)</p>
           <ul>
-            <li class="fragment">often services tend to grow in size uncontrolled</li>
-            <li class="fragment">services are often entity-centric instead of use-case-centric</li>
+            <li class="fragment fade-in-then-semi-out">often services tend to grow in size uncontrolled</li>
+            <li class="fragment fade-in-then-semi-out">
+              services are often entity-centric instead of use-case-centric
+            </li>
             <li class="fragment">
               read and write operations are mixed, even though their implementations differ heavily
             </li>
-            <li class="fragment">
+          </ul>
+        </section>
+
+        <section>
+          <p>Command query separation (CQS)</p>
+          <ul>
+            <li class="fragment fade-in-then-semi-out">
               CQS aims to solve these issues by separating read and write operations and centering code around use-cases
             </li>
-            <li class="fragment">encourages following the open-closed principle</li>
-            <li class="fragment">web APIs become more expressive</li>
+            <li class="fragment fade-in-then-semi-out">encourages following the open-closed principle</li>
+            <li class="fragment fade-in-then-semi-out">web APIs become more expressive</li>
             <li class="fragment">different from CQRS</li>
           </ul>
         </section>
@@ -251,9 +258,11 @@
         <section>
           <p>in C#</p>
           <ul>
-            <li class="fragment">each command and query has a dedicated handler</li>
-            <li class="fragment">command, query, and response objects can be used as DTOs</li>
-            <li class="fragment">no duplication of validation between web API and application API</li>
+            <li class="fragment fade-in-then-semi-out">each command and query has a dedicated handler</li>
+            <li class="fragment fade-in-then-semi-out">command, query, and response objects can be used as DTOs</li>
+            <li class="fragment fade-in-then-semi-out">
+              no duplication of validation between web API and application API
+            </li>
             <li class="fragment">
               still duplication of cross-cutting concerns (e.g. logging, validation execution, authorization)
             </li>
@@ -263,47 +272,38 @@
         <section>
           <p>MediatR</p>
           <ul>
-            <li class="fragment">well-known library</li>
-            <li class="fragment">supports commands and queries (requests) as well as events (notifications)</li>
-            <li class="fragment">cross-cutting concerns via behaviors</li>
-            <li class="fragment">layer of indirection that makes code difficult to navigate</li>
-            <li class="fragment">no distinction between commands and queries</li>
+            <li class="fragment fade-in-then-semi-out">well-known library</li>
+            <li class="fragment fade-in-then-semi-out">
+              supports commands and queries (requests) as well as events (notifications)
+            </li>
+            <li class="fragment fade-in-then-semi-out">cross-cutting concerns via behaviors</li>
+            <li class="fragment fade-in-then-semi-out">layer of indirection that makes code difficult to navigate</li>
+            <li class="fragment fade-in-then-semi-out">no distinction between commands and queries</li>
             <li class="fragment">behaviors not configurable</li>
           </ul>
         </section>
 
         <section>
-          <p>in C#</p>
-          <pre class="fragment"><code data-trim data-noescape class="cs">
-            public static class Foo
-            {
-              public const string Bar = "Baz";
-            }
-          </code></pre>
-        </section>
-
-        <section>
           <p>Decorators</p>
           <ul>
-            <li class="fragment">use dependency injection to decorate command and query handlers</li>
-            <li class="fragment">code stays obvious and navigable</li>
+            <li class="fragment fade-in-then-semi-out">
+              use dependency injection to decorate command and query handlers
+            </li>
+            <li class="fragment fade-in-then-semi-out">code stays obvious and navigable</li>
             <li class="fragment">allow configuration of cross-cutting concerns through options or attributes</li>
           </ul>
-        </section>
-
-        <section>
-          <p>in C#</p>
-          <pre class="fragment"><code data-trim data-noescape class="cs">
-            public static class Foo
-            {
-              public const string Bar = "Baz";
-            }
-          </code></pre>
         </section>
       </section>
 
       <section>
-        thank you
+        <p>thank you</p>
+        <p>
+          <a href="https://github.com/MrWolfZ/clean-architecture-comparison"
+             target="_blank"
+             style="font-size: 0.75em">
+            https://github.com/MrWolfZ/clean-architecture-comparison
+          </a>
+        </p>
       </section>
     </div>
   </div>
