@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -14,15 +15,21 @@ namespace CAC.Core.Application.QueryHandling.Behaviors
     public sealed class QueryLoggingBehaviorAttribute : QueryHandlerBehaviorAttribute
     {
         public bool LogException { get; init; } = true;
+
+        public bool LogQueryPayload { get; init; } = true;
+
+        public bool LogResponsePayload { get; init; } = true;
     }
 
     public sealed class QueryHandlerLoggingBehavior<TQuery, TResponse> : IQueryHandlerBehavior<TQuery, TResponse, QueryLoggingBehaviorAttribute>
         where TQuery : notnull
     {
         private readonly ILogger logger;
+        private readonly JsonSerializerOptions jsonSerializerOptions;
 
-        public QueryHandlerLoggingBehavior(ILoggerFactory loggerFactory)
+        public QueryHandlerLoggingBehavior(ILoggerFactory loggerFactory, JsonSerializerOptions jsonSerializerOptions)
         {
+            this.jsonSerializerOptions = jsonSerializerOptions;
             logger = loggerFactory.CreateLogger($"QueryHandler[{typeof(TQuery).Name},{typeof(TResponse).Name}]");
         }
 
@@ -33,11 +40,25 @@ namespace CAC.Core.Application.QueryHandling.Behaviors
         {
             try
             {
-                logger.LogInformation("Handling query of type {QueryType}", typeof(TQuery).Name);
+                if (attribute.LogQueryPayload)
+                {
+                    logger.LogInformation("Handling query of type {QueryType} with payload {QueryPayload}", typeof(TQuery).Name, Serialize(query));
+                }
+                else
+                {
+                    logger.LogInformation("Handling query of type {QueryType}", typeof(TQuery).Name);
+                }
 
                 var response = await next(query, cancellationToken);
-
-                logger.LogInformation("Handled query of type {QueryType} and got response of type {ResponseType}", typeof(TQuery).Name, typeof(TResponse).Name);
+                
+                if (attribute.LogResponsePayload)
+                {
+                    logger.LogInformation("Handled query of type {QueryType} and got response {ResponsePayload}", typeof(TQuery).Name, Serialize(response));
+                }
+                else
+                {
+                    logger.LogInformation("Handled query of type {QueryType}", typeof(TQuery).Name);
+                }
 
                 return response;
             }
@@ -55,5 +76,7 @@ namespace CAC.Core.Application.QueryHandling.Behaviors
                 throw;
             }
         }
+
+        private string Serialize<T>(T value) => JsonSerializer.Serialize(value, jsonSerializerOptions);
     }
 }

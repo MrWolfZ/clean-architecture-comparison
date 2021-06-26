@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -14,15 +15,21 @@ namespace CAC.Core.Application.CommandHandling.Behaviors
     public sealed class CommandLoggingBehaviorAttribute : CommandHandlerBehaviorAttribute
     {
         public bool LogException { get; init; } = true;
+        
+        public bool LogCommandPayload { get; init; } = true;
+        
+        public bool LogResponsePayload { get; init; } = true;
     }
 
     public sealed class CommandHandlerLoggingBehavior<TCommand, TResponse> : ICommandHandlerBehavior<TCommand, TResponse, CommandLoggingBehaviorAttribute>
         where TCommand : notnull
     {
         private readonly ILogger logger;
+        private readonly JsonSerializerOptions jsonSerializerOptions;
 
-        public CommandHandlerLoggingBehavior(ILoggerFactory loggerFactory)
+        public CommandHandlerLoggingBehavior(ILoggerFactory loggerFactory, JsonSerializerOptions jsonSerializerOptions)
         {
+            this.jsonSerializerOptions = jsonSerializerOptions;
             logger = loggerFactory.CreateLogger($"CommandHandler[{typeof(TCommand).Name},{typeof(TResponse).Name}]");
         }
 
@@ -33,11 +40,25 @@ namespace CAC.Core.Application.CommandHandling.Behaviors
         {
             try
             {
-                logger.LogInformation("Handling command of type {CommandType}", typeof(TCommand).Name);
+                if (attribute.LogCommandPayload)
+                {
+                    logger.LogInformation("Handling command of type {CommandType} with payload {CommandPayload}", typeof(TCommand).Name, Serialize(command));
+                }
+                else
+                {
+                    logger.LogInformation("Handling command of type {CommandType}", typeof(TCommand).Name);
+                }
 
                 var response = await next(command, cancellationToken);
-
-                logger.LogInformation("Handled command of type {CommandType} and got response of type {ResponseType}", typeof(TCommand).Name, typeof(TResponse).Name);
+                
+                if (attribute.LogResponsePayload)
+                {
+                    logger.LogInformation("Handled command of type {CommandType} and got response {ResponsePayload}", typeof(TCommand).Name, Serialize(response));
+                }
+                else
+                {
+                    logger.LogInformation("Handled command of type {CommandType}", typeof(TCommand).Name);
+                }
 
                 return response;
             }
@@ -55,5 +76,7 @@ namespace CAC.Core.Application.CommandHandling.Behaviors
                 throw;
             }
         }
+
+        private string Serialize<T>(T value) => JsonSerializer.Serialize(value, jsonSerializerOptions);
     }
 }

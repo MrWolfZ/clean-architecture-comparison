@@ -6,8 +6,10 @@ using CAC.CQS.Application;
 using CAC.CQS.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 [assembly: InternalsVisibleTo("CAC.CQS.UnitTests")]
 
@@ -42,6 +44,8 @@ namespace CAC.CQS.Web
 
             services.AddApplication();
             services.AddInfrastructure(Configuration);
+
+            services.AddTransient(p => p.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions);
         }
 
         public void Configure(IApplicationBuilder app)
