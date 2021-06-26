@@ -36,7 +36,7 @@ namespace CAC.CQS.UnitTests.Web.TaskLists
 
             var expectedResponse = GetAllTaskListsQueryResponse.FromTaskLists(new[] { taskList1, taskList2 });
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists/getAllTaskLists", new GetAllTaskListsQuery(), JsonSerializerOptions);
+            var response = await HttpClient.GetAsync("taskLists/getAllTaskLists");
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
@@ -55,7 +55,7 @@ namespace CAC.CQS.UnitTests.Web.TaskLists
 
             var expectedResponse = GetTaskListByIdQueryResponse.FromTaskList(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists/getTaskListById", new GetTaskListByIdQuery { TaskListId = taskList.Id }, JsonSerializerOptions);
+            var response = await HttpClient.GetAsync($"taskLists/getTaskListById?TaskListId={taskList.Id}");
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
@@ -69,7 +69,7 @@ namespace CAC.CQS.UnitTests.Web.TaskLists
         {
             var nonExistingId = TaskListId.Of(1);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists/getTaskListById", new GetTaskListByIdQuery { TaskListId = nonExistingId }, JsonSerializerOptions);
+            var response = await HttpClient.GetAsync($"taskLists/getTaskListById?TaskListId={nonExistingId}");
 
             await response.AssertStatusCode(HttpStatusCode.NotFound);
         }
@@ -91,7 +91,7 @@ namespace CAC.CQS.UnitTests.Web.TaskLists
 
             var expectedResponse = GetAllTaskListsWithPendingEntriesQueryResponse.FromTaskLists(new[] { taskList1, taskList2 });
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists/getAllTaskListsWithPendingEntries", new GetAllTaskListsWithPendingEntriesQuery(), JsonSerializerOptions);
+            var response = await HttpClient.GetAsync("taskLists/getAllTaskListsWithPendingEntries");
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 

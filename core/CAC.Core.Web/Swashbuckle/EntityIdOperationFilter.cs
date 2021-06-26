@@ -10,15 +10,25 @@ namespace CAC.Core.Web.Swashbuckle
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
-            var parameterDescriptorsByName = context.ApiDescription.ActionDescriptor.Parameters.ToDictionary(p => p.Name);
+            var actionParameters = context.ApiDescription.ActionDescriptor.Parameters;
+            var parameterTypesByName = actionParameters.ToDictionary(p => p.Name, p => p.ParameterType);
+
+            if (parameterTypesByName.TryGetValue("query", out var queryParameterType))
+            {
+                foreach (var prop in queryParameterType.GetProperties())
+                {
+                    parameterTypesByName[prop.Name] = prop.PropertyType;
+                }
+            }
+            
             foreach (var parameter in operation.Parameters)
             {
-                var parameterDescriptor = parameterDescriptorsByName[parameter.Name];
-                var isEntityIdType = EntityId.IsEntityIdType(parameterDescriptor.ParameterType);
+                var parameterType = parameterTypesByName[parameter.Name];
+                var isEntityIdType = EntityId.IsEntityIdType(parameterType);
 
                 if (isEntityIdType)
                 {
-                    parameter.Example = new OpenApiString(EntityId.CreateExampleValue(parameterDescriptor.ParameterType));
+                    parameter.Example = new OpenApiString(EntityId.CreateExampleValue(parameterType));
                 }
             }
         }
