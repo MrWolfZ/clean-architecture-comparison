@@ -1,7 +1,8 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.CommandHandling;
+using CAC.Core.Application.CommandHandling.Behaviors;
 using CAC.Core.Domain.Exceptions;
 
 namespace CAC.CQS.Decorator.Application.TaskLists.MarkTaskAsDone
@@ -15,8 +16,8 @@ namespace CAC.CQS.Decorator.Application.TaskLists.MarkTaskAsDone
             this.taskListRepository = taskListRepository;
         }
 
-        [LogCommand]
-        [ValidateCommand]
+        [CommandLoggingBehavior]
+        [CommandValidationBehavior]
         public async Task ExecuteCommand(MarkTaskAsDoneCommand command, CancellationToken cancellationToken)
         {
             var taskList = await taskListRepository.GetById(command.TaskListId);

@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.CommandHandling;
+using CAC.Core.Application.CommandHandling.Behaviors;
 using CAC.Core.Domain.Exceptions;
 using CAC.CQS.Decorator.Application.Users;
 using CAC.CQS.Decorator.Domain.TaskListAggregate;
@@ -18,8 +19,8 @@ namespace CAC.CQS.Decorator.Application.TaskLists.CreateNewTaskList
             this.userRepository = userRepository;
         }
 
-        [LogCommand]
-        [ValidateCommand]
+        [CommandLoggingBehavior]
+        [CommandValidationBehavior]
         public async Task<CreateNewTaskListCommandResponse> ExecuteCommand(CreateNewTaskListCommand command, CancellationToken cancellationToken)
         {
             var owner = await userRepository.GetById(command.OwnerId);

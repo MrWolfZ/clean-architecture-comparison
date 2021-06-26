@@ -1,4 +1,5 @@
-﻿using CAC.Core.Application;
+using CAC.Core.Application;
+using CAC.Core.Application.CommandHandling;
 using CAC.CQS.Application.TaskLists;
 using CAC.CQS.Application.TaskLists.CreateNewTaskList;
 using CAC.CQS.Infrastructure.TaskLists;

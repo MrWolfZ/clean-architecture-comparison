@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.CommandHandling;
 using CAC.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 

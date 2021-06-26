@@ -1,7 +1,8 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.CommandHandling;
+using CAC.Core.Application.CommandHandling.Behaviors;
 using CAC.Core.Domain;
 using CAC.CQS.Decorator.Application.Users;
 using CAC.CQS.Decorator.Domain.UserAggregate;
@@ -22,8 +23,8 @@ namespace CAC.CQS.Decorator.Application.TaskLists.SendTaskListReminders
             this.logger = logger;
         }
 
-        [LogCommand(LogException = false)]
-        [ValidateCommand]
+        [CommandLoggingBehavior(LogException = false)]
+        [CommandValidationBehavior]
         public async Task ExecuteCommand(SendTaskListRemindersCommand command, CancellationToken cancellationToken)
         {
             var premiumUsers = await userRepository.GetPremiumUsers();

@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.CommandHandling;
+using CAC.Core.Application.CommandHandling.Behaviors;
 using CAC.Core.Domain.Exceptions;
 using CAC.CQS.Decorator.Domain.TaskListAggregate;
 
@@ -15,8 +16,8 @@ namespace CAC.CQS.Decorator.Application.TaskLists.AddTaskToList
             this.taskListRepository = taskListRepository;
         }
 
-        [LogCommand]
-        [ValidateCommand]
+        [CommandLoggingBehavior]
+        [CommandValidationBehavior]
         public async Task<AddTaskToListCommandResponse> ExecuteCommand(AddTaskToListCommand command, CancellationToken cancellationToken)
         {
             var taskList = await taskListRepository.GetById(command.TaskListId);

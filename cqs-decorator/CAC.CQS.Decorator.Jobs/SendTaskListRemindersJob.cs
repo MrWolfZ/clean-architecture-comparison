@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.CommandHandling;
 using CAC.Core.Jobs;
 using CAC.CQS.Decorator.Application.TaskLists.SendTaskListReminders;
 

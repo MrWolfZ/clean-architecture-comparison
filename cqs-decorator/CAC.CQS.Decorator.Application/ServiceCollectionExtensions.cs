@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using CAC.Core.Application;
+using CAC.Core.Application.CommandHandling.Behaviors;
 using CAC.Core.Domain;
 using CAC.CQS.Decorator.Application.TaskLists;
 using CAC.CQS.Decorator.Application.TaskLists.AddTaskToList;
@@ -22,6 +23,9 @@ namespace CAC.CQS.Decorator.Application
     {
         public static void AddApplication(this IServiceCollection services)
         {
+            services.AddCommandHandlerBehavior(typeof(CommandHandlerLoggingBehavior<,>));
+            services.AddCommandHandlerBehavior(typeof(CommandHandlerValidationBehavior<,>));
+
             services.AddCommandHandler<CreateNewTaskListCommandHandler>();
             services.AddCommandHandler<AddTaskToListCommandHandler>();
             services.AddCommandHandler<MarkTaskAsDoneCommandHandler>();

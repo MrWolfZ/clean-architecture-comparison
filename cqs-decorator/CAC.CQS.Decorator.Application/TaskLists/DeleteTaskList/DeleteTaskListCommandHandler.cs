@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.CommandHandling;
+using CAC.Core.Application.CommandHandling.Behaviors;
 using CAC.Core.Domain.Exceptions;
 
 namespace CAC.CQS.Decorator.Application.TaskLists.DeleteTaskList
@@ -14,8 +15,8 @@ namespace CAC.CQS.Decorator.Application.TaskLists.DeleteTaskList
             this.taskListRepository = taskListRepository;
         }
 
-        [LogCommand]
-        [ValidateCommand]
+        [CommandLoggingBehavior]
+        [CommandValidationBehavior]
         public async Task ExecuteCommand(DeleteTaskListCommand command, CancellationToken cancellationToken)
         {
             var taskList = await taskListRepository.GetById(command.TaskListId);
