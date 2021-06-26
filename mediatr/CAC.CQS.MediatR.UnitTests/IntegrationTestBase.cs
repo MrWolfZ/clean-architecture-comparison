@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 
-namespace CAC.CQS.MediatR.UnitTests.Web.TaskLists
+namespace CAC.CQS.MediatR.UnitTests
 {
     public abstract class IntegrationTestBase : CoreIntegrationTestBase
     {

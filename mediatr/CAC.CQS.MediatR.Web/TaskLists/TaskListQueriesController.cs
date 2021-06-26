@@ -20,24 +20,24 @@ namespace CAC.CQS.MediatR.Web.TaskLists
             this.mediator = mediator;
         }
 
-        [HttpPost("getAllTaskLists")]
-        public async Task<GetAllTaskListsQueryResponse> GetAll(GetAllTaskListsQuery query, CancellationToken cancellationToken)
+        [HttpGet("getAllTaskLists")]
+        public async Task<GetAllTaskListsQueryResponse> GetAll(CancellationToken cancellationToken)
+        {
+            return await mediator.Send(new GetAllTaskListsQuery(), cancellationToken);
+        }
+
+        [HttpGet("getTaskListById")]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        public async Task<GetTaskListByIdQueryResponse> GetById([FromQuery] GetTaskListByIdQuery query, CancellationToken cancellationToken)
         {
             return await mediator.Send(query, cancellationToken);
         }
 
-        [HttpPost("getTaskListById")]
+        [HttpGet("getAllTaskListsWithPendingEntries")]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<GetTaskListByIdQueryResponse> GetById(GetTaskListByIdQuery query, CancellationToken cancellationToken)
+        public async Task<GetAllTaskListsWithPendingEntriesQueryResponse> GetAllWithPendingEntries(CancellationToken cancellationToken)
         {
-            return await mediator.Send(query, cancellationToken);
-        }
-
-        [HttpPost("getAllTaskListsWithPendingEntries")]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<GetAllTaskListsWithPendingEntriesQueryResponse> GetAllWithPendingEntries(GetAllTaskListsWithPendingEntriesQuery query, CancellationToken cancellationToken)
-        {
-            return await mediator.Send(query, cancellationToken);
+            return await mediator.Send(new GetAllTaskListsWithPendingEntriesQuery(), cancellationToken);
         }
     }
 }
