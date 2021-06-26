@@ -60,12 +60,20 @@ Below you can find a list of the various styles we are comparing for implementin
 
 ## Open Points
 
+- in `ddd` (and derived) use builder pattern for creating test data
+- in `basic` (and derived) structure test project by use-cases instead of by layer
+- in `core` tweak logging behaviors to log payloads
+- in `cqs` separate write and read repositories 
+- in `core` add more behaviors
+  - `RetryOnException`
+  - `FallbackResponse`
+  - `Authorization`
+  - for queries `CacheResponse`
 - add `README` for `ddd`
 - add `README` for `basic`
 - adjust `cqs` based on `basic`
   - split write and read repositories
-- create `mediatr`
-- create `cqs-decorator`
 - create `cqs-proxy`
 - add tests for task list reminder feature in `basic` and `cqs`
 - add tests for domain objects that verify that domain events are added correctly
+- write unit tests for `core`
