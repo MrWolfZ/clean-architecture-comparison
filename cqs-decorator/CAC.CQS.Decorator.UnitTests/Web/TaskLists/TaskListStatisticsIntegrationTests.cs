@@ -1,13 +1,13 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using CAC.Basic.Application.TaskLists;
 using CAC.Core.TestUtilities;
+using CAC.CQS.Decorator.Application.TaskLists;
 using NUnit.Framework;
 
-namespace CAC.Basic.UnitTests.Web.TaskLists
+namespace CAC.CQS.Decorator.UnitTests.Web.TaskLists
 {
     [IntegrationTest]
-    public sealed class TaskListStatisticsControllerTests : BaselineControllerTestBase
+    public sealed class TaskListStatisticsIntegrationTests : IntegrationTestBase
     {
         private ITaskListStatisticsRepository TaskListStatisticsRepository => Resolve<ITaskListStatisticsRepository>();
 

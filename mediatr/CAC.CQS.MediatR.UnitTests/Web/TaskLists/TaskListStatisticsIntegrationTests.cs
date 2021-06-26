@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace CAC.CQS.MediatR.UnitTests.Web.TaskLists
 {
     [IntegrationTest]
-    public sealed class TaskListStatisticsControllerTests : BaselineControllerTestBase
+    public sealed class TaskListStatisticsIntegrationTests : IntegrationTestBase
     {
         private ITaskListStatisticsRepository TaskListStatisticsRepository => Resolve<ITaskListStatisticsRepository>();
 

@@ -12,7 +12,7 @@ using NUnit.Framework;
 
 namespace CAC.Core.TestUtilities
 {
-    public abstract class ControllerTestBase
+    public abstract class CoreIntegrationTestBase
     {
         private HttpClient? client;
         private IHost? host;

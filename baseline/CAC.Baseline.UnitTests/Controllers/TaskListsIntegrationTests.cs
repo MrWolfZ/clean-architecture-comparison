@@ -15,7 +15,7 @@ using NUnit.Framework;
 namespace CAC.Baseline.UnitTests.Controllers
 {
     [IntegrationTest]
-    public sealed class TaskListsControllerTests : BaselineControllerTestBase
+    public sealed class TaskListsIntegrationTests : IntegrationTestBase
     {
         private const long PremiumOwnerId = 1;
         private const long NonPremiumOwnerId = 2;

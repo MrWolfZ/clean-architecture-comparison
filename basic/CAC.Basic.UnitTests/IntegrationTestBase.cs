@@ -8,9 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 
-namespace CAC.Basic.UnitTests.Web.TaskLists
+namespace CAC.Basic.UnitTests
 {
-    public abstract class BaselineControllerTestBase : ControllerTestBase
+    public abstract class IntegrationTestBase : CoreIntegrationTestBase
     {
         protected Mock<IMessageQueueAdapter> MessageQueueAdapterMock { get; } = new();
 

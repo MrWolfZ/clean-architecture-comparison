@@ -5,18 +5,18 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using CAC.Core.Domain;
 using CAC.Core.TestUtilities;
-using CAC.CQS.MediatR.Application.TaskLists;
-using CAC.CQS.MediatR.Application.TaskLists.GetAllTaskLists;
-using CAC.CQS.MediatR.Application.TaskLists.GetAllTaskListsWithPendingEntries;
-using CAC.CQS.MediatR.Application.TaskLists.GetTaskListByIdQuery;
-using CAC.CQS.MediatR.Domain.TaskListAggregate;
-using CAC.CQS.MediatR.Domain.UserAggregate;
+using CAC.CQS.Application.TaskLists;
+using CAC.CQS.Application.TaskLists.GetAllTaskLists;
+using CAC.CQS.Application.TaskLists.GetAllTaskListsWithPendingEntries;
+using CAC.CQS.Application.TaskLists.GetTaskListByIdQuery;
+using CAC.CQS.Domain.TaskListAggregate;
+using CAC.CQS.Domain.UserAggregate;
 using NUnit.Framework;
 
-namespace CAC.CQS.MediatR.UnitTests.Web.TaskLists
+namespace CAC.CQS.UnitTests.Web.TaskLists
 {
     [IntegrationTest]
-    public sealed class TaskListQueriesControllerTests : BaselineControllerTestBase
+    public sealed class TaskListQueriesIntegrationTests : IntegrationTestBase
     {
         private static readonly User PremiumOwner = User.FromRawData(1, "premium", true);
 
@@ -36,7 +36,7 @@ namespace CAC.CQS.MediatR.UnitTests.Web.TaskLists
 
             var expectedResponse = GetAllTaskListsQueryResponse.FromTaskLists(new[] { taskList1, taskList2 });
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists/getAllTaskLists", new GetAllTaskListsQuery(), JsonSerializerOptions);
+            var response = await HttpClient.GetAsync("taskLists/getAllTaskLists");
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
@@ -55,7 +55,7 @@ namespace CAC.CQS.MediatR.UnitTests.Web.TaskLists
 
             var expectedResponse = GetTaskListByIdQueryResponse.FromTaskList(taskList);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists/getTaskListById", new GetTaskListByIdQuery { TaskListId = taskList.Id }, JsonSerializerOptions);
+            var response = await HttpClient.GetAsync($"taskLists/getTaskListById?TaskListId={taskList.Id}");
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 
@@ -69,7 +69,7 @@ namespace CAC.CQS.MediatR.UnitTests.Web.TaskLists
         {
             var nonExistingId = TaskListId.Of(1);
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists/getTaskListById", new GetTaskListByIdQuery { TaskListId = nonExistingId }, JsonSerializerOptions);
+            var response = await HttpClient.GetAsync($"taskLists/getTaskListById?TaskListId={nonExistingId}");
 
             await response.AssertStatusCode(HttpStatusCode.NotFound);
         }
@@ -91,7 +91,7 @@ namespace CAC.CQS.MediatR.UnitTests.Web.TaskLists
 
             var expectedResponse = GetAllTaskListsWithPendingEntriesQueryResponse.FromTaskLists(new[] { taskList1, taskList2 });
 
-            var response = await HttpClient.PostAsJsonAsync("taskLists/getAllTaskListsWithPendingEntries", new GetAllTaskListsWithPendingEntriesQuery(), JsonSerializerOptions);
+            var response = await HttpClient.GetAsync("taskLists/getAllTaskListsWithPendingEntries");
 
             await response.AssertStatusCode(HttpStatusCode.OK);
 

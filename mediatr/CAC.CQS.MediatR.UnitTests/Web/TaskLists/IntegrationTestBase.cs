@@ -10,7 +10,7 @@ using Moq;
 
 namespace CAC.CQS.MediatR.UnitTests.Web.TaskLists
 {
-    public abstract class BaselineControllerTestBase : ControllerTestBase
+    public abstract class IntegrationTestBase : CoreIntegrationTestBase
     {
         protected Mock<IMessageQueueAdapter> MessageQueueAdapterMock { get; } = new();
 

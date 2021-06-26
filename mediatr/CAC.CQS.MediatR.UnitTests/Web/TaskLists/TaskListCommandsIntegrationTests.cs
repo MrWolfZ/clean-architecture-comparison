@@ -18,7 +18,7 @@ using NUnit.Framework;
 namespace CAC.CQS.MediatR.UnitTests.Web.TaskLists
 {
     [IntegrationTest]
-    public sealed class TaskListCommandsControllerTests : BaselineControllerTestBase
+    public sealed class TaskListCommandsIntegrationTests : IntegrationTestBase
     {
         private static readonly User PremiumOwner = User.FromRawData(1, "premium", true);
         private static readonly User NonPremiumOwner = User.FromRawData(2, "non-premium", false);

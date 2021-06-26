@@ -1,23 +1,23 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using CAC.Baseline.Web.Model;
-using CAC.Baseline.Web.Services;
 using CAC.Core.TestUtilities;
+using CAC.DDD.Web.Domain;
+using CAC.DDD.Web.Persistence;
 using NUnit.Framework;
 
-namespace CAC.Baseline.UnitTests.Controllers
+namespace CAC.DDD.UnitTests.Controllers
 {
     [IntegrationTest]
-    public sealed class TaskListStatisticsControllerTests : BaselineControllerTestBase
+    public sealed class TaskListStatisticsIntegrationTests : IntegrationTestBase
     {
-        private ITaskListStatisticsService StatisticsService => Resolve<ITaskListStatisticsService>();
+        private ITaskListStatisticsRepository TaskListStatisticsRepository => Resolve<ITaskListStatisticsRepository>();
 
         [Test]
         public async Task GetStatistics_ReturnsStatistics()
         {
             var expectedResponse = new TaskListStatistics { NumberOfTaskListsCreated = 1 };
 
-            await StatisticsService.OnTaskListCreated(new(1, 1, "test"));
+            await TaskListStatisticsRepository.Upsert(expectedResponse);
 
             var response = await HttpClient.GetFromJsonAsync<TaskListStatistics>("taskListStatistics");
 

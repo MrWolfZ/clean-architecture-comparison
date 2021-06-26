@@ -5,18 +5,18 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using CAC.Core.Domain;
 using CAC.Core.TestUtilities;
-using CAC.CQS.Application.TaskLists;
-using CAC.CQS.Application.TaskLists.GetAllTaskLists;
-using CAC.CQS.Application.TaskLists.GetAllTaskListsWithPendingEntries;
-using CAC.CQS.Application.TaskLists.GetTaskListByIdQuery;
-using CAC.CQS.Domain.TaskListAggregate;
-using CAC.CQS.Domain.UserAggregate;
+using CAC.CQS.Decorator.Application.TaskLists;
+using CAC.CQS.Decorator.Application.TaskLists.GetAllTaskLists;
+using CAC.CQS.Decorator.Application.TaskLists.GetAllTaskListsWithPendingEntries;
+using CAC.CQS.Decorator.Application.TaskLists.GetTaskListByIdQuery;
+using CAC.CQS.Decorator.Domain.TaskListAggregate;
+using CAC.CQS.Decorator.Domain.UserAggregate;
 using NUnit.Framework;
 
-namespace CAC.CQS.UnitTests.Web.TaskLists
+namespace CAC.CQS.Decorator.UnitTests.Web.TaskLists
 {
     [IntegrationTest]
-    public sealed class TaskListQueriesControllerTests : BaselineControllerTestBase
+    public sealed class TaskListQueriesIntegrationTests : IntegrationTestBase
     {
         private static readonly User PremiumOwner = User.FromRawData(1, "premium", true);
 

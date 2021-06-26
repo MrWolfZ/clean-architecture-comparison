@@ -1,16 +1,16 @@
 ﻿using CAC.Core.TestUtilities;
-using CAC.CQS.Decorator.Application;
-using CAC.CQS.Decorator.Application.TaskLists;
-using CAC.CQS.Decorator.Infrastructure.TaskLists;
-using CAC.CQS.Decorator.Web;
+using CAC.CQS.Application;
+using CAC.CQS.Application.TaskLists;
+using CAC.CQS.Infrastructure.TaskLists;
+using CAC.CQS.Web;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 
-namespace CAC.CQS.Decorator.UnitTests.Web.TaskLists
+namespace CAC.CQS.UnitTests
 {
-    public abstract class BaselineControllerTestBase : ControllerTestBase
+    public abstract class IntegrationTestBase : CoreIntegrationTestBase
     {
         protected Mock<IMessageQueueAdapter> MessageQueueAdapterMock { get; } = new();
 
