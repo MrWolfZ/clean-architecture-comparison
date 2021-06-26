@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.QueryHandling;
 using CAC.Core.Domain.Exceptions;
 
 namespace CAC.CQS.Application.TaskLists.GetTaskListByIdQuery

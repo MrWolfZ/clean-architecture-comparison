@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.QueryHandling;
 using CAC.CQS.Application.TaskLists.GetAllTaskLists;
 using CAC.CQS.Application.TaskLists.GetAllTaskListsWithPendingEntries;
 using CAC.CQS.Application.TaskLists.GetTaskListByIdQuery;

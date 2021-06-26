@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using CAC.Core.Application;
 using CAC.Core.Application.CommandHandling.Behaviors;
+using CAC.Core.Application.QueryHandling.Behaviors;
 using CAC.Core.Domain;
 using CAC.CQS.Decorator.Application.TaskLists;
 using CAC.CQS.Decorator.Application.TaskLists.AddTaskToList;
@@ -31,6 +32,9 @@ namespace CAC.CQS.Decorator.Application
             services.AddCommandHandler<MarkTaskAsDoneCommandHandler>();
             services.AddCommandHandler<DeleteTaskListCommandHandler>();
             services.AddCommandHandler<SendTaskListRemindersCommandHandler>();
+            
+            services.AddQueryHandlerBehavior(typeof(QueryHandlerLoggingBehavior<,>));
+            services.AddQueryHandlerBehavior(typeof(QueryHandlerValidationBehavior<,>));
             
             services.AddQueryHandler<GetAllTaskListsQueryHandler>();
             services.AddQueryHandler<GetTaskListByIdQueryHandler>();

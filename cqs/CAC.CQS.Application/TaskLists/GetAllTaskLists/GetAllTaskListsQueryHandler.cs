@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.QueryHandling;
 
 namespace CAC.CQS.Application.TaskLists.GetAllTaskLists
 {

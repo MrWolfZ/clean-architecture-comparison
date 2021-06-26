@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.QueryHandling;
+using CAC.Core.Application.QueryHandling.Behaviors;
 
 namespace CAC.CQS.Decorator.Application.TaskLists.GetAllTaskListsWithPendingEntries
 {
@@ -13,8 +14,8 @@ namespace CAC.CQS.Decorator.Application.TaskLists.GetAllTaskListsWithPendingEntr
             this.taskListRepository = taskListRepository;
         }
 
-        [LogQuery]
-        [ValidateQuery]
+        [QueryLoggingBehavior]
+        [QueryValidationBehavior]
         public async Task<GetAllTaskListsWithPendingEntriesQueryResponse> ExecuteQuery(GetAllTaskListsWithPendingEntriesQuery query, CancellationToken cancellationToken)
         {
             var lists = await taskListRepository.GetAllWithPendingEntries();

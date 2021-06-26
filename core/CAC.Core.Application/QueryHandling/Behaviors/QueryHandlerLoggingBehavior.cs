@@ -9,39 +9,33 @@ using Microsoft.Extensions.Logging;
 // it makes sense for these classes to be in this order
 #pragma warning disable SA1649
 
-namespace CAC.Core.Application
+namespace CAC.Core.Application.QueryHandling.Behaviors
 {
-    public sealed record QueryHandlerLoggingOptions(bool LogException);
-
-    [AttributeUsage(AttributeTargets.Method)]
-    public sealed class LogQueryAttribute : Attribute
+    public sealed class QueryLoggingBehaviorAttribute : QueryHandlerBehaviorAttribute
     {
         public bool LogException { get; init; } = true;
     }
 
-    internal sealed class QueryHandlerLoggingDecorator<TQuery, TResponse> : IQueryHandler<TQuery, TResponse>
+    public sealed class QueryHandlerLoggingBehavior<TQuery, TResponse> : IQueryHandlerBehavior<TQuery, TResponse, QueryLoggingBehaviorAttribute>
         where TQuery : notnull
     {
-        private readonly IQueryHandler<TQuery, TResponse> handler;
-        private readonly ILogger<QueryHandlerLoggingDecorator<TQuery, TResponse>> logger;
-        private readonly QueryHandlerLoggingOptions options;
+        private readonly ILogger logger;
 
-        public QueryHandlerLoggingDecorator(IQueryHandler<TQuery, TResponse> handler,
-                                            ILogger<QueryHandlerLoggingDecorator<TQuery, TResponse>> logger, 
-                                            QueryHandlerLoggingOptions options)
+        public QueryHandlerLoggingBehavior(ILoggerFactory loggerFactory)
         {
-            this.handler = handler;
-            this.logger = logger;
-            this.options = options;
+            logger = loggerFactory.CreateLogger($"QueryHandler[{typeof(TQuery).Name},{typeof(TResponse).Name}]");
         }
 
-        public async Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken)
+        public async Task<TResponse> InterceptQuery(TQuery query,
+                                                    QueryHandlerBehaviorNext<TQuery, TResponse> next,
+                                                    QueryLoggingBehaviorAttribute attribute,
+                                                    CancellationToken cancellationToken)
         {
             try
             {
                 logger.LogInformation("Handling query of type {QueryType}", typeof(TQuery).Name);
-                
-                var response = await handler.ExecuteQuery(query, cancellationToken);
+
+                var response = await next(query, cancellationToken);
 
                 logger.LogInformation("Handled query of type {QueryType} and got response of type {ResponseType}", typeof(TQuery).Name, typeof(TResponse).Name);
 
@@ -49,7 +43,7 @@ namespace CAC.Core.Application
             }
             catch (Exception e)
             {
-                if (options.LogException)
+                if (attribute.LogException)
                 {
                     logger.LogError(e, "An exception occurred while handling query of type {QueryType}!", typeof(TQuery).Name);
                 }
@@ -57,7 +51,7 @@ namespace CAC.Core.Application
                 {
                     logger.LogError("An exception occurred while handling query of type {QueryType}!", typeof(TQuery).Name);
                 }
-                
+
                 throw;
             }
         }

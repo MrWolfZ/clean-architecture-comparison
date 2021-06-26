@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using CAC.Core.Application;
+using CAC.Core.Application.QueryHandling;
+using CAC.Core.Application.QueryHandling.Behaviors;
 using CAC.Core.Domain.Exceptions;
 
 namespace CAC.CQS.Decorator.Application.TaskLists.GetTaskListByIdQuery
@@ -14,8 +15,8 @@ namespace CAC.CQS.Decorator.Application.TaskLists.GetTaskListByIdQuery
             this.taskListRepository = taskListRepository;
         }
 
-        [LogQuery]
-        [ValidateQuery]
+        [QueryLoggingBehavior]
+        [QueryValidationBehavior]
         public async Task<GetTaskListByIdQueryResponse> ExecuteQuery(GetTaskListByIdQuery query, CancellationToken cancellationToken)
         {
             var taskList = await taskListRepository.GetById(query.TaskListId);

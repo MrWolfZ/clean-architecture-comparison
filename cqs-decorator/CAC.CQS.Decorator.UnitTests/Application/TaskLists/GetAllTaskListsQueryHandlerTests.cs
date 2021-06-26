@@ -1,4 +1,5 @@
 ﻿using CAC.Core.Application;
+using CAC.Core.Application.QueryHandling;
 using CAC.CQS.Decorator.Application.TaskLists;
 using CAC.CQS.Decorator.Application.TaskLists.GetAllTaskLists;
 using CAC.CQS.Decorator.Infrastructure.TaskLists;
