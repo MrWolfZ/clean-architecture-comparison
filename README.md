@@ -60,7 +60,6 @@ Below you can find a list of the various styles we are comparing for implementin
 
 ## Open Points
 
-- in `ddd` (and derived) use builder pattern for creating test data
 - in `basic` (and derived) structure test project by use-cases instead of by layer
 - in `core` tweak logging behaviors to log payloads
 - in `cqs` separate write and read repositories 

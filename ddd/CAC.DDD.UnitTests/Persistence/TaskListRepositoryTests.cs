@@ -1,10 +1,10 @@
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using CAC.Core.Domain.Exceptions;
 using CAC.Core.TestUtilities;
+using CAC.DDD.UnitTests.Domain.TaskListAggregate;
+using CAC.DDD.UnitTests.Domain.UserAggregate;
 using CAC.DDD.Web.Domain.TaskListAggregate;
-using CAC.DDD.Web.Domain.UserAggregate;
 using CAC.DDD.Web.Persistence;
 using NUnit.Framework;
 
@@ -12,30 +12,24 @@ namespace CAC.DDD.UnitTests.Persistence
 {
     public abstract class TaskListRepositoryTests : AggregateRepositoryTestBase<TaskList, TaskListId>
     {
-        private const long OwnerId = 1;
-        private long taskListEntryIdCounter;
-
-        private long taskListIdCounter;
-
         protected abstract override ITaskListRepository Testee { get; }
 
         [Test]
         public async Task Upsert_GivenNewTaskListWithExistingNameAndSameOwner_ThrowsException()
         {
-            var existingList = CreateTaskList();
+            var existingList = new TaskListBuilder().Build();
             existingList = await Testee.Upsert(existingList);
 
-            var list = TaskList.FromRawData(2, OwnerId, true, existingList.Name, ValueList<TaskListEntry>.Empty);
+            var list = new TaskListBuilder().WithName(existingList.Name).Build();
             _ = Assert.ThrowsAsync<UniquenessConstraintViolationException>(() => Testee.Upsert(list));
         }
 
         [Test]
         public async Task Upsert_GivenNewTaskListWithExistingNameAndDifferentOwner_StoresTaskList()
         {
-            var existingList = CreateTaskList();
+            var existingList = new TaskListBuilder().Build();
             existingList = await Testee.Upsert(existingList);
-
-            var list = CreateTaskList(ownerId: OwnerId + 1, name: existingList.Name);
+            var list = new TaskListBuilder().WithOwner(new UserBuilder().Build()).WithName(existingList.Name).Build();
             list = await Testee.Upsert(list);
 
             var storedList = await Testee.GetById(list.Id);
@@ -53,10 +47,10 @@ namespace CAC.DDD.UnitTests.Persistence
         [Test]
         public async Task GetAll_GivenStoredTaskLists_ReturnsCollectionOfLists()
         {
-            var list1 = CreateTaskList();
+            var list1 = new TaskListBuilder().Build();
             list1 = await Testee.Upsert(list1);
 
-            var list2 = CreateTaskList(1);
+            var list2 = new TaskListBuilder().WithPendingEntries(1).Build();
 
             list2 = await Testee.Upsert(list2);
 
@@ -69,12 +63,12 @@ namespace CAC.DDD.UnitTests.Persistence
         [Test]
         public async Task GetAllWithPendingEntries_GivenStoredTaskLists_ReturnsCollectionOfListsWithPendingEntries()
         {
-            var list1 = CreateTaskList(2);
+            var list1 = new TaskListBuilder().WithPendingEntries(2).Build();
             list1 = list1.MarkEntryAsDone(list1.Entries.First().Id);
 
-            var list2 = CreateTaskList(1);
+            var list2 = new TaskListBuilder().WithPendingEntries(1).Build();
 
-            var list3 = CreateTaskList(1);
+            var list3 = new TaskListBuilder().WithPendingEntries(1).Build();
             list3 = list3.MarkEntryAsDone(list3.Entries.First().Id);
 
             list1 = await Testee.Upsert(list1);
@@ -90,43 +84,30 @@ namespace CAC.DDD.UnitTests.Persistence
         [Test]
         public async Task GetNumberOfTaskListsByOwner_GivenStoredTaskLists_ReturnsCorrectCounts()
         {
-            const long ownerId2 = OwnerId + 1;
-            const long ownerId3 = OwnerId + 2;
+            var owner2 = new UserBuilder().Build();
+            var owner3 = new UserBuilder().Build();
 
-            var list1 = CreateTaskList();
+            var list1 = new TaskListBuilder().Build();
             _ = await Testee.Upsert(list1);
 
-            var list2 = CreateTaskList(1);
+            var list2 = new TaskListBuilder().WithPendingEntries(1).Build();
             _ = await Testee.Upsert(list2);
 
-            var list3 = CreateTaskList(ownerId: ownerId2);
+            var list3 = new TaskListBuilder().WithOwner(owner2).Build();
             _ = await Testee.Upsert(list3);
 
-            Assert.AreEqual(2, await Testee.GetNumberOfTaskListsByOwner(OwnerId));
-            Assert.AreEqual(1, await Testee.GetNumberOfTaskListsByOwner(ownerId2));
-            Assert.AreEqual(0, await Testee.GetNumberOfTaskListsByOwner(ownerId3));
+            Assert.AreEqual(2, await Testee.GetNumberOfTaskListsByOwner(list1.OwnerId));
+            Assert.AreEqual(1, await Testee.GetNumberOfTaskListsByOwner(list3.OwnerId));
+            Assert.AreEqual(0, await Testee.GetNumberOfTaskListsByOwner(owner3.Id));
         }
 
-        protected override TaskList CreateAggregate() => CreateTaskList(1);
+        protected override TaskList CreateAggregate() => new TaskListBuilder().WithPendingEntries(1).Build();
 
         protected override TaskList UpdateAggregate(TaskList aggregate)
         {
-            var entry = CreateEntry();
+            var entry = new TaskListEntryBuilder().Build();
             var entries = aggregate.Entries.Add(entry);
             return TaskList.FromRawData(aggregate.Id, aggregate.OwnerId, true, aggregate.Name, entries);
-        }
-
-        private TaskList CreateTaskList(int numberOfEntries = 0, UserId? ownerId = null, string? name = null)
-        {
-            var listId = ++taskListIdCounter;
-            var entries = Enumerable.Range(1, numberOfEntries).Select(_ => CreateEntry()).ToValueList();
-            return TaskList.FromRawData(listId, ownerId ?? OwnerId, true, name ?? $"list {listId}", entries);
-        }
-
-        private TaskListEntry CreateEntry()
-        {
-            var entryId = ++taskListEntryIdCounter;
-            return TaskListEntry.FromRawData(entryId, $"task {entryId}", false);
         }
     }
 }

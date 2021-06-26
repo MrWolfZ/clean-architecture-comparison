@@ -1,11 +1,8 @@
-﻿using System.Collections.Immutable;
-using System.Linq;
-using System.Threading.Tasks;
-using CAC.Core.Domain;
+﻿using System.Threading.Tasks;
 using CAC.CQS.Application.TaskLists;
 using CAC.CQS.Application.TaskLists.DeleteTaskList;
 using CAC.CQS.Domain.TaskListAggregate;
-using CAC.CQS.Domain.UserAggregate;
+using CAC.CQS.UnitTests.Domain.TaskListAggregate;
 using Moq;
 using NUnit.Framework;
 
@@ -13,11 +10,6 @@ namespace CAC.CQS.UnitTests.TaskLists.Commands.DeleteTaskList
 {
     public abstract class DeleteTaskListCommandTests : CommandHandlingIntegrationTestBase<DeleteTaskListCommand>
     {
-        private static readonly User PremiumOwner = User.FromRawData(1, "premium", true);
-
-        private long taskListEntryIdCounter;
-        private long taskListIdCounter;
-
         private ITaskListRepository TaskListRepository => Resolve<ITaskListRepository>();
 
         private ITaskListStatisticsRepository StatisticsRepository => Resolve<ITaskListStatisticsRepository>();
@@ -25,7 +17,7 @@ namespace CAC.CQS.UnitTests.TaskLists.Commands.DeleteTaskList
         [Test]
         public async Task GivenExistingTaskListId_DeletesTaskList()
         {
-            var taskList = CreateTaskList(numberOfEntries: 2);
+            var taskList = new TaskListBuilder().WithPendingEntries(2).Build();
 
             taskList = await TaskListRepository.Upsert(taskList);
 
@@ -46,7 +38,7 @@ namespace CAC.CQS.UnitTests.TaskLists.Commands.DeleteTaskList
         [Test]
         public async Task GivenSuccess_UpdatesStatistics()
         {
-            var taskList = CreateTaskList();
+            var taskList = new TaskListBuilder().Build();
 
             taskList = await TaskListRepository.Upsert(taskList);
             
@@ -59,26 +51,13 @@ namespace CAC.CQS.UnitTests.TaskLists.Commands.DeleteTaskList
         [Test]
         public async Task GivenSuccess_PublishesNotification()
         {
-            var taskList = CreateTaskList();
+            var taskList = new TaskListBuilder().Build();
 
             taskList = await TaskListRepository.Upsert(taskList);
 
             await ExecuteCommand(new() { TaskListId = taskList.Id });
 
             MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskListDeletedMessage>(m => m.TaskListId == taskList.Id)));
-        }
-
-        private TaskList CreateTaskList(User? owner = null, int numberOfEntries = 0)
-        {
-            var listId = ++taskListIdCounter;
-            var entries = Enumerable.Range(1, numberOfEntries).Select(_ => CreateEntry()).ToValueList();
-            return TaskList.FromRawData(listId, (owner ?? PremiumOwner).Id, (owner ?? PremiumOwner).IsPremium, $"list {listId}", entries, SystemTime.Now, null);
-        }
-
-        private TaskListEntry CreateEntry()
-        {
-            var entryId = ++taskListEntryIdCounter;
-            return TaskListEntry.FromRawData(entryId, $"task {entryId}", false);
         }
     }
 }

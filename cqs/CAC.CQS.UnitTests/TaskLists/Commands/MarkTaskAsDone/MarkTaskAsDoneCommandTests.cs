@@ -1,11 +1,9 @@
-﻿using System.Collections.Immutable;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using CAC.Core.Domain;
 using CAC.CQS.Application.TaskLists;
 using CAC.CQS.Application.TaskLists.MarkTaskAsDone;
 using CAC.CQS.Domain.TaskListAggregate;
-using CAC.CQS.Domain.UserAggregate;
+using CAC.CQS.UnitTests.Domain.TaskListAggregate;
 using Moq;
 using NUnit.Framework;
 
@@ -13,11 +11,6 @@ namespace CAC.CQS.UnitTests.TaskLists.Commands.MarkTaskAsDone
 {
     public abstract class MarkTaskAsDoneCommandTests : CommandHandlingIntegrationTestBase<MarkTaskAsDoneCommand>
     {
-        private static readonly User PremiumOwner = User.FromRawData(1, "premium", true);
-
-        private long taskListEntryIdCounter;
-        private long taskListIdCounter;
-
         private ITaskListRepository TaskListRepository => Resolve<ITaskListRepository>();
 
         private ITaskListStatisticsRepository StatisticsRepository => Resolve<ITaskListStatisticsRepository>();
@@ -25,7 +18,7 @@ namespace CAC.CQS.UnitTests.TaskLists.Commands.MarkTaskAsDone
         [Test]
         public async Task GivenExistingTaskListIdAndValidEntryId_UpdatesTaskList()
         {
-            var taskList = CreateTaskList(numberOfEntries: 2);
+            var taskList = new TaskListBuilder().WithPendingEntries(2).Build();
             var entryId = taskList.Entries.First().Id;
 
             taskList = await TaskListRepository.Upsert(taskList);
@@ -40,11 +33,11 @@ namespace CAC.CQS.UnitTests.TaskLists.Commands.MarkTaskAsDone
         [Test]
         public async Task GivenExistingTaskListIdAndNonExistingEntryId_FailsWithEntityNotFound()
         {
-            var taskList = CreateTaskList(numberOfEntries: 2);
+            var taskList = new TaskListBuilder().WithPendingEntries(2).Build();
             var nonExistingEntryId = TaskListEntryId.Of(99);
 
             taskList = await TaskListRepository.Upsert(taskList);
-            
+
             await AssertCommandFailure(new() { TaskListId = taskList.Id, EntryId = nonExistingEntryId }, ExpectedCommandFailure.EntityNotFound);
         }
 
@@ -53,14 +46,14 @@ namespace CAC.CQS.UnitTests.TaskLists.Commands.MarkTaskAsDone
         {
             var nonExistingId = TaskListId.Of(1);
             var entryId = TaskListEntryId.Of(1);
-            
+
             await AssertCommandFailure(new() { TaskListId = nonExistingId, EntryId = entryId }, ExpectedCommandFailure.EntityNotFound);
         }
 
         [Test]
         public async Task GivenSuccess_UpdatesStatistics()
         {
-            var taskList = CreateTaskList(numberOfEntries: 1);
+            var taskList = new TaskListBuilder().WithPendingEntries(1).Build();
             var entryId = taskList.Entries.First().Id;
 
             taskList = await TaskListRepository.Upsert(taskList);
@@ -74,7 +67,7 @@ namespace CAC.CQS.UnitTests.TaskLists.Commands.MarkTaskAsDone
         [Test]
         public async Task GivenSuccess_PublishesNotification()
         {
-            var taskList = CreateTaskList();
+            var taskList = new TaskListBuilder().Build();
             var newEntry = TaskListEntry.ForAddingToTaskList(taskList.Id, 1, "task");
             taskList = taskList.AddEntry(newEntry);
 
@@ -83,19 +76,6 @@ namespace CAC.CQS.UnitTests.TaskLists.Commands.MarkTaskAsDone
             await ExecuteCommand(new() { TaskListId = taskList.Id, EntryId = newEntry.Id });
 
             MessageQueueAdapterMock.Verify(a => a.Send(It.Is<TaskListNotificationDomainEventHandler.TaskMarkedAsDoneMessage>(m => m.TaskListId == taskList.Id && m.TaskListEntryId == newEntry.Id)));
-        }
-
-        private TaskList CreateTaskList(User? owner = null, int numberOfEntries = 0)
-        {
-            var listId = ++taskListIdCounter;
-            var entries = Enumerable.Range(1, numberOfEntries).Select(_ => CreateEntry()).ToValueList();
-            return TaskList.FromRawData(listId, (owner ?? PremiumOwner).Id, (owner ?? PremiumOwner).IsPremium, $"list {listId}", entries, SystemTime.Now, null);
-        }
-
-        private TaskListEntry CreateEntry()
-        {
-            var entryId = ++taskListEntryIdCounter;
-            return TaskListEntry.FromRawData(entryId, $"task {entryId}", false);
         }
     }
 }
